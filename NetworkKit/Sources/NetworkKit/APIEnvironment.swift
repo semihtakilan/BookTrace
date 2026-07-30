@@ -18,7 +18,7 @@ public enum APIEnvironment: String, CaseIterable, Sendable {
     }
 
     public var baseURL: URL {
-        URL(string: "http://127.0.0.1:8000")!
+        URL(string: "https://jsonplaceholder.typicode.com")!
     }
 
     public var timeout: TimeInterval {

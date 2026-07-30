@@ -8,11 +8,16 @@
 
 /* Begin PBXBuildFile section */
 		D846A9CE301A90E400477B1E /* NavigatorUI in Frameworks */ = {isa = PBXBuildFile; productRef = D846A9CD301A90E400477B1E /* NavigatorUI */; };
+		D846AA26301B351000477B1E /* NetworkKit in Frameworks */ = {isa = PBXBuildFile; productRef = D846AA25301B351000477B1E /* NetworkKit */; };
+		D846AA50301B361E00477B1E /* NetworkRegistration in Frameworks */ = {isa = PBXBuildFile; productRef = D846AA4F301B361E00477B1E /* NetworkRegistration */; };
+		D846AA7E301B3B9300477B1E /* Models in Frameworks */ = {isa = PBXBuildFile; productRef = D846AA7D301B3B9300477B1E /* Models */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		D846A992301A8E4C00477B1E /* BookTrace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BookTrace.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D846A9CB301A8EEC00477B1E /* NetworkKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = NetworkKit; sourceTree = "<group>"; };
+		D846AA27301B35E800477B1E /* NetworkRegistration */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = NetworkRegistration; sourceTree = "<group>"; };
+		D846AA7C301B3B2100477B1E /* Models */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Models; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -28,7 +33,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D846AA26301B351000477B1E /* NetworkKit in Frameworks */,
 				D846A9CE301A90E400477B1E /* NavigatorUI in Frameworks */,
+				D846AA7E301B3B9300477B1E /* Models in Frameworks */,
+				D846AA50301B361E00477B1E /* NetworkRegistration in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -38,8 +46,11 @@
 		D846A989301A8E4C00477B1E = {
 			isa = PBXGroup;
 			children = (
+				D846AA7C301B3B2100477B1E /* Models */,
+				D846AA27301B35E800477B1E /* NetworkRegistration */,
 				D846A9CB301A8EEC00477B1E /* NetworkKit */,
 				D846A994301A8E4C00477B1E /* BookTrace */,
+				D846AA24301B351000477B1E /* Frameworks */,
 				D846A993301A8E4C00477B1E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -50,6 +61,13 @@
 				D846A992301A8E4C00477B1E /* BookTrace.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D846AA24301B351000477B1E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -73,6 +91,9 @@
 			name = BookTrace;
 			packageProductDependencies = (
 				D846A9CD301A90E400477B1E /* NavigatorUI */,
+				D846AA25301B351000477B1E /* NetworkKit */,
+				D846AA4F301B361E00477B1E /* NetworkRegistration */,
+				D846AA7D301B3B9300477B1E /* Models */,
 			);
 			productName = BookTrace;
 			productReference = D846A992301A8E4C00477B1E /* BookTrace.app */;
@@ -196,6 +217,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -253,6 +275,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -360,6 +383,18 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D846A9CC301A90E400477B1E /* XCRemoteSwiftPackageReference "Navigator" */;
 			productName = NavigatorUI;
+		};
+		D846AA25301B351000477B1E /* NetworkKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NetworkKit;
+		};
+		D846AA4F301B361E00477B1E /* NetworkRegistration */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NetworkRegistration;
+		};
+		D846AA7D301B3B9300477B1E /* Models */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Models;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

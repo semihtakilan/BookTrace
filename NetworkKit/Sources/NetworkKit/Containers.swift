@@ -26,20 +26,3 @@ public extension Container {
         }.cached
     }
 }
-
-// MARK: - Registration
-
-public enum NetworkKit {
-    /// Call once at app launch (inside app init).
-    /// - Parameter tokenProvider: Returns current Bearer token, or nil when not authenticated.
-    nonisolated public static func register(
-        tokenProvider: (@Sendable () async -> String?)? = nil
-    ) {
-        Container.shared.networkService.register {
-            NetworkService.standard(
-                configuration: Container.shared.networkConfiguration(),
-                tokenProvider: tokenProvider
-            )
-        }
-    }
-}

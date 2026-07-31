@@ -12,6 +12,14 @@ import NetworkKit
 import Models
 
 struct HomeTab: View {
+    var body: some View {
+        ManagedNavigationStack {
+            HomeContentView()
+        }
+    }
+}
+
+private struct HomeContentView: View {
     @Environment(\.navigator)
     private var navigator
 
@@ -19,16 +27,14 @@ struct HomeTab: View {
     private var service
 
     var body: some View {
-        ManagedNavigationStack {
-            Button {
-                navigator.navigate(to: HomeDestinations.bookDetail)
-            } label: {
-                Text("Go detail")
-            }
-            .task {
-                let photos = try? await service?.fetchPhotos()
-                print(photos ?? [])
-            }
+        Button {
+            navigator.navigate(to: HomeDestinations.bookDetail)
+        } label: {
+            Text("Go detail")
+        }
+        .task {
+            let photos = try? await service?.fetchPhotos()
+            print(photos ?? [])
         }
     }
 }

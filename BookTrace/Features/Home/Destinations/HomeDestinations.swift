@@ -7,14 +7,15 @@
 
 import SwiftUI
 import NavigatorUI
+import Models
 
 enum HomeDestinations: NavigationDestination {
-    case bookDetail
+    case bookDetail(BookReference)
 
     var body: some View {
         switch self {
-        case .bookDetail:
-            Text("BookDetail")
+        case .bookDetail(let reference):
+            BookDetailView(reference: reference)
         }
     }
 }

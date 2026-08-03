@@ -6,6 +6,7 @@ import FactoryKit
 public protocol Endpoint: Sendable {
     associatedtype Response: Decodable & Sendable
     var path: String { get set }
+    var baseURL: URL { get }
     var httpMethod: HTTPMethod { get }
     var headers: [String: String] { get }
     var queryParameters: [String: String]? { get set }
@@ -17,6 +18,7 @@ public protocol Endpoint: Sendable {
 }
 
 public extension Endpoint {
+    var baseURL: URL { Container.shared.environmentManager().currentEnvironment.baseURL }
     var httpMethod: HTTPMethod { .GET }
     var headers: [String: String] { ["Content-Type": "application/json"] }
     var queryParameters: [String: String]? { nil }
@@ -26,7 +28,6 @@ public extension Endpoint {
     var cachePolicy: URLRequest.CachePolicy { .useProtocolCachePolicy }
 
     func urlRequest() throws -> URLRequest {
-        let baseURL = Container.shared.environmentManager().currentEnvironment.baseURL
         var components = URLComponents(url: baseURL.appendingPathComponent(path), resolvingAgainstBaseURL: true)
         if let params = queryParameters, !params.isEmpty {
             components?.queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value) }

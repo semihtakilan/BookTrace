@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import NavigatorUI
 import FactoryKit
 
 @main

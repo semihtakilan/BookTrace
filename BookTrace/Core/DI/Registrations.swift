@@ -12,9 +12,9 @@ extension Container: @retroactive AutoRegistering {
 
     public func autoRegister() {
         NetworkRegistrations.register()
-
-        Container.shared.homeService.register {
-            HomeServiceLive()
+        
+        Container.shared.bookService.register {
+            BookServiceLive()
         }
     }
 }

@@ -7,8 +7,6 @@
 
 import SwiftUI
 import NavigatorUI
-import FactoryKit
-import NetworkKit
 import Models
 
 struct HomeTab: View {
@@ -23,49 +21,68 @@ private struct HomeContentView: View {
     @Environment(\.navigator)
     private var navigator
 
-    @Injected(\.homeService)
-    private var service
+    @State private var viewModel = HomeViewModel()
 
     var body: some View {
-        Button {
-            navigator.navigate(to: HomeDestinations.bookDetail)
-        } label: {
-            Text("Go detail")
-        }
-        .task {
-            let photos = try? await service?.fetchPhotos()
-            print(photos ?? [])
+        content
+            .task { await viewModel.load() }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch viewModel.state {
+        case .idle, .loading:
+            ProgressView()
+        case .loaded(let categories):
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    ForEach(categories) { category in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(category.displayName)
+                                .font(.title3.bold())
+                                .padding(.horizontal)
+
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 12) {
+                                    ForEach(category.books) { book in
+                                        Button {
+                                            navigator.navigate(to: HomeDestinations.bookDetail(book))
+                                        } label: {
+                                            BookCoverCell(book: book)
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                        }
+                    }
+                }
+                .padding(.vertical)
+            }
+        case .failed(let message):
+            Text("Hata: \(message)")
+                .foregroundStyle(.red)
         }
     }
 }
 
-struct PhotosEndpoint: Endpoint {
-    typealias Response = [Photo]
-    var path: String = "/photos"
-    var queryParameters: [String : String]? = [:]
-}
+private struct BookCoverCell: View {
+    let book: BookReference
 
-protocol HomeService {
-    func fetchPhotos() async throws -> [Photo]
-}
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            AsyncImage(url: book.coverURL) { image in
+                image.resizable().aspectRatio(contentMode: .fill)
+            } placeholder: {
+                Color.gray.opacity(0.2)
+            }
+            .frame(width: 100, height: 150)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
 
-final class HomeServiceLive: HomeService {
-
-    @Injected(\.networkService)
-    private var networkService
-
-    nonisolated init() {}
-
-    func fetchPhotos() async throws -> [Photo] {
-        do {
-            return try await networkService.execute(PhotosEndpoint())
-        } catch {
-            // örn: logger.error("fetchPhotos failed: \(error)")
-            throw error
+            Text(book.title)
+                .font(.caption.bold())
+                .lineLimit(2)
+                .frame(width: 100, alignment: .leading)
         }
     }
-}
-
-extension Container {
-    var homeService: Factory<HomeService?> { self { nil } }
 }

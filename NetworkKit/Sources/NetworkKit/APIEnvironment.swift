@@ -18,7 +18,7 @@ public enum APIEnvironment: String, CaseIterable, Sendable {
     }
 
     public var baseURL: URL {
-        URL(string: "https://jsonplaceholder.typicode.com")!
+        URL(string: "https://openlibrary.org")!
     }
 
     public var timeout: TimeInterval {

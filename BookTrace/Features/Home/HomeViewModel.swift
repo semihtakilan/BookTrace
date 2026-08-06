@@ -9,11 +9,12 @@ import Foundation
 import Observation
 import FactoryKit
 import Models
+import NetworkKit
 
 struct BookCategory: Identifiable, Sendable {
     let id: String
     let displayName: String
-    let books: [BookReference]
+    let books: [Book]
 }
 
 @MainActor
@@ -22,38 +23,55 @@ final class HomeViewModel {
     private(set) var state: ViewState<[BookCategory]> = .idle
 
     @ObservationIgnored
-    @Injected(\.bookService)
-    private var bookService
+    @Injected(\.bookSearching)
+    private var bookSearching
 
     private let categories: [(key: String, displayName: String)] = [
-        ("fiction", "Kurgu"),
-        ("science_fiction", "Bilim Kurgu"),
-        ("mystery", "Gizem"),
-        ("fantasy", "Fantastik")
+        ("subject:fiction", "Kurgu"),
+        ("subject:science fiction", "Bilim Kurgu"),
+        ("subject:mystery", "Gizem"),
+        ("subject:fantasy", "Fantastik")
     ]
 
     func load() async {
         state = .loading
         do {
-            let results = try await withThrowingTaskGroup(of: BookCategory.self) { group in
-                for category in categories {
-                    group.addTask { [bookService] in
-                        let books = try await bookService.fetchSubject(category.key, limit: 10)
-                        return BookCategory(id: category.key, displayName: category.displayName, books: books)
-                    }
-                }
-                var collected: [BookCategory] = []
-                for try await category in group {
-                    collected.append(category)
-                }
-                return collected
+            // Google Books başlangıçta dört eşzamanlı arama yerine sıralı çağrılır;
+            // bu, geçici 503/rate-limit cevaplarının olasılığını azaltır.
+            var results: [BookCategory] = []
+            for category in categories {
+                let books = try await bookSearching.searchBooks(query: category.key, maxResults: 10)
+                results.append(
+                    BookCategory(id: category.key, displayName: category.displayName, books: books)
+                )
             }
-            let order = categories.map(\.key)
-            state = .loaded(results.sorted {
-                (order.firstIndex(of: $0.id) ?? 0) < (order.firstIndex(of: $1.id) ?? 0)
-            })
+            state = .loaded(results)
         } catch {
-            state = .failed(error.localizedDescription)
+            state = .failed(userFacingMessage(for: error))
+        }
+    }
+
+    private func userFacingMessage(for error: Error) -> String {
+        if case NetworkError.serverError(let statusCode) = error, statusCode == 503 {
+            return "Google Books geçici olarak kullanılamıyor. İstek otomatik olarak yeniden denendi; lütfen kısa süre sonra tekrar deneyin."
+        }
+
+        if case NetworkError.httpError(let statusCode, _, _) = error, statusCode == 503 {
+            return "Google Books geçici olarak kullanılamıyor. İstek otomatik olarak yeniden denendi; lütfen kısa süre sonra tekrar deneyin."
+        }
+
+        guard case let NetworkError.networkError(underlying) = error,
+              let urlError = underlying as? URLError else {
+            return error.localizedDescription
+        }
+
+        switch urlError.code {
+        case .secureConnectionFailed, .serverCertificateHasBadDate,
+             .serverCertificateUntrusted, .serverCertificateHasUnknownRoot,
+             .serverCertificateNotYetValid:
+            return "Google Books ile güvenli bağlantı kurulamadı. Bu genellikle ağdaki VPN, proxy veya SSL incelemesinden kaynaklanır. Bu bağlantıları kapatıp tekrar deneyin."
+        default:
+            return error.localizedDescription
         }
     }
 }

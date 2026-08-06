@@ -11,6 +11,7 @@
 		D846AA26301B351000477B1E /* NetworkKit in Frameworks */ = {isa = PBXBuildFile; productRef = D846AA25301B351000477B1E /* NetworkKit */; };
 		D846AA50301B361E00477B1E /* NetworkRegistration in Frameworks */ = {isa = PBXBuildFile; productRef = D846AA4F301B361E00477B1E /* NetworkRegistration */; };
 		D846AA7E301B3B9300477B1E /* Models in Frameworks */ = {isa = PBXBuildFile; productRef = D846AA7D301B3B9300477B1E /* Models */; };
+		E00000010000000000000001 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = E00000020000000000000002 /* Kingfisher */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E00000010000000000000001 /* Kingfisher in Frameworks */,
 				D846AA26301B351000477B1E /* NetworkKit in Frameworks */,
 				D846A9CE301A90E400477B1E /* NavigatorUI in Frameworks */,
 				D846AA7E301B3B9300477B1E /* Models in Frameworks */,
@@ -90,6 +92,7 @@
 			);
 			name = BookTrace;
 			packageProductDependencies = (
+				E00000020000000000000002 /* Kingfisher */,
 				D846A9CD301A90E400477B1E /* NavigatorUI */,
 				D846AA25301B351000477B1E /* NetworkKit */,
 				D846AA4F301B361E00477B1E /* NetworkRegistration */,
@@ -124,6 +127,7 @@
 			mainGroup = D846A989301A8E4C00477B1E;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				E00000030000000000000003 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				D846A9CC301A90E400477B1E /* XCRemoteSwiftPackageReference "Navigator" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -289,7 +293,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LT5K4Z2RQ4;
+				DEVELOPMENT_TEAM = 7U7CA9M6T2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -325,7 +329,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LT5K4Z2RQ4;
+				DEVELOPMENT_TEAM = 7U7CA9M6T2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -386,6 +390,14 @@
 				minimumVersion = 2.1.3;
 			};
 		};
+		E00000030000000000000003 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -405,6 +417,11 @@
 		D846AA7D301B3B9300477B1E /* Models */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Models;
+		};
+		E00000020000000000000002 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E00000030000000000000003 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

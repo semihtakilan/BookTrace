@@ -13,8 +13,8 @@ extension Container: @retroactive AutoRegistering {
     public func autoRegister() {
         NetworkRegistrations.register()
         
-        Container.shared.bookService.register {
-            BookServiceLive()
+        Container.shared.bookSearching.register {
+            GoogleBooksService()
         }
     }
 }

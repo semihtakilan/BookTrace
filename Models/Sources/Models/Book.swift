@@ -7,47 +7,77 @@
 
 import Foundation
 
-public struct Book: Codable, Sendable {
+/// Uygulama katmanlarının kullandığı, sağlayıcıdan bağımsız kitap entity'si.
+public struct Book: Identifiable, Hashable, Sendable, Decodable {
+    public let id: String
     public let title: String
-    public let subtitle: String?
-    public let authors: [BookAuthor]?
-    public let publishers: [BookPublisher]?
-    public let publishDate: String?
-    public let numberOfPages: Int?
-    public let subjects: [BookSubject]?
-    public let cover: BookCover?
-    public let identifiers: BookIdentifiers?
-    public let url: String?
-}
+    public let authors: [String]
+    public let pageCount: Int?
+    public let coverURL: URL?
+    public let publishedDate: String?
+    public let description: String?
+    public let isbn13: String?
 
-public struct BookAuthor: Codable, Sendable {
-    public let name: String
-    public let url: String?
-}
+    public init(
+        id: String,
+        title: String,
+        authors: [String] = [],
+        pageCount: Int? = nil,
+        coverURL: URL? = nil,
+        publishedDate: String? = nil,
+        description: String? = nil,
+        isbn13: String? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.authors = authors
+        self.pageCount = pageCount
+        self.coverURL = coverURL
+        self.publishedDate = publishedDate
+        self.description = description
+        self.isbn13 = isbn13
+    }
 
-public struct BookPublisher: Codable, Sendable {
-    public let name: String
-}
+    /// Google Books yanıtını doğrudan domain entity'sine decode eder.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
 
-public struct BookSubject: Codable, Sendable {
-    public let name: String
-    public let url: String?
-}
+        let volumeInfo = try container.nestedContainer(keyedBy: VolumeInfoKeys.self, forKey: .volumeInfo)
+        title = try volumeInfo.decode(String.self, forKey: .title)
+        authors = try volumeInfo.decodeIfPresent([String].self, forKey: .authors) ?? []
+        pageCount = try volumeInfo.decodeIfPresent(Int.self, forKey: .pageCount)
+        publishedDate = try volumeInfo.decodeIfPresent(String.self, forKey: .publishedDate)
+        description = try volumeInfo.decodeIfPresent(String.self, forKey: .description)
 
-public struct BookCover: Codable, Sendable {
-    public let small: String?
-    public let medium: String?
-    public let large: String?
-}
+        if let imageLinks = try? volumeInfo.nestedContainer(keyedBy: ImageLinkKeys.self, forKey: .imageLinks) {
+            let rawURL = try imageLinks.decodeIfPresent(String.self, forKey: .thumbnail)
+                ?? imageLinks.decodeIfPresent(String.self, forKey: .smallThumbnail)
+            coverURL = rawURL
+                .map { $0.replacingOccurrences(of: "http://", with: "https://") }
+                .flatMap(URL.init(string:))
+        } else {
+            coverURL = nil
+        }
 
-public struct BookIdentifiers: Codable, Sendable {
-    public let isbn10: [String]?
-    public let isbn13: [String]?
-    public let openlibrary: [String]?
+        let identifiers = try volumeInfo.decodeIfPresent([IndustryIdentifier].self, forKey: .industryIdentifiers)
+        isbn13 = identifiers?.first(where: { $0.type == "ISBN_13" })?.identifier
+    }
 
-    enum CodingKeys: String, CodingKey {
-        case isbn10 = "isbn_10"
-        case isbn13 = "isbn_13"
-        case openlibrary
+    private enum CodingKeys: String, CodingKey {
+        case id, volumeInfo
+    }
+
+    private enum VolumeInfoKeys: String, CodingKey {
+        case title, authors, pageCount, imageLinks, publishedDate, description, industryIdentifiers
+    }
+
+    private enum ImageLinkKeys: String, CodingKey {
+        case thumbnail, smallThumbnail
+    }
+
+    private struct IndustryIdentifier: Decodable {
+        let type: String
+        let identifier: String
     }
 }

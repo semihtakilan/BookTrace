@@ -10,12 +10,12 @@ import NavigatorUI
 import Models
 
 enum HomeDestinations: NavigationDestination {
-    case bookDetail(BookReference)
+    case bookDetail(Book)
 
     var body: some View {
         switch self {
-        case .bookDetail(let reference):
-            BookDetailView(reference: reference)
+        case .bookDetail(let book):
+            BookDetailView(book: book)
         }
     }
 }

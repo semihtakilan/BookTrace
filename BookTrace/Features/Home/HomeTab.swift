@@ -60,24 +60,25 @@ private struct HomeContentView: View {
                 .padding(.vertical)
             }
         case .failed(let message):
-            Text("Hata: \(message)")
-                .foregroundStyle(.red)
+            ContentUnavailableView {
+                Label("Kitaplar Yüklenemedi", systemImage: "wifi.exclamationmark")
+            } description: {
+                Text(message)
+            } actions: {
+                Button("Tekrar Dene") {
+                    Task { await viewModel.load() }
+                }
+            }
         }
     }
 }
 
 private struct BookCoverCell: View {
-    let book: BookReference
+    let book: Book
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            AsyncImage(url: book.coverURL) { image in
-                image.resizable().aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Color.gray.opacity(0.2)
-            }
-            .frame(width: 100, height: 150)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            RemoteBookCover(url: book.coverURL, width: 100, height: 150, contentMode: .fill)
 
             Text(book.title)
                 .font(.caption.bold())

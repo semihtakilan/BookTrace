@@ -1,3 +1,10 @@
+//
+//  APIEnvironment.swift
+//  NetworkKit
+//
+//  Created by Semih TAKILAN on 06.08.2026.
+//
+
 import Foundation
 
 // MARK: - API Environment
@@ -18,7 +25,7 @@ public enum APIEnvironment: String, CaseIterable, Sendable {
     }
 
     public var baseURL: URL {
-        URL(string: "https://openlibrary.org")!
+        URL(string: "https://www.googleapis.com/books/v1")!
     }
 
     public var timeout: TimeInterval {
@@ -31,9 +38,8 @@ public enum APIEnvironment: String, CaseIterable, Sendable {
 
     public var retryCount: Int {
         switch self {
-        case .development, .testing: return 1
-        case .staging:               return 2
-        case .production:            return 3
+        case .development, .staging, .production: return 3
+        case .testing:                            return 1
         }
     }
 

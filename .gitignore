@@ -63,3 +63,11 @@ playground.xcworkspace
 
 # Swift Package Manager
 # Package.resolved
+
+### Local secrets
+# Keep real credentials out of source control. Commit only an `*.example` template.
+.env
+.env.*
+!.env.example
+Secrets.xcconfig
+**/Secrets.xcconfig

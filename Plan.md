@@ -18,7 +18,7 @@ Uygulamanın omurgası olan durum (state) yönetimini ve veritabanı kurulumunu 
 Dışarıdan veri çekme işlemlerini UI'dan izole edecek, API isteklerini minimize ederek performansı ve ağ kullanımını optimize edeceksin.
 
 *   **3.1. API Servisi:** Google Books API üzerinden ISBN ve metin araması yapacak servisi oluştur.
-*   **3.2. DTO Eşlemesi:** API'den dönen JSON formatını `Domain/Book` yapısına dönüştürecek modelleri yaz.
+*   **3.2. API Yanıt Modelleri (Response):** API'den dönen karmaşık JSON formatını `Domain/Book` yapısına dönüştürecek (map edecek) ağ modellerini (`BookResponse`, vb.) yaz.
 *   **3.3. In-Memory Cache (NSCache) Yöneticisi:** Ana sayfa verilerini ve sık yapılan aramaları cihazın RAM'inde belirli bir süre (TTL - Time to Live) tutacak bağımsız bir cache yöneticisi kurgula.
 *   **3.4. Cache-First (Önce Önbellek) Stratejisi:** Repository katmanını güncelleyerek veriyi önce önbellekten oku. Veri önbellekte yoksa veya süresi dolmuşsa API'ye istek at, dönen yeni veriyi önbelleğe kaydet ve arayüze ilet.
 *   **3.5. Görsel Önbellekleme:** Arayüzde kapak fotoğrafları için Kingfisher entegrasyonunu kurgulayarak ağ üzerinden indirilen görsellerin cihaz diskinde ve belleğinde otomatik saklanmasını sağla.

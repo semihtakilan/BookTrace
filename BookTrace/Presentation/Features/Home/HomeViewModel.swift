@@ -27,7 +27,7 @@ final class HomeViewModel {
         ("subject:fiction", "Kurgu"),
         ("subject:science fiction", "Bilim Kurgu"),
         ("subject:mystery", "Gizem"),
-        ("subject:fantasy", "Fantastik")
+        ("fantasy", "Fantastik")
     ]
 
     init(bookSearching: any BookSearching) {
@@ -35,6 +35,9 @@ final class HomeViewModel {
     }
 
     func load() async {
+        if case .loaded = state { return }
+        if case .loading = state { return }
+        
         state = .loading
         do {
             // Google Books başlangıçta dört eşzamanlı arama yerine sıralı çağrılır;

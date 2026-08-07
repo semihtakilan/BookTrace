@@ -14,7 +14,13 @@ struct BookDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
-                RemoteBookCover(url: book.coverURL, height: 220, contentMode: .fit)
+                RemoteBookCover(
+                    url: book.coverURL,
+                    height: 220,
+                    contentMode: .fit,
+                    fallbackTitle: book.title,
+                    fallbackAuthor: book.author
+                )
 
                 Text(book.title)
                     .font(.title.bold())

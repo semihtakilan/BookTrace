@@ -4,13 +4,12 @@
 //
 
 import Foundation
-import Models
 import NetworkKit
 
 private let googleBooksBaseURL = URL(string: "https://www.googleapis.com/books/v1")!
 
 struct GoogleBooksSearchEndpoint: Endpoint {
-    typealias Response = BookSearchResult
+    typealias Response = GoogleBooksSearchResponse
 
     var path: String = "volumes"
     var queryParameters: [String: String]?

@@ -84,7 +84,14 @@ private struct BookCoverCell: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            RemoteBookCover(url: book.coverURL, width: 100, height: 150, contentMode: .fill)
+            RemoteBookCover(
+                url: book.coverURL,
+                width: 100,
+                height: 150,
+                contentMode: .fill,
+                fallbackTitle: book.title,
+                fallbackAuthor: book.author
+            )
 
             Text(book.title)
                 .font(.caption.bold())

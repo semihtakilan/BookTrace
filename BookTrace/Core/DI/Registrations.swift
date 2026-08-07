@@ -20,9 +20,16 @@ extension Container: @retroactive AutoRegistering {
 extension Container {
     var bookSearching: Factory<any BookSearching> {
         self {
-            GoogleBooksService(networkService: self.networkService())
+            CacheFirstBookSearching(
+                remote: GoogleBooksService(networkService: self.networkService()),
+                cache: self.bookSearchCache()
+            )
         }
         .singleton
+    }
+
+    var bookSearchCache: Factory<any BookSearchCaching> {
+        self { BookSearchCache() }.singleton
     }
 
     @MainActor

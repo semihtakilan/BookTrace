@@ -35,6 +35,5 @@ private struct ApplicationRootContent: View {
         }
         .animation(.smooth(duration: 0.4), value: routeManager.rootType)
         .environment(routeManager)
-        .navigationRoot(routeManager.navigator)
     }
 }

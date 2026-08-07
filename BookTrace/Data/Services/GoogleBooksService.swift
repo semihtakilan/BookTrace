@@ -21,7 +21,7 @@ final class GoogleBooksService: BookSearching {
         let response = try await networkService.execute(
             GoogleBooksSearchEndpoint(query: query, maxResults: maxResults, apiKey: apiKey)
         )
-        return response.items
+        return response.toBooks()
     }
 
     func findBook(isbn: String) async throws -> Book {

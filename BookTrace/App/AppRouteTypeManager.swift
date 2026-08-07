@@ -14,7 +14,19 @@ final class AppRouteTypeManager {
     private(set) var rootType: AppRootType = .splash
     var selectedTab: AppTab = .home
 
-    let navigator = Navigator(configuration: .init(
+    let homeNavigator = Navigator(configuration: .init(
+        restorationKey: nil,
+        executionDelay: 0.4,
+        verbosity: .warning,
+        autoDestinationMode: true
+    ))
+    let exploreNavigator = Navigator(configuration: .init(
+        restorationKey: nil,
+        executionDelay: 0.4,
+        verbosity: .warning,
+        autoDestinationMode: true
+    ))
+    let profileNavigator = Navigator(configuration: .init(
         restorationKey: nil,
         executionDelay: 0.4,
         verbosity: .warning,

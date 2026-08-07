@@ -2,7 +2,6 @@ import Foundation
 import FactoryKit
 
 // MARK: - NetworkKit Container Extensions
-
 public extension Container {
     var environmentManager: Factory<EnvironmentManager> {
         self { EnvironmentManager() }.singleton

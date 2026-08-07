@@ -10,14 +10,16 @@ import FactoryKit
 
 @main
 struct BookTraceApp: App {
+    private let dependencies: AppDependencies
 
     init() {
         Container.shared.autoRegister()
+        dependencies = AppDependencies(container: .shared)
     }
 
     var body: some Scene {
         WindowGroup {
-            ApplicationRootView()
+            ApplicationRootView(homeViewModel: dependencies.homeViewModel)
         }
     }
 }

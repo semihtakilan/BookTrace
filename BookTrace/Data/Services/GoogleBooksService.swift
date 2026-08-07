@@ -3,16 +3,16 @@
 //  BookTrace
 //
 
-import FactoryKit
 import Models
 import NetworkKit
 
 /// Google Books API'nin uygulama içindeki tek erişim noktası.
 final class GoogleBooksService: BookSearching {
-    @Injected(\.networkService)
-    private var networkService
+    private let networkService: any NetworkServiceProtocol
 
-    nonisolated init() {}
+    init(networkService: any NetworkServiceProtocol) {
+        self.networkService = networkService
+    }
 
     func searchBooks(query: String, maxResults: Int = 20) async throws -> [Book] {
         guard let apiKey = GoogleBooksAPIKey.value else {
@@ -28,11 +28,5 @@ final class GoogleBooksService: BookSearching {
         let books = try await searchBooks(query: "isbn:\(isbn)", maxResults: 1)
         guard let book = books.first else { throw NetworkError.notFound() }
         return book
-    }
-}
-
-extension Container {
-    var bookSearching: Factory<any BookSearching> {
-        self { GoogleBooksService() }.singleton
     }
 }

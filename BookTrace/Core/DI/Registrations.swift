@@ -6,15 +6,29 @@
 //
 
 import FactoryKit
+import Models
+import NetworkKit
 import NetworkRegistration
 
 extension Container: @retroactive AutoRegistering {
 
     public func autoRegister() {
         NetworkRegistrations.register()
-        
-        Container.shared.bookSearching.register {
-            GoogleBooksService()
+    }
+}
+
+extension Container {
+    var bookSearching: Factory<any BookSearching> {
+        self {
+            GoogleBooksService(networkService: self.networkService())
+        }
+        .singleton
+    }
+
+    @MainActor
+    var homeViewModel: Factory<HomeViewModel> {
+        self {
+            HomeViewModel(bookSearching: self.bookSearching())
         }
     }
 }

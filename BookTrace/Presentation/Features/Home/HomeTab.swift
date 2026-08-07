@@ -10,9 +10,15 @@ import NavigatorUI
 import Models
 
 struct HomeTab: View {
+    @State private var viewModel: HomeViewModel
+
+    init(viewModel: HomeViewModel) {
+        _viewModel = State(initialValue: viewModel)
+    }
+
     var body: some View {
         ManagedNavigationStack {
-            HomeContentView()
+            HomeContentView(viewModel: viewModel)
         }
     }
 }
@@ -21,7 +27,7 @@ private struct HomeContentView: View {
     @Environment(\.navigator)
     private var navigator
 
-    @State private var viewModel = HomeViewModel()
+    @Bindable var viewModel: HomeViewModel
 
     var body: some View {
         content

@@ -2,7 +2,6 @@ import Foundation
 import FactoryKit
 
 // MARK: - Endpoint Protocol
-
 public protocol Endpoint: Sendable {
     associatedtype Response: Decodable & Sendable
     var path: String { get set }

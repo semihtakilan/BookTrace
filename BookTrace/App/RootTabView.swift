@@ -9,11 +9,12 @@ import SwiftUI
 
 struct RootTabView: View {
     @Environment(AppRouteTypeManager.self) private var routeManager
+    let homeViewModel: HomeViewModel
 
     var body: some View {
         @Bindable var routeManager = routeManager
         TabView(selection: $routeManager.selectedTab) {
-            HomeTab()
+            HomeTab(viewModel: homeViewModel)
                 .tabItem { Label("Home", systemImage: "house") }
                 .tag(AppTab.home)
             ExploreTab()

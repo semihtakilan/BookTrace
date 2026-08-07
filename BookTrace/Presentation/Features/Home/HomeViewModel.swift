@@ -7,9 +7,7 @@
 
 import Foundation
 import Observation
-import FactoryKit
 import Models
-import NetworkKit
 
 struct BookCategory: Identifiable, Sendable {
     let id: String
@@ -23,8 +21,7 @@ final class HomeViewModel {
     private(set) var state: ViewState<[BookCategory]> = .idle
 
     @ObservationIgnored
-    @Injected(\.bookSearching)
-    private var bookSearching
+    private let bookSearching: any BookSearching
 
     private let categories: [(key: String, displayName: String)] = [
         ("subject:fiction", "Kurgu"),
@@ -32,6 +29,10 @@ final class HomeViewModel {
         ("subject:mystery", "Gizem"),
         ("subject:fantasy", "Fantastik")
     ]
+
+    init(bookSearching: any BookSearching) {
+        self.bookSearching = bookSearching
+    }
 
     func load() async {
         state = .loading
@@ -52,26 +53,6 @@ final class HomeViewModel {
     }
 
     private func userFacingMessage(for error: Error) -> String {
-        if case NetworkError.serverError(let statusCode) = error, statusCode == 503 {
-            return "Google Books geçici olarak kullanılamıyor. İstek otomatik olarak yeniden denendi; lütfen kısa süre sonra tekrar deneyin."
-        }
-
-        if case NetworkError.httpError(let statusCode, _, _) = error, statusCode == 503 {
-            return "Google Books geçici olarak kullanılamıyor. İstek otomatik olarak yeniden denendi; lütfen kısa süre sonra tekrar deneyin."
-        }
-
-        guard case let NetworkError.networkError(underlying) = error,
-              let urlError = underlying as? URLError else {
-            return error.localizedDescription
-        }
-
-        switch urlError.code {
-        case .secureConnectionFailed, .serverCertificateHasBadDate,
-             .serverCertificateUntrusted, .serverCertificateHasUnknownRoot,
-             .serverCertificateNotYetValid:
-            return "Google Books ile güvenli bağlantı kurulamadı. Bu genellikle ağdaki VPN, proxy veya SSL incelemesinden kaynaklanır. Bu bağlantıları kapatıp tekrar deneyin."
-        default:
-            return error.localizedDescription
-        }
+        error.localizedDescription
     }
 }

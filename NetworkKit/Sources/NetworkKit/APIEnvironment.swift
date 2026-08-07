@@ -8,7 +8,6 @@
 import Foundation
 
 // MARK: - API Environment
-
 public enum APIEnvironment: String, CaseIterable, Sendable {
     case development = "dev"
     case staging = "staging"

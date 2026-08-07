@@ -26,6 +26,14 @@ extension Container {
     }
 
     @MainActor
+    var bookRepository: Factory<any BookRepository> {
+        self {
+            fatalError("BookRepository is registered when AppDependencies creates the SwiftData container.")
+        }
+        .singleton
+    }
+
+    @MainActor
     var homeViewModel: Factory<HomeViewModel> {
         self {
             HomeViewModel(bookSearching: self.bookSearching())

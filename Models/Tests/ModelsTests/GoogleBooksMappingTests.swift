@@ -53,6 +53,15 @@ struct GoogleBooksMappingTests {
         #expect(repository.receivedQuery == nil)
     }
 
+    @Test func localReadingMetadataHasSafeDefaults() {
+        let book = Book(id: "book-3", title: "Domain Driven Design")
+
+        #expect(book.status == .toRead)
+        #expect(!book.isFavorite)
+        #expect(book.currentProgress == 0)
+        #expect(book.author.isEmpty)
+    }
+
     private func decodeBook(_ json: String) throws -> Book {
         try JSONDecoder().decode(Book.self, from: Data(json.utf8))
     }

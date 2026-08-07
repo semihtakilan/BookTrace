@@ -4,6 +4,7 @@
 //
 
 import FactoryKit
+import SwiftData
 
 /// Uygulamanın composition root'u.
 ///
@@ -13,8 +14,22 @@ import FactoryKit
 @MainActor
 struct AppDependencies {
     let homeViewModel: HomeViewModel
+    let modelContainer: ModelContainer
 
     init(container: Container) {
+        let persistentContainer: ModelContainer
+        do {
+            persistentContainer = try ModelContainer(for: LocalBookModel.self)
+        } catch {
+            fatalError("Unable to create the local book library: \(error)")
+        }
+
+        modelContainer = persistentContainer
+        let repository = LocalBookRepositoryImpl(modelContext: persistentContainer.mainContext)
+        container.bookRepository.register {
+            repository
+        }
+
         homeViewModel = container.homeViewModel()
     }
 }

@@ -17,6 +17,13 @@ public struct Book: Identifiable, Hashable, Sendable, Decodable {
     public let publishedDate: String?
     public let description: String?
     public let isbn13: String?
+    public let status: ReadingStatus
+    public let isFavorite: Bool
+    public let currentProgress: Int
+
+    public var author: String {
+        authors.joined(separator: ", ")
+    }
 
     public init(
         id: String,
@@ -26,7 +33,10 @@ public struct Book: Identifiable, Hashable, Sendable, Decodable {
         coverURL: URL? = nil,
         publishedDate: String? = nil,
         description: String? = nil,
-        isbn13: String? = nil
+        isbn13: String? = nil,
+        status: ReadingStatus = .toRead,
+        isFavorite: Bool = false,
+        currentProgress: Int = 0
     ) {
         self.id = id
         self.title = title
@@ -36,6 +46,9 @@ public struct Book: Identifiable, Hashable, Sendable, Decodable {
         self.publishedDate = publishedDate
         self.description = description
         self.isbn13 = isbn13
+        self.status = status
+        self.isFavorite = isFavorite
+        self.currentProgress = max(0, currentProgress)
     }
 
     /// Google Books yanıtını doğrudan domain entity'sine decode eder.
@@ -62,6 +75,9 @@ public struct Book: Identifiable, Hashable, Sendable, Decodable {
 
         let identifiers = try volumeInfo.decodeIfPresent([IndustryIdentifier].self, forKey: .industryIdentifiers)
         isbn13 = identifiers?.first(where: { $0.type == "ISBN_13" })?.identifier
+        status = .toRead
+        isFavorite = false
+        currentProgress = 0
     }
 
     private enum CodingKeys: String, CodingKey {

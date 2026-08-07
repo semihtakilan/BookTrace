@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 import FactoryKit
 
 @main
@@ -20,6 +21,7 @@ struct BookTraceApp: App {
     var body: some Scene {
         WindowGroup {
             ApplicationRootView(homeViewModel: dependencies.homeViewModel)
+                .modelContainer(dependencies.modelContainer)
         }
     }
 }

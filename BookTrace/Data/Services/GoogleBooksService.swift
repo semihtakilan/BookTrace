@@ -15,7 +15,7 @@ final class GoogleBooksService: BookSearching {
     }
 
     func searchBooks(query: String, maxResults: Int = 20) async throws -> [Book] {
-        guard let apiKey = GoogleBooksAPIKey.value else {
+        guard let apiKey = await GoogleBooksAPIKey.value else {
             throw GoogleBooksServiceError.missingAPIKey
         }
         let response = try await networkService.execute(

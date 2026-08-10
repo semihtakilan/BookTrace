@@ -1,12 +1,10 @@
 import Foundation
 
-/// Book arama sonuçlarını saklayan altyapı sözleşmesi.
 public protocol BookSearchCaching: Sendable {
     func books(for key: String) -> [Book]?
     func store(_ books: [Book], for key: String)
 }
 
-/// Ağ isteğini yalnızca cache'te güncel veri olmadığında yapan repository decorator'ı.
 public struct CacheFirstBookSearching: BookSearching, Sendable {
     private let remote: any BookSearching
     private let cache: any BookSearchCaching

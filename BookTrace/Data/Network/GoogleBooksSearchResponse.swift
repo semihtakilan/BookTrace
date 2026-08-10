@@ -53,7 +53,7 @@ struct GoogleBooksVolumeInfo: Decodable, Sendable {
     let description: String?
     let industryIdentifiers: [GoogleBooksIndustryIdentifier]?
 
-    var coverURL: URL? {
+    nonisolated var coverURL: URL? {
         let rawURL = imageLinks?.thumbnail ?? imageLinks?.smallThumbnail
         return rawURL
             .map { $0.replacingOccurrences(of: "http://", with: "https://") }

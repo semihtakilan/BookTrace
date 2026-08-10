@@ -19,7 +19,6 @@ public struct SearchBooksUseCase: Sendable {
         self.repository = repository
     }
 
-    /// Boş aramayı ağ isteğine çevirmeden sonuçsuz kabul eder.
     public func execute(query: String, maxResults: Int = 20) async throws -> [Book] {
         let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedQuery.isEmpty else { return [] }

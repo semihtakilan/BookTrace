@@ -73,3 +73,6 @@ playground.xcworkspace
 !.env.example
 Secrets.xcconfig
 **/Secrets.xcconfig
+
+### Agent Rules
+.agents/

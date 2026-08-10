@@ -1,6 +1,5 @@
 import Foundation
 
-/// Kullanıcının yerel kitaplığını yöneten domain sözleşmesi.
 @MainActor
 public protocol BookRepository: AnyObject {
     func add(_ book: Book) throws

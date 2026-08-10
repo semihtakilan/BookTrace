@@ -7,8 +7,7 @@
 
 import Foundation
 
-/// Uygulama katmanlarının kullandığı, sağlayıcıdan bağımsız kitap entity'si.
-public struct Book: Identifiable, Hashable, Sendable {
+public struct Book: Identifiable, Hashable, Sendable, Codable {
     public let id: String
     public let title: String
     public let authors: [String]

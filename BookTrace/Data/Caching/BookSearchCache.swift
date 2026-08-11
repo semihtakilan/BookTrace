@@ -24,7 +24,6 @@ final class BookSearchCache: BookSearchCaching, @unchecked Sendable {
     
     private func fileURL(for key: String) -> URL {
         let cacheDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        // Dosya isminde geçersiz karakter olmaması için key'i base64'e çeviriyoruz
         let safeKey = Data(key.utf8).base64EncodedString()
         return cacheDirectory.appendingPathComponent("BookSearchCache_\(safeKey).json")
     }
@@ -38,7 +37,6 @@ final class BookSearchCache: BookSearchCaching, @unchecked Sendable {
             if Date() < entry.expiryDate {
                 return entry.books
             } else {
-                // Süresi geçmişse dosyayı sil
                 try? fileManager.removeItem(at: url)
                 return nil
             }

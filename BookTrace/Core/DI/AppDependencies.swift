@@ -19,7 +19,7 @@ struct AppDependencies {
     init(container: Container) {
         let persistentContainer: ModelContainer
         do {
-            persistentContainer = try ModelContainer(for: LocalBookModel.self)
+            persistentContainer = try ModelContainer(for: LocalBookModel.self, LocalCategoryModel.self)
         } catch {
             fatalError("Unable to create the local book library: \(error)")
         }

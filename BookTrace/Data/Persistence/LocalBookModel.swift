@@ -21,6 +21,13 @@ final class LocalBookModel {
     var statusRawValue: String
     var isFavorite: Bool
     var currentProgress: Int
+    
+    var ownershipRawValue: String
+    var actualReadTime: TimeInterval
+    var dynamicReadingSpeed: Double?
+    var estimatedRemainingTime: TimeInterval?
+    
+    @Relationship(deleteRule: .nullify) var categories: [LocalCategoryModel]
 
     init(book: Book) {
         id = book.id
@@ -34,6 +41,12 @@ final class LocalBookModel {
         statusRawValue = book.status.rawValue
         isFavorite = book.isFavorite
         currentProgress = book.currentProgress
+        
+        ownershipRawValue = book.ownership.rawValue
+        actualReadTime = book.actualReadTime
+        dynamicReadingSpeed = book.dynamicReadingSpeed
+        estimatedRemainingTime = book.estimatedRemainingTime
+        categories = book.categories.map { LocalCategoryModel(category: $0) }
     }
 
     func apply(_ book: Book) {
@@ -47,6 +60,12 @@ final class LocalBookModel {
         statusRawValue = book.status.rawValue
         isFavorite = book.isFavorite
         currentProgress = book.currentProgress
+        
+        ownershipRawValue = book.ownership.rawValue
+        actualReadTime = book.actualReadTime
+        dynamicReadingSpeed = book.dynamicReadingSpeed
+        estimatedRemainingTime = book.estimatedRemainingTime
+        categories = book.categories.map { LocalCategoryModel(category: $0) }
     }
 
     func toDomain() -> Book {
@@ -61,7 +80,12 @@ final class LocalBookModel {
             isbn13: isbn13,
             status: ReadingStatus(rawValue: statusRawValue) ?? .toRead,
             isFavorite: isFavorite,
-            currentProgress: currentProgress
+            currentProgress: currentProgress,
+            ownership: OwnershipStatus(rawValue: ownershipRawValue) ?? .notOwned,
+            categories: categories.map { $0.toDomain() },
+            actualReadTime: actualReadTime,
+            dynamicReadingSpeed: dynamicReadingSpeed,
+            estimatedRemainingTime: estimatedRemainingTime
         )
     }
 }

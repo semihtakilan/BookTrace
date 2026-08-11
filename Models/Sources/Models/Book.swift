@@ -19,6 +19,11 @@ public struct Book: Identifiable, Hashable, Sendable, Codable {
     public let status: ReadingStatus
     public let isFavorite: Bool
     public let currentProgress: Int
+    public let ownership: OwnershipStatus
+    public let categories: [Category]
+    public let actualReadTime: TimeInterval
+    public let dynamicReadingSpeed: Double?
+    public let estimatedRemainingTime: TimeInterval?
 
     public var author: String {
         authors.joined(separator: ", ")
@@ -35,7 +40,12 @@ public struct Book: Identifiable, Hashable, Sendable, Codable {
         isbn13: String? = nil,
         status: ReadingStatus = .toRead,
         isFavorite: Bool = false,
-        currentProgress: Int = 0
+        currentProgress: Int = 0,
+        ownership: OwnershipStatus = .notOwned,
+        categories: [Category] = [],
+        actualReadTime: TimeInterval = 0,
+        dynamicReadingSpeed: Double? = nil,
+        estimatedRemainingTime: TimeInterval? = nil
     ) {
         self.id = id
         self.title = title
@@ -48,5 +58,10 @@ public struct Book: Identifiable, Hashable, Sendable, Codable {
         self.status = status
         self.isFavorite = isFavorite
         self.currentProgress = max(0, currentProgress)
+        self.ownership = ownership
+        self.categories = categories
+        self.actualReadTime = actualReadTime
+        self.dynamicReadingSpeed = dynamicReadingSpeed
+        self.estimatedRemainingTime = estimatedRemainingTime
     }
 }

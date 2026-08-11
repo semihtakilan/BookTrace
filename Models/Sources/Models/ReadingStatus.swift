@@ -1,8 +1,11 @@
 import Foundation
 
 public enum ReadingStatus: String, CaseIterable, Codable, Sendable {
+    case library
+    case wishlist
     case toRead
     case reading
-    case read
-    case dnf
+    case finished
+    case abandoned
+    case starred
 }

@@ -46,4 +46,11 @@ extension Container {
             BooksViewModel(bookRepository: self.bookRepository())
         }
     }
+
+    @MainActor
+    var exploreViewModel: Factory<ExploreViewModel> {
+        self {
+            ExploreViewModel(bookSearching: self.bookSearching())
+        }
+    }
 }

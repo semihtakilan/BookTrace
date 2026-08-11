@@ -11,6 +11,7 @@ import NavigatorUI
 struct RootTabView: View {
     @Bindable var routeManager: AppRouteTypeManager
     let booksViewModel: BooksViewModel
+    let exploreViewModel: ExploreViewModel
 
     var body: some View {
         TabView(selection: $routeManager.selectedTab) {
@@ -18,7 +19,7 @@ struct RootTabView: View {
                 .navigationRoot(routeManager.booksNavigator)
                 .tabItem { Label("Library", systemImage: "books.vertical") }
                 .tag(AppTab.books)
-            ExploreTab()
+            ExploreTab(viewModel: exploreViewModel)
                 .navigationRoot(routeManager.exploreNavigator)
                 .tabItem { Label("Explore", systemImage: "magnifyingglass") }
                 .tag(AppTab.explore)

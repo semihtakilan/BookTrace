@@ -11,9 +11,10 @@ import NavigatorUI
 struct ApplicationRootView: View {
     @State private var routeManager = AppRouteTypeManager()
     let booksViewModel: BooksViewModel
+    let exploreViewModel: ExploreViewModel
 
     var body: some View {
-        ApplicationRootContent(routeManager: routeManager, booksViewModel: booksViewModel)
+        ApplicationRootContent(routeManager: routeManager, booksViewModel: booksViewModel, exploreViewModel: exploreViewModel)
             .task {
                 await routeManager.bootstrap()
             }
@@ -23,6 +24,7 @@ struct ApplicationRootView: View {
 private struct ApplicationRootContent: View {
     @Bindable var routeManager: AppRouteTypeManager
     let booksViewModel: BooksViewModel
+    let exploreViewModel: ExploreViewModel
 
     var body: some View {
         Group {
@@ -30,7 +32,7 @@ private struct ApplicationRootContent: View {
             case .splash:
                 SplashView()
             case .tabbed:
-                RootTabView(routeManager: routeManager, booksViewModel: booksViewModel)
+                RootTabView(routeManager: routeManager, booksViewModel: booksViewModel, exploreViewModel: exploreViewModel)
             }
         }
         .animation(.smooth(duration: 0.4), value: routeManager.rootType)

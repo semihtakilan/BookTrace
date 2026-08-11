@@ -16,6 +16,7 @@ import SwiftData
 @MainActor
 struct AppDependencies {
     let booksViewModel: BooksViewModel
+    let exploreViewModel: ExploreViewModel
     let modelContainer: ModelContainer
 
     init(container: Container) {
@@ -33,5 +34,6 @@ struct AppDependencies {
         }
 
         booksViewModel = container.booksViewModel()
+        exploreViewModel = container.exploreViewModel()
     }
 }

@@ -1,6 +1,8 @@
 //
 //  GoogleBooksEndpoint.swift
-//  BookTrace
+//  Network
+//
+//  Created by Semih TAKILAN on 06.08.2026.
 //
 
 import Foundation

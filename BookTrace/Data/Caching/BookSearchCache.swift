@@ -1,6 +1,8 @@
 //
 //  BookSearchCache.swift
-//  BookTrace
+//  Caching
+//
+//  Created by Semih TAKILAN on 07.08.2026.
 //
 
 import Foundation

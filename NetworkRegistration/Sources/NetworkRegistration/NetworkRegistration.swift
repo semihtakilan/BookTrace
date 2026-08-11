@@ -1,8 +1,8 @@
 //
-//  NetworkRegistration
+//  NetworkRegistration.swift
 //  NetworkRegistration
 //
-//  Created by Batuhan Baran on 1.07.2025.
+//  Created by Semih TAKILAN on 30.07.2026.
 //
 
 import Foundation

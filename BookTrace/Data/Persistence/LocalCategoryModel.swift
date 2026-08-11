@@ -1,6 +1,6 @@
 //
 //  LocalCategoryModel.swift
-//  BookTrace
+//  Persistence
 //
 //  Created by Semih TAKILAN on 11.08.2026.
 //

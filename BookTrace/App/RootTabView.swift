@@ -1,24 +1,23 @@
 //
 //  RootTabView.swift
-//  BookTrace
+//  App
 //
-//  Created by Batuhan Baran on 30.07.2026.
+//  Created by Semih TAKILAN on 29.07.2026.
 //
 
 import SwiftUI
 import NavigatorUI
 
 struct RootTabView: View {
-    @Environment(AppRouteTypeManager.self) private var routeManager
-    let homeViewModel: HomeViewModel
+    @Bindable var routeManager: AppRouteTypeManager
+    let booksViewModel: BooksViewModel
 
     var body: some View {
-        @Bindable var routeManager = routeManager
         TabView(selection: $routeManager.selectedTab) {
-            HomeTab(viewModel: homeViewModel)
-                .navigationRoot(routeManager.homeNavigator)
-                .tabItem { Label("Home", systemImage: "house") }
-                .tag(AppTab.home)
+            BooksTab(viewModel: booksViewModel)
+                .navigationRoot(routeManager.booksNavigator)
+                .tabItem { Label("Library", systemImage: "books.vertical") }
+                .tag(AppTab.books)
             ExploreTab()
                 .navigationRoot(routeManager.exploreNavigator)
                 .tabItem { Label("Explore", systemImage: "magnifyingglass") }

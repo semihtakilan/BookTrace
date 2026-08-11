@@ -1,8 +1,8 @@
 //
 //  SplashView.swift
-//  BookTrace
+//  Splash
 //
-//  Created by Batuhan Baran on 30.07.2026.
+//  Created by Semih TAKILAN on 07.08.2026.
 //
 
 import SwiftUI

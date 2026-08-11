@@ -1,8 +1,8 @@
 //
 //  ApplicationRootView.swift
-//  BookTrace
+//  App
 //
-//  Created by Batuhan Baran on 30.07.2026.
+//  Created by Semih TAKILAN on 29.07.2026.
 //
 
 import SwiftUI
@@ -10,10 +10,10 @@ import NavigatorUI
 
 struct ApplicationRootView: View {
     @State private var routeManager = AppRouteTypeManager()
-    let homeViewModel: HomeViewModel
+    let booksViewModel: BooksViewModel
 
     var body: some View {
-        ApplicationRootContent(routeManager: routeManager, homeViewModel: homeViewModel)
+        ApplicationRootContent(routeManager: routeManager, booksViewModel: booksViewModel)
             .task {
                 await routeManager.bootstrap()
             }
@@ -22,7 +22,7 @@ struct ApplicationRootView: View {
 
 private struct ApplicationRootContent: View {
     @Bindable var routeManager: AppRouteTypeManager
-    let homeViewModel: HomeViewModel
+    let booksViewModel: BooksViewModel
 
     var body: some View {
         Group {
@@ -30,7 +30,7 @@ private struct ApplicationRootContent: View {
             case .splash:
                 SplashView()
             case .tabbed:
-                RootTabView(homeViewModel: homeViewModel)
+                RootTabView(routeManager: routeManager, booksViewModel: booksViewModel)
             }
         }
         .animation(.smooth(duration: 0.4), value: routeManager.rootType)

@@ -1,6 +1,8 @@
 //
 //  LocalBookRepositoryImpl.swift
-//  BookTrace
+//  Persistence
+//
+//  Created by Semih TAKILAN on 07.08.2026.
 //
 
 import Foundation

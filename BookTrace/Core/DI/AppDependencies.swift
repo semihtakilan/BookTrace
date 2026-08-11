@@ -1,6 +1,8 @@
 //
 //  AppDependencies.swift
-//  BookTrace
+//  DI
+//
+//  Created by Semih TAKILAN on 07.08.2026.
 //
 
 import FactoryKit
@@ -13,7 +15,7 @@ import SwiftData
 /// initializer üzerinden alır.
 @MainActor
 struct AppDependencies {
-    let homeViewModel: HomeViewModel
+    let booksViewModel: BooksViewModel
     let modelContainer: ModelContainer
 
     init(container: Container) {
@@ -30,6 +32,6 @@ struct AppDependencies {
             repository
         }
 
-        homeViewModel = container.homeViewModel()
+        booksViewModel = container.booksViewModel()
     }
 }

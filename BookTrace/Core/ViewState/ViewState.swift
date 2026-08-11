@@ -1,8 +1,8 @@
 //
 //  ViewState.swift
-//  BookTrace
+//  ViewState
 //
-//  Created by Semih TAKILAN on 31.07.2026.
+//  Created by Semih TAKILAN on 03.08.2026.
 //
 
 import Foundation

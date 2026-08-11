@@ -1,8 +1,8 @@
 //
 //  Registrations.swift
-//  BookTrace
+//  DI
 //
-//  Created by Batuhan Baran on 30.07.2026.
+//  Created by Semih TAKILAN on 30.07.2026.
 //
 
 import FactoryKit
@@ -41,9 +41,9 @@ extension Container {
     }
 
     @MainActor
-    var homeViewModel: Factory<HomeViewModel> {
+    var booksViewModel: Factory<BooksViewModel> {
         self {
-            HomeViewModel(bookSearching: self.bookSearching())
+            BooksViewModel(bookRepository: self.bookRepository())
         }
     }
 }

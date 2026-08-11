@@ -1,6 +1,8 @@
 //
 //  RemoteBookCover.swift
-//  BookTrace
+//  Shared
+//
+//  Created by Semih TAKILAN on 06.08.2026.
 //
 
 import Kingfisher

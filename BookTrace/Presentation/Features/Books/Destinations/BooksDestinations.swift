@@ -1,21 +1,21 @@
 //
-//  HomeDestinations.swift
-//  BookTrace
+//  BooksDestinations.swift
+//  Destinations
 //
-//  Created by Batuhan Baran on 30.07.2026.
+//  Created by Semih TAKILAN on 06.08.2026.
 //
 
 import SwiftUI
 import NavigatorUI
 import Models
 
-enum HomeDestinations: NavigationDestination {
+enum BooksDestinations: NavigationDestination {
     case bookDetail(Book)
 
     var body: some View {
         switch self {
         case .bookDetail(let book):
-            BookDetailView(book: book)
+            Text("Book Detail for \(book.title)")
         }
     }
 }

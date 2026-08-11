@@ -1,6 +1,8 @@
 //
 //  GoogleBooksService.swift
-//  BookTrace
+//  Services
+//
+//  Created by Semih TAKILAN on 06.08.2026.
 //
 
 import Models

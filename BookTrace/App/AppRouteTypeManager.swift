@@ -1,8 +1,8 @@
 //
 //  AppRouteTypeManager.swift
-//  BookTrace
+//  App
 //
-//  Created by Batuhan Baran on 29.07.2026.
+//  Created by Semih TAKILAN on 29.07.2026.
 //
 
 import SwiftUI
@@ -12,9 +12,9 @@ import NavigatorUI
 @Observable
 final class AppRouteTypeManager {
     private(set) var rootType: AppRootType = .splash
-    var selectedTab: AppTab = .home
+    var selectedTab: AppTab = .books
 
-    let homeNavigator = Navigator(configuration: .init(
+    let booksNavigator = Navigator(configuration: .init(
         restorationKey: nil,
         executionDelay: 0.4,
         verbosity: .warning,

@@ -1,8 +1,8 @@
 //
 //  BookDetailView.swift
-//  BookTrace
+//  BookDetail
 //
-//  Created by Semih TAKILAN on 3.08.2026.
+//  Created by Semih TAKILAN on 06.08.2026.
 //
 
 import SwiftUI

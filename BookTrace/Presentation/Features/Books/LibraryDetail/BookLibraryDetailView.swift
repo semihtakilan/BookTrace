@@ -1,0 +1,326 @@
+//
+//  BookLibraryDetailView.swift
+//  LibraryDetail
+//
+//  Created by Semih TAKILAN on 28.08.2026.
+//
+
+import SwiftUI
+import NavigatorUI
+import Models
+
+/// Kütüphanedeki bir kitabın detayı.
+///
+/// Plandaki üç eylem burada toplanır: okuma oturumu başlatmak, okuma durumunu
+/// değiştirmek ve sahiplik durumunu değiştirmek.
+struct BookLibraryDetailView: View {
+    private let entry: LibraryEntry
+
+    @Environment(ViewModelFactory.self) private var viewModelFactory
+
+    init(entry: LibraryEntry) {
+        self.entry = entry
+    }
+
+    var body: some View {
+        BookLibraryDetailContent(
+            viewModel: viewModelFactory.makeLibraryEntryDetailViewModel(entry: entry)
+        )
+    }
+}
+
+private struct BookLibraryDetailContent: View {
+    @State var viewModel: LibraryEntryDetailViewModel
+
+    @Environment(\.navigator) private var navigator
+    @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
+    @State private var isPresentingProgressEditor = false
+    @State private var isConfirmingRemoval = false
+    @State private var progressInput = ""
+
+    private var entry: LibraryEntry { viewModel.entry }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                header
+                actionButtons
+                progressSection
+                if !entry.categories.isEmpty { categoriesSection }
+                sessionsSection
+                if let description = entry.book.description, !description.isEmpty {
+                    aboutSection(description)
+                }
+                removeButton
+            }
+            .padding()
+        }
+        .navigationTitle(entry.book.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .alert("Update progress", isPresented: $isPresentingProgressEditor) {
+            TextField(progressFieldPrompt, text: $progressInput)
+                .keyboardType(.numberPad)
+            Button("Cancel", role: .cancel) {}
+            Button("Save") { commitProgress() }
+        } message: {
+            Text(progressFieldPrompt)
+        }
+        .confirmationDialog(
+            "Remove from library?",
+            isPresented: $isConfirmingRemoval,
+            titleVisibility: .visible
+        ) {
+            Button("Remove", role: .destructive) { viewModel.remove() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Reading sessions recorded for this book will also be deleted.")
+        }
+        .alert(
+            "Something went wrong",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { if !$0 { viewModel.errorMessage = nil } }
+            ),
+            actions: { Button("OK", role: .cancel) { viewModel.errorMessage = nil } },
+            message: { Text(viewModel.errorMessage ?? "") }
+        )
+        .onAppear { viewModel.reload() }
+        // Tam ekran okuma oturumu kapanırken bu ekran "yeniden görünmüş" saymadığı
+        // için onAppear tetiklenmiyor; oturum kaydı buradan yakalanır.
+        .onChange(of: libraryChangeNotifier.revision) { _, _ in viewModel.reload() }
+        .onChange(of: viewModel.wasRemoved) { _, wasRemoved in
+            if wasRemoved { navigator.back() }
+        }
+    }
+
+    // MARK: - Bölümler
+
+    private var header: some View {
+        HStack(alignment: .top, spacing: 16) {
+            RemoteBookCover(
+                url: entry.book.coverURL,
+                width: 110,
+                height: 165,
+                contentMode: .fill,
+                fallbackTitle: entry.book.title,
+                fallbackAuthor: entry.book.author
+            )
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(entry.book.title)
+                    .font(.title3.bold())
+
+                Text(entry.book.author)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                if let year = entry.book.publicationYear {
+                    Text(year).font(.footnote).foregroundStyle(.secondary)
+                }
+
+                if let pageCount = entry.effectivePageCount {
+                    Text("\(pageCount) pages").font(.footnote).foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var actionButtons: some View {
+        VStack(spacing: 12) {
+            Button {
+                navigator.navigate(to: BooksDestinations.readingSession(entry))
+            } label: {
+                Label("Reading Mode", systemImage: "timer")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+
+            HStack(spacing: 12) {
+                Menu {
+                    Picker("Reading Status", selection: readingStatusBinding) {
+                        ForEach(ReadingStatus.allCases, id: \.self) { status in
+                            Label(status.displayName, systemImage: status.systemImage).tag(status)
+                        }
+                    }
+                } label: {
+                    ActionTile(
+                        caption: "Reading Status",
+                        value: entry.readingStatus.displayName,
+                        systemImage: entry.readingStatus.systemImage
+                    )
+                }
+
+                Menu {
+                    Picker("Ownership Status", selection: ownershipStatusBinding) {
+                        ForEach(OwnershipStatus.allCases, id: \.self) { status in
+                            Label(status.displayName, systemImage: status.systemImage).tag(status)
+                        }
+                    }
+                } label: {
+                    ActionTile(
+                        caption: "Ownership",
+                        value: entry.ownershipStatus.displayName,
+                        systemImage: entry.ownershipStatus.systemImage
+                    )
+                }
+            }
+        }
+    }
+
+    private var progressSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Progress").font(.headline)
+                Spacer()
+                Picker("Progress Type", selection: progressTypeBinding) {
+                    ForEach(ProgressType.allCases, id: \.self) { type in
+                        Text(type.displayName).tag(type)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 190)
+            }
+
+            ReadingProgressView(entry: entry)
+
+            Button("Update progress") {
+                progressInput = currentProgressInput
+                isPresentingProgressEditor = true
+            }
+            .font(.subheadline)
+            .disabled(entry.effectivePageCount == nil)
+        }
+        .padding()
+        .background(.regularMaterial, in: .rect(cornerRadius: 16))
+    }
+
+    private var categoriesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Categories").font(.headline)
+            FlowingTags(names: entry.categories.map(\.name))
+        }
+    }
+
+    private var sessionsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Reading Sessions").font(.headline)
+                Spacer()
+                if !entry.readingSessions.isEmpty {
+                    Text("\(DurationFormatter.compact(seconds: entry.totalReadSeconds)) · \(entry.totalPagesRead) pages")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if entry.readingSessions.isEmpty {
+                Text("No sessions yet. Start Reading Mode to record one — the time estimate gets personal after your first session.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(entry.readingSessions.reversed()) { session in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(session.startDate, format: .dateTime.day().month().year().hour().minute())
+                                .font(.subheadline)
+                            Text("\(session.pagesRead) pages")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(DurationFormatter.compact(seconds: session.durationSeconds))
+                            .font(.subheadline.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                    Divider()
+                }
+            }
+        }
+    }
+
+    private func aboutSection(_ description: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("About").font(.headline)
+            Text(description).font(.body)
+        }
+    }
+
+    private var removeButton: some View {
+        Button(role: .destructive) {
+            isConfirmingRemoval = true
+        } label: {
+            Label("Remove from Library", systemImage: "trash")
+                .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+    }
+
+    // MARK: - Binding'ler
+
+    private var readingStatusBinding: Binding<ReadingStatus> {
+        Binding(get: { entry.readingStatus }, set: { viewModel.update(readingStatus: $0) })
+    }
+
+    private var ownershipStatusBinding: Binding<OwnershipStatus> {
+        Binding(get: { entry.ownershipStatus }, set: { viewModel.update(ownershipStatus: $0) })
+    }
+
+    private var progressTypeBinding: Binding<ProgressType> {
+        Binding(get: { entry.progressType }, set: { viewModel.update(progressType: $0) })
+    }
+
+    // MARK: - İlerleme girişi
+
+    private var progressFieldPrompt: String {
+        switch entry.progressType {
+        case .pages:      "Current page (0–\(entry.effectivePageCount ?? 0))"
+        case .percentage: "Completed percentage (0–100)"
+        }
+    }
+
+    private var currentProgressInput: String {
+        switch entry.progressType {
+        case .pages:      String(entry.currentPage)
+        case .percentage: String(entry.progressPercentage ?? 0)
+        }
+    }
+
+    /// Yüzde girişi kayda sayfaya çevrilerek yazılır; ilerleme tek birimde tutulur.
+    private func commitProgress() {
+        guard let value = Int(progressInput.trimmingCharacters(in: .whitespaces)) else { return }
+
+        switch entry.progressType {
+        case .pages:
+            viewModel.update(currentPage: value)
+        case .percentage:
+            guard let total = entry.effectivePageCount else { return }
+            let clampedPercentage = min(max(0, value), 100)
+            viewModel.update(currentPage: Int((Double(total) * Double(clampedPercentage) / 100).rounded()))
+        }
+    }
+}
+
+private struct ActionTile: View {
+    let caption: String
+    let value: String
+    let systemImage: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label(caption, systemImage: systemImage)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(.regularMaterial, in: .rect(cornerRadius: 12))
+    }
+}

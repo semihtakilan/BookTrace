@@ -7,55 +7,57 @@
 
 import Foundation
 import Models
-import NetworkKit
 
-/// Google Books aramalarını diske kaydederek uygulama kapanıp açıldığında da hatırlanmasını sağlar.
+/// Google Books sorgularını diske yazarak uygulama kapanıp açıldığında da hatırlar.
+///
+/// Anahtar biçimini `CacheFirstBookSearching` belirler; burası yalnızca
+/// saklama ve süre dolumuyla ilgilenir.
 final class BookSearchCache: BookSearchCaching, @unchecked Sendable {
     private let timeToLive: TimeInterval
     private let fileManager = FileManager.default
-    
+    private let directoryURL: URL
+
     private struct CacheEntry: Codable {
-        let books: [Book]
+        let books: [BookReference]
         let expiryDate: Date
     }
 
-    // Varsayılan olarak 24 saat (60 * 60 * 24) cache'de tutuyoruz
     init(timeToLive: TimeInterval = 24 * 60 * 60) {
         self.timeToLive = timeToLive
-    }
-    
-    private func fileURL(for key: String) -> URL {
-        let cacheDirectory = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let safeKey = Data(key.utf8).base64EncodedString()
-        return cacheDirectory.appendingPathComponent("BookSearchCache_\(safeKey).json")
+
+        let cachesDirectory = fileManager
+            .urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("BookSearchCache", isDirectory: true)
+        try? fileManager.createDirectory(at: cachesDirectory, withIntermediateDirectories: true)
+        directoryURL = cachesDirectory
     }
 
-    func books(for key: String) -> [Book]? {
+    func books(for key: String) -> [BookReference]? {
         let url = fileURL(for: key)
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        
-        do {
-            let entry = try JSONDecoder().decode(CacheEntry.self, from: data)
-            if Date() < entry.expiryDate {
-                return entry.books
-            } else {
-                try? fileManager.removeItem(at: url)
-                return nil
-            }
-        } catch {
+        guard let data = try? Data(contentsOf: url),
+              let entry = try? JSONDecoder().decode(CacheEntry.self, from: data) else {
             return nil
         }
+
+        guard Date() < entry.expiryDate else {
+            try? fileManager.removeItem(at: url)
+            return nil
+        }
+        return entry.books
     }
 
-    func store(_ books: [Book], for key: String) {
-        let url = fileURL(for: key)
+    func store(_ books: [BookReference], for key: String) {
         let entry = CacheEntry(books: books, expiryDate: Date().addingTimeInterval(timeToLive))
-        
-        do {
-            let data = try JSONEncoder().encode(entry)
-            try data.write(to: url)
-        } catch {
-            print("Failed to write cache for \(key): \(error)")
-        }
+        guard let data = try? JSONEncoder().encode(entry) else { return }
+        try? data.write(to: fileURL(for: key), options: .atomic)
+    }
+
+    /// Anahtarlar `:` ve `"` gibi dosya adında sorun çıkaran karakterler içeriyor,
+    /// bu yüzden base64'e çevriliyor.
+    private func fileURL(for key: String) -> URL {
+        let safeKey = Data(key.utf8)
+            .base64EncodedString()
+            .replacingOccurrences(of: "/", with: "_")
+        return directoryURL.appendingPathComponent("\(safeKey).json")
     }
 }

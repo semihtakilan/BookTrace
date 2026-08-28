@@ -7,9 +7,23 @@
 
 import Foundation
 
+/// Uzak kitap kaynağının Domain sözleşmesi.
+///
+/// Explore'un üç girişi de buradan geçer: serbest metin arama, konu rafı ve ISBN.
 public protocol BookSearching: Sendable {
-    func searchBooks(query: String, maxResults: Int) async throws -> [Book]
-    func findBook(isbn: String) async throws -> Book
+    func searchBooks(query: String, maxResults: Int) async throws -> [BookReference]
+    func books(inSubject subject: String, maxResults: Int) async throws -> [BookReference]
+    func findBook(isbn: String) async throws -> BookReference
+}
+
+public extension BookSearching {
+    func searchBooks(query: String) async throws -> [BookReference] {
+        try await searchBooks(query: query, maxResults: 20)
+    }
+
+    func books(inSubject subject: String) async throws -> [BookReference] {
+        try await books(inSubject: subject, maxResults: 15)
+    }
 }
 
 public struct SearchBooksUseCase: Sendable {
@@ -19,7 +33,7 @@ public struct SearchBooksUseCase: Sendable {
         self.repository = repository
     }
 
-    public func execute(query: String, maxResults: Int = 20) async throws -> [Book] {
+    public func execute(query: String, maxResults: Int = 20) async throws -> [BookReference] {
         let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedQuery.isEmpty else { return [] }
         return try await repository.searchBooks(query: normalizedQuery, maxResults: maxResults)

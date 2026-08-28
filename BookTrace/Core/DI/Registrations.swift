@@ -33,24 +33,26 @@ extension Container {
     }
 
     @MainActor
-    var bookRepository: Factory<any BookRepository> {
+    var libraryRepository: Factory<any LibraryRepository> {
         self {
-            fatalError("BookRepository is registered when AppDependencies creates the SwiftData container.")
+            fatalError("LibraryRepository is registered when AppDependencies creates the SwiftData container.")
         }
         .singleton
     }
 
     @MainActor
-    var booksViewModel: Factory<BooksViewModel> {
-        self {
-            BooksViewModel(bookRepository: self.bookRepository())
-        }
+    var libraryChangeNotifier: Factory<LibraryChangeNotifier> {
+        self { LibraryChangeNotifier() }.singleton
     }
 
     @MainActor
-    var exploreViewModel: Factory<ExploreViewModel> {
+    var viewModelFactory: Factory<ViewModelFactory> {
         self {
-            ExploreViewModel(bookSearching: self.bookSearching())
+            ViewModelFactory(
+                libraryRepository: self.libraryRepository(),
+                bookSearching: self.bookSearching()
+            )
         }
+        .singleton
     }
 }

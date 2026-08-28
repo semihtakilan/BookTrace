@@ -1,62 +1,153 @@
-# Project Plan: BookTrace (iOS)
+# BookTrace — Proje Planı
 
-## Phase 1: Project Setup & Infrastructure
-In this phase, you will establish the foundational project skeleton, external dependencies, and modular folder structure.
+## Proje Özeti
 
-*   **1.1. Version Control:** Initialize a local GitHub repository (main branch) at the start of the project[cite: 6]. Execute subsequent phases on separate feature branches[cite: 6].
-*   **1.2. Dependency Management (SPM):** Integrate `Factory` (Dependency Injection), `Navigator` (Routing), and `Kingfisher` (Image Caching) packages[cite: 6].
-*   **1.3. Domain Architecture:** Create `Domain`, `Data`, `Presentation`, and `Core` directories strictly adhering to Clean Architecture standards[cite: 6].
+Google Books API'sini kullanan, kitap keşfi, kişisel kütüphane yönetimi ve okuma
+takibi sunan bir iOS uygulaması. 3 tab: **Books** (kütüphane/okuma takibi),
+**Explore** (arama/kategori/barkod ile keşif), **Profile**.
 
-## Phase 2: Enhanced Data Models & Local Storage (Data Layer)
-You will configure the state management and database setup, which serve as the backbone of the application.
+**Kapsam hedefi:** Ne MVP kadar sınırlı ne de tüm fazları kasan bir kapsam —
+portföyde iyi durabilecek, öğretici, dengeli bir uygulama.
 
-*   **2.1. Define Domain Entities:**
-    *   `ReadingStatus` (Enum): Library, Wishlist, To Read, Reading, Finished, Abandoned, Starred.
-    *   `OwnershipStatus` (Enum): Borrowed, Not Owned, Owned.
-    *   `Category` (Entity): Custom user-defined categories.
-    *   `Book` (Entity): Book metadata and reading metrics. (Add properties for `actualReadTime`, `dynamicReadingSpeed`, and `estimatedRemainingTime` to support the calibration algorithm).
-*   **2.2. SwiftData Configuration:** Convert the `Book` and `Category` entities into SwiftData models and set up the `.modelContainer(for:)`[cite: 6].
-*   **2.3. Local Repository Implementation:** Implement the `BookRepository` protocol using SwiftData and register it within the Dependency Injection container[cite: 6].
+## Mimari Genel Bakış
 
-## Phase 3: Network Layer & Performance Optimization (Cache)
-You will isolate external data fetching from the UI and minimize API requests to optimize performance.
+* **Desen:** MVVM + Repository Pattern, yerel SPM paketleri (`Models`, `NetworkKit`, `NetworkRegistration`)
+* **DI:** FactoryKit. Composition root `AppDependencies`; navigasyon hedeflerinin
+  view model'ları `ViewModelFactory` üzerinden environment'tan gelir.
+* **Navigasyon:** NavigatorUI — her sekmenin kendi `Navigator`'ı var
+* **Ağ Katmanı:** `NetworkService` (actor), interceptor zinciri, `async/await`
+* **Yerel Kalıcılık:** SwiftData — `LocalLibraryEntryModel`, `LocalReadingSessionModel`, `LocalCategoryModel`
+* **Ortak veri tipi:** `BookReference` (volumeId + başlık + yazarlar + kapak + sayfa + konu).
+  Explore'un üç kaynağından (arama/kategori/barkod) gelen kitapları tek bir Detay
+  akışına bağlar. Kütüphane kaydı ise `LibraryEntry` — içinde bir `BookReference`
+  taşır, üzerine yalnızca kullanıcıya ait durumu ekler.
 
-*   **3.1. API Service:** Construct a service to handle ISBN and text-based queries via the Google Books API[cite: 6].
-*   **3.2. API Response Models:** Write pure network models (e.g., `GoogleBooksSearchResponse`) to decode the complex JSON responses, avoiding any backend-oriented terminology[cite: 6]. 
-*   **3.3. In-Memory Cache (NSCache):** Architect an independent cache manager to store frequent search queries in RAM with a specific Time-to-Live (TTL)[cite: 6].
-*   **3.4. Cache-First Strategy:** Read data from the cache first; if missing or expired, fetch from the API and cache the new result[cite: 6].
-*   **3.5. Image Caching:** Implement Kingfisher in the UI layer to automatically handle disk and memory caching for fetched cover images[cite: 6].
-*   **3.6. Unit Testing:** Validate the cache logic and fallback behaviors using comprehensive unit tests[cite: 6].
+### Katman ayrımı
 
-## Phase 4: Tab-Based Navigation & Core UI (Presentation)
-You will build the three main tabs and their respective features. Each tab will utilize its own independent `NavigationStack`.
+Domain tipleri (`BookReference`, `LibraryEntry`, `ReadingSession`, `ReadingSpeedEstimator`)
+test edilebilir olsun diye `Models` paketinde, SwiftData ve UI'dan bağımsız durur.
+SwiftData modelleri uygulama hedefinde yaşar ve Domain tiplerine dönüştürülür.
 
-*   **4.1. Tab 1: Books (Library)**
-    *   **Toolbar:** "Edit" button positioned at the top right.
-    *   **Section 1 (Now Reading):** Displays the currently active book's cover, title, and a progress bar.
-    *   **Section 2 (Library):** Filtered horizontal or vertical lists based on `ReadingStatus` (Library, Wishlist, To Read, Reading, Finished, Abandoned, Starred).
-    *   **Section 3 (Ownership):** Filtered lists based on `OwnershipStatus` (Borrowed, Not Owned, Owned).
-    *   **Section 4 (Categories):** User-defined custom tag/category lists.
-*   **4.2. Tab 2: Explore**
-    *   **Toolbar:** Top right, ordered right-to-left: Barcode Scanner (Camera) button and `+` (Manual Add) button.
-    *   **Search System:** Implement a text field with `Debounce` logic for API calls, and integrate the AVFoundation barcode scanner[cite: 6]. The main list view will remain an Empty State for now.
-*   **4.3. Tab 3: Statistics**
-    *   **Toolbar:** "Settings" button at the top right.
-    *   **Section 1 (Goals):** Time-based daily reading goal (e.g., 0 / 15 mins) and annual book completion goal (e.g., 0 of 12 books).
-    *   **Section 2 (Calendar):** A heatmap/calendar view to visualize daily goal streaks.
-    *   **Section 3 (Trends):** A section with a time-range picker (e.g., "Last 7 Days"). Metric strings must remain static with only the numeric variables changing dynamically (e.g., "Read `X` pages.", "Average reading speed: `X` pages/hour.").
+## Faz 1 — Temel Altyapı ✅
 
-## Phase 5: Reading Session & Custom UI Components
-Core mechanics designed to maximize user experience (UX) and daily retention.
+Network katmanı, `Endpoint` protokolü, DI kurulumu, interceptor zinciri.
 
-*   **5.1. Dynamic Reading Session (Timer & Calibration):** 
-    *   Implement a background timer view that starts when the user begins reading.
-    *   Upon tapping "Finish", prompt the user to input the exact number of pages read.
-    *   **Dynamic Calibration Algorithm:** Calculate the actual reading speed for the session (`Time Spent / Pages Read`). Override the baseline estimate (2 mins/page) with this personalized speed to dynamically recalculate the estimated remaining time for the specific book.
-*   **5.2. Signature Feature (Custom Circular Slider):** Develop the algorithm calculating the angle from a drag gesture's coordinate location[cite: 6].
-*   **5.3. Percentage Snapping:** Automatically lock the slider to specific quarter thresholds (25%, 50%, etc.)[cite: 6].
-*   **5.4. Haptic Feedback:** Integrate appropriate tactile feedback during slider movement and snapping[cite: 6].
+## Faz 2 — Keşif Altyapısı ✅
 
-## Phase 6: Advanced Analytics & iOS Widgets
-*   **6.1. Deep Reading Statistics:** Utilize Swift Charts to generate the heatmap and trend graphs required in Tab 3[cite: 6].
-*   **6.2. iOS Widget Extension:** Design Lock Screen and Home Screen widgets that display the cover and progress of the currently active `.reading` book[cite: 6].
+* `GoogleBooksSearchEndpoint` (`/volumes`) — tek uç nokta, üç fabrika metodu:
+  * `.search(query:)` — serbest metin arama
+  * `.subject(_:)` — kategori bazlı keşif (`q=subject:"..."`)
+  * `.isbn(_:)` — barkoddan gelen ISBN ile tek kitap
+* `CacheFirstBookSearching` — arama/konu/ISBN sonuçlarını 24 saat diskte tutar
+* Kapak görselleri Kingfisher ile önbelleklenir
+
+## Faz 3 — Explore Tab (Arama + Kategori + Barkod) ✅
+
+* Arama çubuğu — 500 ms debounce
+* Kategori rafları — 6 konu, paralel yüklenir, her raf kendi hata/tekrar dene durumunu taşır
+* Barkod tarama (AVFoundation) → ISBN → kitap
+* Üçü de aynı yere çıkıyor: Kitap Detay ekranı (`BookReference` ile)
+
+## Faz 4 — Kitap Detay & Kütüphaneye Ekleme ✅
+
+* Detayda açıklama, konu etiketleri, sayfa sayısı, ISBN, yayın tarihi
+* "Add to Library" → form:
+  * Reading Status: Wishlist, To Read, Reading, Finished, Abandoned
+  * Progress Type: Pages / Percentage
+  * Page Count girişi
+  * Ownership Status: Borrowed, Not Owned, Owned
+  * Categories (kullanıcı etiketleri + kitabın konularından öneriler)
+* Kitap zaten kütüphanedeyse form mevcut seçimlerle dolar ve kaydı günceller;
+  ilerleme ve okuma oturumları korunur.
+
+### Veri modeli
+
+```swift
+enum ReadingStatus  { case wishlist, toRead, reading, finished, abandoned }
+enum OwnershipStatus { case borrowed, notOwned, owned }
+enum ProgressType   { case pages, percentage }
+
+struct LibraryEntry {
+    var book: BookReference          // id == book.id
+    var readingStatus: ReadingStatus
+    var ownershipStatus: OwnershipStatus
+    var progressType: ProgressType
+    var pageCount: Int?              // kullanıcının girdiği; yoksa book.pageCount
+    var currentPage: Int             // her zaman sayfa cinsinden
+    var categories: [Category]
+    var addedDate: Date
+    var readingSessions: [ReadingSession]
+}
+```
+
+**Not:** `progressType` yalnızca giriş ve gösterim birimini belirler. İlerleme
+kayıtta her zaman sayfa olarak tutulur ki okuma oturumları ve hız tahmini tek
+birim üzerinden hesaplanabilsin.
+
+## Faz 5 — Books Tab (Kütüphane Listesi) ✅
+
+* Üstte "Now Reading" bölümü: kapak, ilerleme çubuğu, tahmini kalan süre
+* Reading Status, Ownership Status ve Categories bölümleri — yatay raflar
+* "Edit" ile raflardan kitap silme
+* Kitaba dokununca `BookLibraryDetailView`, plandaki üç eylem:
+  * Reading Mode
+  * Reading Status (değiştirmek için)
+  * Ownership Status (değiştirmek için)
+* Ayrıca: ilerleme güncelleme, oturum geçmişi, kütüphaneden çıkarma
+
+## Faz 6 — Reading Mode (Okuma Oturumu Sayaç Ekranı) ✅
+
+* Tam ekran sayaç, Pause/Resume
+* Sağ üstte Finish → "kaç sayfa okudunuz" sayfası, Discard ve Save
+* Save → yeni `ReadingSession`, `currentPage` ilerler, gerekirse durum
+  `.reading`/`.finished` olur
+
+```swift
+struct ReadingSession {
+    let id: String
+    let startDate: Date
+    let durationSeconds: Int
+    let pagesRead: Int
+}
+```
+
+**Arka plan dayanıklılığı:** Sayaç `Timer` ile artırılmıyor; geçen süre saklanan
+başlangıç tarihi ile `Date()` farkından hesaplanıyor. Saniyelik tik yalnızca
+görüntüyü tazeliyor, bu yüzden uygulama arka plandayken de süre doğru kalıyor.
+
+## Faz 7 — Okuma Hızı Tahmini ✅
+
+* Varsayılan hız: sayfa başına 2 dakika (hiç oturum yokken)
+* En az bir `ReadingSession` varsa: o kitabın tüm oturumlarının toplam süresi ÷
+  toplam okunan sayfa = kişiye ve kitaba özel sayfa başına süre
+* İlerleme çubuğunun yanında "tahmini kalan süre" olarak gösterilir. Tahmin
+  varsayılan hızdan geliyorsa metinde `(estimate)` ibaresi yer alır; ilk
+  oturumdan sonra bu ibare düşer.
+* `ReadingSpeedEstimator` saf ve durumsuz — birim testleri UI'a bağlanmadan yazılabiliyor.
+
+## Faz 8 — Yazar Modülü ⬜
+
+Yazar arama, profil, bibliyografi.
+
+## Faz 9 — Öneri Algoritması ⬜
+
+Kütüphanedeki konu/kategori dağılımına dayalı basit bir benzerlik skoru ile
+"Sana Göre" önerileri.
+
+## Faz 10 — Profile Tab & İstatistikler ⬜
+
+Okuma hedefleri, streak takvimi, Swift Charts ile trendler.
+
+## Faz 11 — Cilalama & Dokümantasyon ⬜
+
+Tema desteği, boş/hata durumlarının gözden geçirilmesi, README, portföy sunumu.
+
+## Notlar
+
+* Her faz kendi başına çalışan bir uygulama bırakır.
+* Yerel kütüphaneye her yazımdan sonra `LibraryChangeNotifier` sayacı artar;
+  ekranlar bunu dinleyerek tazelenir. `onAppear` tek başına yetmiyordu — tam
+  ekran okuma oturumu kapandığında altındaki detay ekranı "yeniden görünmüş"
+  sayılmadığı için eski ilerlemeyi göstermeye devam ediyordu.
+* Google Books API anahtarı için `README.md`'ye bakın. Anahtarsız çağrılar
+  Google'ın paylaşımlı anonim kotasını kullanıyor ve pratikte sürekli HTTP 429 dönüyor.

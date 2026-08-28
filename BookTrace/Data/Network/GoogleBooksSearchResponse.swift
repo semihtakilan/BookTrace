@@ -8,7 +8,7 @@
 import Foundation
 import Models
 
-/// Google Books'un taşıma formatı; Domain `Book`'tan bağımsız tutulur.
+/// Google Books'un taşıma formatı; Domain `BookReference`'tan bağımsız tutulur.
 struct GoogleBooksSearchResponse: Decodable, Sendable {
     let items: [GoogleBooksVolume]?
 
@@ -21,8 +21,14 @@ struct GoogleBooksSearchResponse: Decodable, Sendable {
         case items
     }
 
-    nonisolated func toBooks() -> [Book] {
-        (items ?? []).map { $0.toDomain() }
+    /// Başlıksız veya kimliği tekrar eden kayıtları eler; Google zaman zaman
+    /// aynı cildi birden fazla baskıyla döndürüyor.
+    nonisolated func toBookReferences() -> [BookReference] {
+        var seenIDs = Set<String>()
+        return (items ?? [])
+            .filter { !$0.volumeInfo.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .filter { seenIDs.insert($0.id).inserted }
+            .map { $0.toDomain() }
     }
 }
 
@@ -30,18 +36,19 @@ struct GoogleBooksVolume: Decodable, Sendable {
     let id: String
     let volumeInfo: GoogleBooksVolumeInfo
 
-    nonisolated func toDomain() -> Book {
-        Book(
+    nonisolated func toDomain() -> BookReference {
+        BookReference(
             id: id,
             title: volumeInfo.title,
             authors: volumeInfo.authors ?? [],
-            pageCount: volumeInfo.pageCount,
             coverURL: volumeInfo.coverURL,
+            pageCount: volumeInfo.pageCount.flatMap { $0 > 0 ? $0 : nil },
             publishedDate: volumeInfo.publishedDate,
             description: volumeInfo.description,
             isbn13: volumeInfo.industryIdentifiers?
                 .first(where: { $0.type == "ISBN_13" })?
-                .identifier
+                .identifier,
+            subjects: volumeInfo.categories ?? []
         )
     }
 }
@@ -54,7 +61,9 @@ struct GoogleBooksVolumeInfo: Decodable, Sendable {
     let publishedDate: String?
     let description: String?
     let industryIdentifiers: [GoogleBooksIndustryIdentifier]?
+    let categories: [String]?
 
+    /// Google küçük kapakları hâlâ http üzerinden veriyor; ATS'i geçmesi için https'e çeviriyoruz.
     nonisolated var coverURL: URL? {
         let rawURL = imageLinks?.thumbnail ?? imageLinks?.smallThumbnail
         return rawURL

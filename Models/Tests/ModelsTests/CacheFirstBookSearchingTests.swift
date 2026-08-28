@@ -1,83 +1,101 @@
+//
+//  CacheFirstBookSearchingTests.swift
+//  ModelsTests
+//
+//  Created by Semih TAKILAN on 07.08.2026.
+//
+
 import Foundation
 import Testing
 @testable import Models
 
 struct CacheFirstBookSearchingTests {
-    
-    @Test func searchBooks_whenNotCached_callsRemoteAndStoresInCache() async throws {
-        let remote = MockBookSearching()
-        let cache = MockBookSearchCaching()
+
+    @Test func searchGoesToRemoteAndStoresTheResultWhenNothingIsCached() async throws {
+        let remote = BookSearchingMock()
+        let cache = BookSearchCacheMock()
         let sut = CacheFirstBookSearching(remote: remote, cache: cache)
-        
-        let query = "swift"
-        let books = try await sut.searchBooks(query: query, maxResults: 10)
-        
+
+        let books = try await sut.searchBooks(query: " Swift ", maxResults: 10)
+
         #expect(remote.searchCallCount == 1)
-        #expect(cache.storeCallCount == 1)
-        #expect(books.first?.id == "remote-1")
+        #expect(remote.receivedQuery == "Swift")
+        #expect(books == remote.result)
+        #expect(cache.values["search:swift:10"] == remote.result)
     }
-    
-    @Test func searchBooks_whenCached_returnsFromCacheAndDoesNotCallRemote() async throws {
-        let remote = MockBookSearching()
-        let cache = MockBookSearchCaching()
-        
-        let cachedBook = Book(
-            id: "cached-1",
-            title: "Cached Swift",
-            authors: [],
-            pageCount: 100,
-            coverURL: nil,
-            publishedDate: nil,
-            description: nil,
-            isbn13: nil
-        )
-        cache.storedBooks["search:swift:10"] = [cachedBook]
-        
+
+    @Test func searchSkipsRemoteWhenTheQueryIsAlreadyCached() async throws {
+        let remote = BookSearchingMock()
+        let cache = BookSearchCacheMock()
+        let cached = [makeReference(id: "cached-1", title: "Cached Swift")]
+        cache.values["search:swift:10"] = cached
         let sut = CacheFirstBookSearching(remote: remote, cache: cache)
-        
-        let query = "swift"
-        let books = try await sut.searchBooks(query: query, maxResults: 10)
-        
+
+        let books = try await sut.searchBooks(query: "Swift", maxResults: 10)
+
         #expect(remote.searchCallCount == 0)
         #expect(cache.storeCallCount == 0)
-        #expect(books.first?.id == "cached-1")
+        #expect(books == cached)
+    }
+
+    @Test func subjectShelvesUseTheirOwnCacheKey() async throws {
+        let remote = BookSearchingMock()
+        let cache = BookSearchCacheMock()
+        let sut = CacheFirstBookSearching(remote: remote, cache: cache)
+
+        _ = try await sut.books(inSubject: "History", maxResults: 15)
+        _ = try await sut.books(inSubject: "History", maxResults: 15)
+
+        #expect(remote.subjectCallCount == 1)
+        #expect(cache.values["subject:history:15"] == remote.result)
+        #expect(cache.values["search:history:15"] == nil)
+    }
+
+    @Test func isbnLookupIsCachedAndReturnsASingleBook() async throws {
+        let remote = BookSearchingMock(result: [makeReference(id: "isbn-1")])
+        let cache = BookSearchCacheMock()
+        let sut = CacheFirstBookSearching(remote: remote, cache: cache)
+
+        let first = try await sut.findBook(isbn: "9781234567897")
+        let second = try await sut.findBook(isbn: "9781234567897")
+
+        #expect(first.id == "isbn-1")
+        #expect(second.id == "isbn-1")
+        #expect(remote.isbnCallCount == 1)
+    }
+
+    @Test func isbnLookupThrowsWhenTheCachedEntryIsEmpty() async throws {
+        let remote = BookSearchingMock()
+        let cache = BookSearchCacheMock()
+        cache.values["isbn:9780000000000"] = []
+        let sut = CacheFirstBookSearching(remote: remote, cache: cache)
+
+        await #expect(throws: CacheFirstBookSearchingError.self) {
+            _ = try await sut.findBook(isbn: "9780000000000")
+        }
     }
 }
 
-private final class MockBookSearching: BookSearching, @unchecked Sendable {
-    var searchCallCount = 0
-    
-    func searchBooks(query: String, maxResults: Int) async throws -> [Book] {
-        searchCallCount += 1
-        return [
-            Book(
-                id: "remote-1",
-                title: "Remote Swift",
-                authors: [],
-                pageCount: 200,
-                coverURL: nil,
-                publishedDate: nil,
-                description: nil,
-                isbn13: nil
-            )
-        ]
-    }
-    
-    func findBook(isbn: String) async throws -> Book {
-        throw CacheFirstBookSearchingError.bookNotFound
-    }
-}
+struct SearchBooksUseCaseTests {
 
-private final class MockBookSearchCaching: BookSearchCaching, @unchecked Sendable {
-    var storeCallCount = 0
-    var storedBooks: [String: [Book]] = [:]
-    
-    func books(for key: String) -> [Book]? {
-        storedBooks[key]
+    @Test func theUseCaseTrimsTheQueryBeforeCallingTheRepository() async throws {
+        let repository = BookSearchingMock()
+        let useCase = SearchBooksUseCase(repository: repository)
+
+        let books = try await useCase.execute(query: "  swift  ", maxResults: 5)
+
+        #expect(repository.receivedQuery == "swift")
+        #expect(repository.receivedMaxResults == 5)
+        #expect(books == repository.result)
     }
-    
-    func store(_ books: [Book], for key: String) {
-        storeCallCount += 1
-        storedBooks[key] = books
+
+    @Test func anEmptyQueryNeverReachesTheRepository() async throws {
+        let repository = BookSearchingMock()
+        let useCase = SearchBooksUseCase(repository: repository)
+
+        let books = try await useCase.execute(query: "   ")
+
+        #expect(books.isEmpty)
+        #expect(repository.searchCallCount == 0)
     }
 }

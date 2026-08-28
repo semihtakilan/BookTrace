@@ -12,28 +12,36 @@ import SwiftData
 ///
 /// Factory kayıtları yalnızca burada çözülür; Presentation katmanı somut veri
 /// servislerini veya DI container'ını bilmeden, ihtiyaç duyduğu bağımlılıkları
-/// initializer üzerinden alır.
+/// initializer veya environment üzerinden alır.
 @MainActor
 struct AppDependencies {
-    let booksViewModel: BooksViewModel
-    let exploreViewModel: ExploreViewModel
+    let viewModelFactory: ViewModelFactory
+    let libraryChangeNotifier: LibraryChangeNotifier
     let modelContainer: ModelContainer
 
     init(container: Container) {
         let persistentContainer: ModelContainer
         do {
-            persistentContainer = try ModelContainer(for: LocalBookModel.self, LocalCategoryModel.self)
+            persistentContainer = try ModelContainer(
+                for: LocalLibraryEntryModel.self,
+                LocalReadingSessionModel.self,
+                LocalCategoryModel.self
+            )
         } catch {
             fatalError("Unable to create the local book library: \(error)")
         }
 
         modelContainer = persistentContainer
-        let repository = LocalBookRepositoryImpl(modelContext: persistentContainer.mainContext)
-        container.bookRepository.register {
+        libraryChangeNotifier = container.libraryChangeNotifier()
+
+        let repository = LocalLibraryRepositoryImpl(
+            modelContext: persistentContainer.mainContext,
+            changeNotifier: libraryChangeNotifier
+        )
+        container.libraryRepository.register {
             repository
         }
 
-        booksViewModel = container.booksViewModel()
-        exploreViewModel = container.exploreViewModel()
+        viewModelFactory = container.viewModelFactory()
     }
 }

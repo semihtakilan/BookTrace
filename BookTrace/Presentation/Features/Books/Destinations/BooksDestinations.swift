@@ -10,12 +10,23 @@ import NavigatorUI
 import Models
 
 enum BooksDestinations: NavigationDestination {
-    case bookDetail(Book)
+    case entryDetail(LibraryEntry)
+    case readingSession(LibraryEntry)
 
     var body: some View {
         switch self {
-        case .bookDetail(let book):
-            Text("Book Detail for \(book.title)")
+        case .entryDetail(let entry):
+            BookLibraryDetailView(entry: entry)
+        case .readingSession(let entry):
+            ReadingSessionView(entry: entry)
+        }
+    }
+
+    /// Okuma oturumu tam ekran açılır; sayaç sırasında sekme çubuğu dikkat dağıtmasın.
+    var method: NavigationMethod {
+        switch self {
+        case .entryDetail:    .push
+        case .readingSession: .managedCover
         }
     }
 }

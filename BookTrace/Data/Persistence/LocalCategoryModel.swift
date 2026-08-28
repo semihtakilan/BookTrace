@@ -15,6 +15,10 @@ final class LocalCategoryModel {
     var name: String
     var colorHex: String?
 
+    /// Aynı etiket birden çok kayda bağlanabilir; kayıt silinince etiket yaşamaya devam eder.
+    @Relationship(deleteRule: .nullify, inverse: \LocalLibraryEntryModel.categories)
+    var entries: [LocalLibraryEntryModel] = []
+
     init(category: Models.Category) {
         id = category.id
         name = category.name
@@ -27,10 +31,6 @@ final class LocalCategoryModel {
     }
 
     func toDomain() -> Models.Category {
-        Models.Category(
-            id: id,
-            name: name,
-            colorHex: colorHex
-        )
+        Models.Category(id: id, name: name, colorHex: colorHex)
     }
 }

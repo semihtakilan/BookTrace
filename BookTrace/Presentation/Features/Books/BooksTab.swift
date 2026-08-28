@@ -10,10 +10,10 @@ import NavigatorUI
 import Models
 
 struct BooksTab: View {
-    @State private var viewModel: BooksViewModel
+    private let viewModel: BooksViewModel
 
     init(viewModel: BooksViewModel) {
-        _viewModel = State(initialValue: viewModel)
+        self.viewModel = viewModel
     }
 
     var body: some View {
@@ -24,192 +24,220 @@ struct BooksTab: View {
 }
 
 private struct BooksContentView: View {
-    @Environment(\.navigator) private var navigator
+    @Environment(AppRouteTypeManager.self) private var routeManager
+    @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
     @Bindable var viewModel: BooksViewModel
+    @State private var isEditing = false
 
     var body: some View {
+        Group {
+            if viewModel.isEmpty {
+                emptyState
+            } else {
+                libraryContent
+            }
+        }
+        .navigationTitle("Library")
+        .toolbar {
+            if !viewModel.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(isEditing ? "Done" : "Edit") {
+                        withAnimation { isEditing.toggle() }
+                    }
+                }
+            }
+        }
+        .alert(
+            "Something went wrong",
+            isPresented: Binding(
+                get: { viewModel.errorMessage != nil },
+                set: { if !$0 { viewModel.errorMessage = nil } }
+            ),
+            actions: { Button("OK", role: .cancel) { viewModel.errorMessage = nil } },
+            message: { Text(viewModel.errorMessage ?? "") }
+        )
+        .onAppear { viewModel.load() }
+        // Explore'dan kitap eklendiğinde veya detayda bir şey değiştiğinde,
+        // bu sekme hiç kaybolmamış olsa bile listeyi tazeler.
+        .onChange(of: libraryChangeNotifier.revision) { _, _ in viewModel.load() }
+    }
+
+    private var emptyState: some View {
+        ContentUnavailableView {
+            Label("Your library is empty", systemImage: "books.vertical")
+        } description: {
+            Text("Search, browse a shelf or scan a barcode in Explore to add your first book.")
+        } actions: {
+            Button("Go to Explore") {
+                routeManager.selectedTab = .explore
+            }
+            .buttonStyle(.borderedProminent)
+        }
+    }
+
+    private var libraryContent: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                if let nowReading = viewModel.nowReading {
-                    NowReadingSection(book: nowReading)
+            LazyVStack(alignment: .leading, spacing: 28) {
+                if !viewModel.nowReading.isEmpty {
+                    NowReadingSection(entries: viewModel.nowReading)
                 }
 
-                if !viewModel.libraryBooks.isEmpty {
-                    LibrarySection(libraryBooks: viewModel.libraryBooks)
+                ForEach(viewModel.entriesByStatus, id: \.status) { group in
+                    LibraryShelf(
+                        title: group.status.displayName,
+                        systemImage: group.status.systemImage,
+                        entries: group.entries,
+                        isEditing: isEditing,
+                        onDelete: viewModel.delete
+                    )
                 }
 
-                if !viewModel.ownershipBooks.isEmpty {
-                    OwnershipSection(ownershipBooks: viewModel.ownershipBooks)
+                SectionHeader(title: "Ownership")
+
+                ForEach(viewModel.entriesByOwnership, id: \.status) { group in
+                    LibraryShelf(
+                        title: group.status.displayName,
+                        systemImage: group.status.systemImage,
+                        entries: group.entries,
+                        isEditing: isEditing,
+                        onDelete: viewModel.delete
+                    )
                 }
 
-                if !viewModel.categoryBooks.isEmpty {
-                    CategoriesSection(categoryBooks: viewModel.categoryBooks)
+                if !viewModel.entriesByCategory.isEmpty {
+                    SectionHeader(title: "Categories")
+
+                    ForEach(viewModel.entriesByCategory, id: \.category) { group in
+                        LibraryShelf(
+                            title: group.category.name,
+                            systemImage: "tag",
+                            entries: group.entries,
+                            isEditing: isEditing,
+                            onDelete: viewModel.delete
+                        )
+                    }
                 }
             }
             .padding(.vertical)
         }
-        .navigationTitle("Library")
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Edit") {
-                    print("Edit tapped")
-                }
-            }
-        }
-        .onAppear {
-            viewModel.load()
-        }
     }
 }
 
+private struct SectionHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.title2.bold())
+            .padding(.horizontal)
+            .padding(.top, 8)
+    }
+}
+
+/// Ekranın en üstündeki "şu an okunan" bölümü — ilerleme çubuğu ve tahmini
+/// kalan süre burada gösterilir.
 private struct NowReadingSection: View {
-    let book: Book
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            Text("Now Reading")
-                .font(.title2.bold())
-                .padding(.horizontal)
-
-            HStack(spacing: 16) {
-                RemoteBookCover(url: book.coverURL, width: 80, height: 120, contentMode: .fill, fallbackTitle: book.title, fallbackAuthor: book.author)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(book.title)
-                        .font(.headline)
-                        .lineLimit(2)
-                    Text(book.author)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-
-                    if let totalPages = book.pageCount, totalPages > 0 {
-                        ProgressView(value: Double(book.currentProgress), total: Double(totalPages))
-                            .progressViewStyle(.linear)
-                        Text("\(book.currentProgress) / \(totalPages) pages")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-            .padding(.horizontal)
-        }
-    }
-}
-
-private struct LibrarySection: View {
-    let libraryBooks: [ReadingStatus: [Book]]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Library")
-                .font(.title2.bold())
-                .padding(.horizontal)
-            
-            ForEach(ReadingStatus.allCases, id: \.self) { status in
-                if let books = libraryBooks[status], !books.isEmpty {
-                    VStack(alignment: .leading) {
-                        Text(status.rawValue.capitalized)
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        BookHorizontalList(books: books)
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct OwnershipSection: View {
-    let ownershipBooks: [OwnershipStatus: [Book]]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Ownership")
-                .font(.title2.bold())
-                .padding(.horizontal)
-            
-            ForEach(OwnershipStatus.allCases, id: \.self) { status in
-                if let books = ownershipBooks[status], !books.isEmpty {
-                    VStack(alignment: .leading) {
-                        Text(status.rawValue.capitalized)
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        BookHorizontalList(books: books)
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct CategoriesSection: View {
-    let categoryBooks: [Models.Category: [Book]]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Categories")
-                .font(.title2.bold())
-                .padding(.horizontal)
-            
-            // Sort by category name
-            let sortedCategories = Array(categoryBooks.keys).sorted(by: { $0.name < $1.name })
-            
-            ForEach(sortedCategories) { category in
-                if let books = categoryBooks[category], !books.isEmpty {
-                    VStack(alignment: .leading) {
-                        Text(category.name)
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        BookHorizontalList(books: books)
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct BookHorizontalList: View {
-    let books: [Book]
+    let entries: [LibraryEntry]
     @Environment(\.navigator) private var navigator
-    
+
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(books) { book in
-                    Button {
-                        navigator.navigate(to: BooksDestinations.bookDetail(book))
-                    } label: {
-                        BookCoverCell(book: book)
-                    }
-                    .buttonStyle(.plain)
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Now Reading")
+
+            ForEach(entries) { entry in
+                Button {
+                    navigator.navigate(to: BooksDestinations.entryDetail(entry))
+                } label: {
+                    NowReadingCard(entry: entry)
                 }
+                .buttonStyle(.plain)
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
         }
     }
 }
 
-private struct BookCoverCell: View {
-    let book: Book
+private struct NowReadingCard: View {
+    let entry: LibraryEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        HStack(alignment: .top, spacing: 16) {
             RemoteBookCover(
-                url: book.coverURL,
-                width: 100,
-                height: 150,
+                url: entry.book.coverURL,
+                width: 84,
+                height: 126,
                 contentMode: .fill,
-                fallbackTitle: book.title,
-                fallbackAuthor: book.author
+                fallbackTitle: entry.book.title,
+                fallbackAuthor: entry.book.author
             )
 
-            Text(book.title)
-                .font(.caption.bold())
-                .lineLimit(2)
-                .frame(width: 100, alignment: .leading)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(entry.book.title)
+                    .font(.headline)
+                    .lineLimit(2)
+
+                Text(entry.book.author)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                ReadingProgressView(entry: entry)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding()
+        .background(.regularMaterial, in: .rect(cornerRadius: 16))
+    }
+}
+
+private struct LibraryShelf: View {
+    let title: String
+    let systemImage: String
+    let entries: [LibraryEntry]
+    let isEditing: Bool
+    let onDelete: (LibraryEntry) -> Void
+
+    @Environment(\.navigator) private var navigator
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("\(title) · \(entries.count)", systemImage: systemImage)
+                .font(.headline)
+                .padding(.horizontal)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: 14) {
+                    ForEach(entries) { entry in
+                        Button {
+                            navigator.navigate(to: BooksDestinations.entryDetail(entry))
+                        } label: {
+                            BookCoverCell(
+                                title: entry.book.title,
+                                author: entry.book.author,
+                                coverURL: entry.book.coverURL
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .overlay(alignment: .topTrailing) {
+                            if isEditing {
+                                Button(role: .destructive) {
+                                    onDelete(entry)
+                                } label: {
+                                    Image(systemName: "minus.circle.fill")
+                                        .font(.title3)
+                                        .symbolRenderingMode(.palette)
+                                        .foregroundStyle(.white, .red)
+                                }
+                                .buttonStyle(.plain)
+                                .offset(x: 8, y: -8)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top, isEditing ? 8 : 0)
+            }
         }
     }
 }

@@ -20,7 +20,10 @@ struct BookTraceApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ApplicationRootView(booksViewModel: dependencies.booksViewModel, exploreViewModel: dependencies.exploreViewModel)
+            ApplicationRootView(
+                viewModelFactory: dependencies.viewModelFactory,
+                libraryChangeNotifier: dependencies.libraryChangeNotifier
+            )
                 .modelContainer(dependencies.modelContainer)
         }
     }

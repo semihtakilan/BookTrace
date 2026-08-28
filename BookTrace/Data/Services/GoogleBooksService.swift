@@ -5,6 +5,7 @@
 //  Created by Semih TAKILAN on 06.08.2026.
 //
 
+import Foundation
 import Models
 import NetworkKit
 
@@ -16,19 +17,42 @@ final class GoogleBooksService: BookSearching {
         self.networkService = networkService
     }
 
-    func searchBooks(query: String, maxResults: Int = 20) async throws -> [Book] {
-        guard let apiKey = await GoogleBooksAPIKey.value else {
-            throw GoogleBooksServiceError.missingAPIKey
+    func searchBooks(query: String, maxResults: Int) async throws -> [BookReference] {
+        try await execute {
+            GoogleBooksSearchEndpoint.search(query: query, maxResults: maxResults, apiKey: $0)
         }
-        let response = try await networkService.execute(
-            GoogleBooksSearchEndpoint(query: query, maxResults: maxResults, apiKey: apiKey)
-        )
-        return response.toBooks()
     }
 
-    func findBook(isbn: String) async throws -> Book {
-        let books = try await searchBooks(query: "isbn:\(isbn)", maxResults: 1)
-        guard let book = books.first else { throw NetworkError.notFound() }
+    func books(inSubject subject: String, maxResults: Int) async throws -> [BookReference] {
+        try await execute {
+            GoogleBooksSearchEndpoint.subject(subject, maxResults: maxResults, apiKey: $0)
+        }
+    }
+
+    func findBook(isbn: String) async throws -> BookReference {
+        let books = try await execute { GoogleBooksSearchEndpoint.isbn(isbn, apiKey: $0) }
+        guard let book = books.first else {
+            throw GoogleBooksServiceError.bookNotFound
+        }
         return book
+    }
+
+    /// Anahtarı tek yerden geçirir ve kota hatalarını kullanıcıya anlamlı gelen
+    /// bir mesaja çevirir; ham "HTTP 429" kimseye ne yapacağını söylemiyor.
+    private func execute(
+        _ makeEndpoint: (String?) -> GoogleBooksSearchEndpoint
+    ) async throws -> [BookReference] {
+        let apiKey = GoogleBooksAPIKey.value
+
+        do {
+            return try await networkService.execute(makeEndpoint(apiKey)).toBookReferences()
+        } catch let error as NetworkError {
+            switch error.statusCode {
+            case 429, 403:
+                throw GoogleBooksServiceError.quotaExceeded(hasAPIKey: apiKey != nil)
+            default:
+                throw error
+            }
+        }
     }
 }

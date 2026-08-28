@@ -8,6 +8,7 @@
 import Kingfisher
 import SwiftUI
 
+/// Kitap kapağı. Kapak yoksa veya indirilemezse başlık ve yazardan bir sırt tasarımı üretir.
 struct RemoteBookCover: View {
     let url: URL?
     let width: CGFloat?
@@ -33,64 +34,57 @@ struct RemoteBookCover: View {
     }
 
     var body: some View {
-        KFImage(url)
-            .placeholder {
+        Group {
+            if let url {
+                // Kingfisher indirme sırasında ve hata durumunda placeholder'ı gösterir.
+                KFImage(url)
+                    .placeholder { fallbackView }
+                    .resizable()
+                    .aspectRatio(contentMode: contentMode)
+            } else {
                 fallbackView
             }
-            .resizable()
-            .aspectRatio(contentMode: contentMode)
-            .frame(width: width, height: height)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-            // If the URL is genuinely nil or fails, KFImage will still show placeholder.
-            // But if url is nil, KFImage alone might not render at all or render empty. 
-            // So we explicitly show fallback if URL is nil.
-            .overlay {
-                if url == nil {
-                    fallbackView
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                }
-            }
+        }
+        .frame(width: width, height: height)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 
-    @ViewBuilder
     private var fallbackView: some View {
         ZStack {
             LinearGradient(
-                colors: [.accentColor.opacity(0.6), .accentColor.opacity(0.8)],
+                colors: [.accentColor.opacity(0.6), .accentColor.opacity(0.85)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
-            
+
             VStack(spacing: 6) {
-                if let fallbackTitle = fallbackTitle {
+                if let fallbackTitle {
                     Text(fallbackTitle)
-                        .font(.system(size: height > 150 ? 16 : 12, weight: .bold, design: .serif))
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.white)
+                        .font(.system(size: height > 150 ? 15 : 11, weight: .bold, design: .serif))
                         .lineLimit(4)
+                        .foregroundStyle(.white)
                 } else {
                     Image(systemName: "book.closed.fill")
                         .font(.system(size: height > 150 ? 40 : 24))
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundStyle(.white.opacity(0.7))
                 }
-                
-                if let fallbackAuthor = fallbackAuthor, !fallbackAuthor.isEmpty {
+
+                if let fallbackAuthor, !fallbackAuthor.isEmpty {
                     Text(fallbackAuthor)
-                        .font(.system(size: height > 150 ? 12 : 10, weight: .medium, design: .serif))
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.white.opacity(0.8))
+                        .font(.system(size: height > 150 ? 11 : 9, weight: .medium, design: .serif))
                         .lineLimit(2)
+                        .foregroundStyle(.white.opacity(0.85))
                 }
             }
+            .multilineTextAlignment(.center)
             .padding(8)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            
-            // Add a subtle book spine effect
+
+            // Sırt etkisi: sol kenarda ince bir gölge şeridi.
             HStack {
                 Rectangle()
-                    .fill(Color.black.opacity(0.1))
+                    .fill(.black.opacity(0.12))
                     .frame(width: 4)
-                Spacer()
+                Spacer(minLength: 0)
             }
         }
     }

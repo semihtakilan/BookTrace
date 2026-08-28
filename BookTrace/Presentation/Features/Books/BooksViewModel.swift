@@ -6,49 +6,72 @@
 //
 
 import Foundation
-import Observation
 import Models
+import Observation
 
 @MainActor
 @Observable
 final class BooksViewModel {
-    var nowReading: Book?
-    var libraryBooks: [ReadingStatus: [Book]] = [:]
-    var ownershipBooks: [OwnershipStatus: [Book]] = [:]
-    var categoryBooks: [Models.Category: [Book]] = [:]
-    
+    private(set) var entries: [LibraryEntry] = []
     var errorMessage: String?
-    
-    @ObservationIgnored
-    private let bookRepository: any BookRepository
 
-    init(bookRepository: any BookRepository) {
-        self.bookRepository = bookRepository
+    @ObservationIgnored
+    private let libraryRepository: any LibraryRepository
+
+    init(libraryRepository: any LibraryRepository) {
+        self.libraryRepository = libraryRepository
+    }
+
+    var isEmpty: Bool { entries.isEmpty }
+
+    /// Şu an okunan kitaplar; ekranın en üstündeki bölüm.
+    var nowReading: [LibraryEntry] {
+        entries.filter { $0.readingStatus == .reading }
+    }
+
+    /// Durum bölümleri, `ReadingStatus` sırasını koruyarak ve boş olanları eleyerek.
+    var entriesByStatus: [(status: ReadingStatus, entries: [LibraryEntry])] {
+        let grouped = Dictionary(grouping: entries, by: \.readingStatus)
+        return ReadingStatus.allCases.compactMap { status in
+            guard let matches = grouped[status], !matches.isEmpty else { return nil }
+            return (status, matches)
+        }
+    }
+
+    var entriesByOwnership: [(status: OwnershipStatus, entries: [LibraryEntry])] {
+        let grouped = Dictionary(grouping: entries, by: \.ownershipStatus)
+        return OwnershipStatus.allCases.compactMap { status in
+            guard let matches = grouped[status], !matches.isEmpty else { return nil }
+            return (status, matches)
+        }
+    }
+
+    /// Bir kitap birden fazla etikete ait olabildiği için gruplama elle yapılır.
+    var entriesByCategory: [(category: Models.Category, entries: [LibraryEntry])] {
+        var grouped: [Models.Category: [LibraryEntry]] = [:]
+        for entry in entries {
+            for category in entry.categories {
+                grouped[category, default: []].append(entry)
+            }
+        }
+        return grouped
+            .map { (category: $0.key, entries: $0.value) }
+            .sorted { $0.category.name.localizedCaseInsensitiveCompare($1.category.name) == .orderedAscending }
     }
 
     func load() {
         do {
-            let books = try bookRepository.fetchBooks()
-            
-            // Section 1: Now Reading
-            nowReading = books.first { $0.status == .reading }
-            
-            // Section 2: Library
-            libraryBooks = Dictionary(grouping: books, by: { $0.status })
-            
-            // Section 3: Ownership
-            ownershipBooks = Dictionary(grouping: books, by: { $0.ownership })
-            
-            // Section 4: Categories
-            var catBooks: [Models.Category: [Book]] = [:]
-            for book in books {
-                for category in book.categories {
-                    catBooks[category, default: []].append(book)
-                }
-            }
-            categoryBooks = catBooks
-            
+            entries = try libraryRepository.fetchEntries()
             errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func delete(_ entry: LibraryEntry) {
+        do {
+            try libraryRepository.delete(id: entry.id)
+            load()
         } catch {
             errorMessage = error.localizedDescription
         }

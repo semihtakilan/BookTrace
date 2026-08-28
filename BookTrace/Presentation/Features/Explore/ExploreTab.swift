@@ -27,6 +27,7 @@ private struct ExploreContentView: View {
     @Bindable var viewModel: ExploreViewModel
 
     @Environment(\.navigator) private var navigator
+    @Environment(AppSettings.self) private var settings
     @State private var isPresentingScanner = false
     /// Okunan ISBN, sorgu başlamadan önce burada bekler — aşağıdaki nota bakın.
     @State private var pendingISBN: String?
@@ -39,7 +40,7 @@ private struct ExploreContentView: View {
                 subjectShelves
             }
         }
-        .navigationTitle("Explore")
+        .navigationTitle(settings.localized("Explore"))
         .searchable(text: $viewModel.searchText, prompt: "Title, author or ISBN")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

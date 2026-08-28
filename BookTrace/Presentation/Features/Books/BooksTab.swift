@@ -26,6 +26,7 @@ struct BooksTab: View {
 private struct BooksContentView: View {
     @Environment(AppRouteTypeManager.self) private var routeManager
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
+    @Environment(AppSettings.self) private var settings
     @Bindable var viewModel: BooksViewModel
     @State private var isEditing = false
 
@@ -37,7 +38,7 @@ private struct BooksContentView: View {
                 libraryContent
             }
         }
-        .navigationTitle("Library")
+        .navigationTitle(settings.localized("Library"))
         .toolbar {
             if !viewModel.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {

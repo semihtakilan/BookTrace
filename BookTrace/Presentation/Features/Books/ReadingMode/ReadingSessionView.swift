@@ -31,6 +31,7 @@ private struct ReadingSessionContent: View {
 
     @Environment(\.navigator) private var navigator
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(AppSettings.self) private var settings
     @State private var isConfirmingDiscard = false
 
     var body: some View {
@@ -67,7 +68,7 @@ private struct ReadingSessionContent: View {
             Spacer()
         }
         .padding()
-        .navigationTitle("Reading Mode")
+        .navigationTitle(settings.localized("Reading Mode"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -115,6 +116,7 @@ private struct FinishSessionSheet: View {
     @Bindable var viewModel: ReadingSessionViewModel
 
     @Environment(\.navigator) private var navigator
+    @Environment(AppSettings.self) private var settings
     @FocusState private var isPagesFieldFocused: Bool
 
     var body: some View {
@@ -144,7 +146,7 @@ private struct FinishSessionSheet: View {
                     }
                 }
             }
-            .navigationTitle("Finish Session")
+            .navigationTitle(settings.localized("Finish Session"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

@@ -98,7 +98,7 @@ private struct SettingsContentView: View {
                 Text("About")
             }
         }
-        .navigationTitle("Settings")
+        .navigationTitle(settings.localized("Settings"))
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
             "Erase your library?",

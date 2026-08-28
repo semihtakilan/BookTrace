@@ -113,3 +113,26 @@ final class AppSettings {
         language.locale ?? Locale.autoupdatingCurrent
     }
 }
+
+extension AppSettings {
+    /// Seçilen dilin `.lproj` paketi. Dil "System" ise uygulamanın kendi paketi.
+    ///
+    /// SwiftUI çoğu yerde `\.locale` ortam değerini dinliyor, ama `navigationTitle`
+    /// aynı `LocalizedStringKey`'i aldığında başlığı yeniden çözmüyor — dil
+    /// değiştiğinde anahtar değişmediği için başlık eski dilde kalıyordu.
+    /// Metni buradan `String` olarak çözünce değerin kendisi değişiyor ve
+    /// başlık anında güncelleniyor.
+    var localizationBundle: Bundle {
+        guard let code = language.locale?.identifier,
+              let path = Bundle.main.path(forResource: code, ofType: "lproj"),
+              let bundle = Bundle(path: path) else {
+            return .main
+        }
+        return bundle
+    }
+
+    /// Ekran başlıkları gibi, anahtar yerine hazır metin isteyen yerler için.
+    func localized(_ key: String.LocalizationValue) -> String {
+        String(localized: key, bundle: localizationBundle, locale: resolvedLocale)
+    }
+}

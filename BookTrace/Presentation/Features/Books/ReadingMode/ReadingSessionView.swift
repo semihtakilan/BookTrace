@@ -75,7 +75,7 @@ private struct ReadingSessionContent: View {
                 Button("Cancel") { isConfirmingDiscard = true }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Finish") { viewModel.presentFinishSheet() }
+                Button("Finish") { viewModel.beginFinishing() }
                     .fontWeight(.semibold)
             }
         }
@@ -93,9 +93,13 @@ private struct ReadingSessionContent: View {
         .onChange(of: viewModel.didSave) { _, didSave in
             if didSave { navigator.dismiss() }
         }
-        .sheet(isPresented: $viewModel.isPresentingFinishSheet) {
-            FinishSessionSheet(viewModel: viewModel)
-                .presentationDetents([.medium])
+        .navigationDestination(isPresented: $viewModel.isFinishing) {
+            FinishSessionView(viewModel: viewModel)
+        }
+        // Sistem geri butonu veya kaydırma `isFinishing`'i kendisi kapatıyor;
+        // kaydedilmeden dönüldüyse sayaç devam etsin.
+        .onChange(of: viewModel.isFinishing) { _, isFinishing in
+            if !isFinishing { viewModel.resumeAfterFinishing() }
         }
         .confirmationDialog(
             "Discard this session?",
@@ -108,52 +112,5 @@ private struct ReadingSessionContent: View {
             Text("The elapsed time will not be recorded.")
         }
         .errorAlert($viewModel.error)
-    }
-}
-
-/// "Kaç sayfa okudunuz?" girişi — Discard ve Save burada.
-private struct FinishSessionSheet: View {
-    @Bindable var viewModel: ReadingSessionViewModel
-
-    @Environment(\.navigator) private var navigator
-    @Environment(AppSettings.self) private var settings
-    @FocusState private var isPagesFieldFocused: Bool
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    LabeledContent("Session length", value: DurationFormatter.compact(seconds: viewModel.elapsedSeconds))
-
-                    TextField("Pages read", text: $viewModel.pagesReadText)
-                        .keyboardType(.numberPad)
-                        .focused($isPagesFieldFocused)
-                } header: {
-                    Text("How many pages did you read?")
-                } footer: {
-                    if let projectedPage = viewModel.projectedPage {
-                        Text("Progress will move to page \(projectedPage).")
-                    }
-                }
-
-                Section {
-                    Button("Save Session") { viewModel.save() }
-                        .disabled(!viewModel.canSave)
-
-                    Button("Discard", role: .destructive) {
-                        viewModel.isPresentingFinishSheet = false
-                        navigator.dismiss()
-                    }
-                }
-            }
-            .navigationTitle(settings.localized("Finish Session"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Back") { viewModel.resumeAfterCancellingFinish() }
-                }
-            }
-            .onAppear { isPagesFieldFocused = true }
-        }
     }
 }

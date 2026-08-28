@@ -17,7 +17,7 @@ final class ReadingSessionViewModel {
     private(set) var isRunning = false
     private(set) var didSave = false
 
-    var isPresentingFinishSheet = false
+    var isFinishing = false
     var pagesReadText = ""
     var error: UserFacingError?
 
@@ -36,6 +36,9 @@ final class ReadingSessionViewModel {
     }
 
     var bookTitle: String { entry.book.title }
+
+    /// Finish ekranında gösterilen ayrıntılı süre (`01:06` gibi).
+    var elapsedDisplay: String { DurationFormatter.timer(seconds: elapsedSeconds) }
 
     var pagesReadValue: Int? {
         Int(pagesReadText.trimmingCharacters(in: .whitespaces))
@@ -79,15 +82,17 @@ final class ReadingSessionViewModel {
         tick()
     }
 
-    func presentFinishSheet() {
+    /// Finish ekranına geçerken sayaç durur; kullanıcı geri dönerse kaldığı yerden devam eder.
+    func beginFinishing() {
         if runningSince != nil { togglePause() }
         pagesReadText = ""
-        isPresentingFinishSheet = true
+        isFinishing = true
     }
 
-    func resumeAfterCancellingFinish() {
-        isPresentingFinishSheet = false
-        if runningSince == nil { togglePause() }
+    /// Finish ekranı kaydedilmeden kapandığında sayaç kaldığı yerden devam eder.
+    func resumeAfterFinishing() {
+        guard !didSave, runningSince == nil else { return }
+        togglePause()
     }
 
     /// Oturumu kaydeder: süre ve sayfa yazılır, `currentPage` ve okuma durumu güncellenir.
@@ -102,7 +107,7 @@ final class ReadingSessionViewModel {
 
         do {
             entry = try libraryRepository.appendSession(session, toEntryWith: entry.id)
-            isPresentingFinishSheet = false
+            isFinishing = false
             didSave = true
         } catch {
             self.error = UserFacingError(error)

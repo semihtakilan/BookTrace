@@ -286,9 +286,9 @@ enum ScannerError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .noCameraAvailable: "Bu cihazda kamera bulunmuyor."
-        case .cannotAddInput:    "Kamera girişi eklenemedi."
-        case .cannotAddOutput:   "Kamera çıkışı eklenemedi."
+        case .noCameraAvailable: "This device has no camera."
+        case .cannotAddInput:    "The camera input could not be added."
+        case .cannotAddOutput:   "The camera output could not be added."
         }
     }
 }

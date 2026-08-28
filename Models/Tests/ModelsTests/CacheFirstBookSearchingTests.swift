@@ -75,27 +75,3 @@ struct CacheFirstBookSearchingTests {
         }
     }
 }
-
-struct SearchBooksUseCaseTests {
-
-    @Test func theUseCaseTrimsTheQueryBeforeCallingTheRepository() async throws {
-        let repository = BookSearchingMock()
-        let useCase = SearchBooksUseCase(repository: repository)
-
-        let books = try await useCase.execute(query: "  swift  ", maxResults: 5)
-
-        #expect(repository.receivedQuery == "swift")
-        #expect(repository.receivedMaxResults == 5)
-        #expect(books == repository.result)
-    }
-
-    @Test func anEmptyQueryNeverReachesTheRepository() async throws {
-        let repository = BookSearchingMock()
-        let useCase = SearchBooksUseCase(repository: repository)
-
-        let books = try await useCase.execute(query: "   ")
-
-        #expect(books.isEmpty)
-        #expect(repository.searchCallCount == 0)
-    }
-}

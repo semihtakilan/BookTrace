@@ -15,19 +15,22 @@ struct ApplicationRootView: View {
     @State private var routeManager = AppRouteTypeManager()
     @State private var booksViewModel: BooksViewModel
     @State private var exploreViewModel: ExploreViewModel
+    @State private var profileViewModel: ProfileViewModel
 
     init(viewModelFactory: ViewModelFactory, libraryChangeNotifier: LibraryChangeNotifier) {
         self.viewModelFactory = viewModelFactory
         self.libraryChangeNotifier = libraryChangeNotifier
         _booksViewModel = State(initialValue: viewModelFactory.makeBooksViewModel())
         _exploreViewModel = State(initialValue: viewModelFactory.makeExploreViewModel())
+        _profileViewModel = State(initialValue: viewModelFactory.makeProfileViewModel())
     }
 
     var body: some View {
         ApplicationRootContent(
             routeManager: routeManager,
             booksViewModel: booksViewModel,
-            exploreViewModel: exploreViewModel
+            exploreViewModel: exploreViewModel,
+            profileViewModel: profileViewModel
         )
         .environment(viewModelFactory)
         .environment(libraryChangeNotifier)
@@ -41,6 +44,7 @@ private struct ApplicationRootContent: View {
     @Bindable var routeManager: AppRouteTypeManager
     let booksViewModel: BooksViewModel
     let exploreViewModel: ExploreViewModel
+    let profileViewModel: ProfileViewModel
 
     var body: some View {
         Group {
@@ -51,7 +55,8 @@ private struct ApplicationRootContent: View {
                 RootTabView(
                     routeManager: routeManager,
                     booksViewModel: booksViewModel,
-                    exploreViewModel: exploreViewModel
+                    exploreViewModel: exploreViewModel,
+                    profileViewModel: profileViewModel
                 )
             }
         }

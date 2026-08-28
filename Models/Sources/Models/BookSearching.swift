@@ -25,17 +25,3 @@ public extension BookSearching {
         try await books(inSubject: subject, maxResults: 15)
     }
 }
-
-public struct SearchBooksUseCase: Sendable {
-    private let repository: any BookSearching
-
-    public init(repository: any BookSearching) {
-        self.repository = repository
-    }
-
-    public func execute(query: String, maxResults: Int = 20) async throws -> [BookReference] {
-        let normalizedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !normalizedQuery.isEmpty else { return [] }
-        return try await repository.searchBooks(query: normalizedQuery, maxResults: maxResults)
-    }
-}

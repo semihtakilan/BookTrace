@@ -12,6 +12,7 @@ struct RootTabView: View {
     @Bindable var routeManager: AppRouteTypeManager
     let booksViewModel: BooksViewModel
     let exploreViewModel: ExploreViewModel
+    let profileViewModel: ProfileViewModel
 
     var body: some View {
         TabView(selection: $routeManager.selectedTab) {
@@ -23,7 +24,7 @@ struct RootTabView: View {
                 .navigationRoot(routeManager.exploreNavigator)
                 .tabItem { Label("Explore", systemImage: "magnifyingglass") }
                 .tag(AppTab.explore)
-            ProfileTab()
+            ProfileTab(viewModel: profileViewModel)
                 .navigationRoot(routeManager.profileNavigator)
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                 .tag(AppTab.profile)

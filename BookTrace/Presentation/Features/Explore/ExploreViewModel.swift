@@ -102,7 +102,7 @@ final class ExploreViewModel {
         do {
             scannedBook = try await bookSearching.findBook(isbn: isbn)
         } catch {
-            errorMessage = "Barkod okundu (\(isbn)) ama kitap bulunamadı: \(error.localizedDescription)"
+            errorMessage = "Scanned \(isbn), but no book matched it: \(error.localizedDescription)"
         }
     }
 

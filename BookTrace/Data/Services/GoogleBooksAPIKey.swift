@@ -36,15 +36,15 @@ enum GoogleBooksServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .bookNotFound:
-            "Bu kitap Google Books üzerinde bulunamadı."
+            "This book could not be found on Google Books."
         case .quotaExceeded(let hasAPIKey):
             hasAPIKey
-                ? "Google Books kotası doldu. Bir süre sonra tekrar deneyin."
-                : "Google Books kotası doldu. Kendi API anahtarınızı ekleyin: Xcode → Scheme → Run → Arguments → Environment Variables → GOOGLE_BOOKS_API_KEY."
+                ? "Google Books quota reached. Try again in a little while."
+                : "Google Books quota reached. Add your own API key: Xcode → Scheme → Run → Arguments → Environment Variables → GOOGLE_BOOKS_API_KEY."
         case .regionUnavailable(let region):
-            "Google Books \(region) bölgesi için yanıt vermedi. Cihazın bölge ayarı, bağlandığınız ülkeyle eşleşmiyor olabilir."
+            "Google Books did not respond for region \(region). Your device region may not match the country you are connecting from."
         case .unreadableResponse:
-            "Google Books beklenmeyen bir yanıt döndürdü."
+            "Google Books returned an unexpected response."
         }
     }
 }

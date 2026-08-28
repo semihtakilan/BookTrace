@@ -32,6 +32,10 @@ final class ViewModelFactory {
         ExploreViewModel(bookSearching: bookSearching)
     }
 
+    func makeProfileViewModel() -> ProfileViewModel {
+        ProfileViewModel(libraryRepository: libraryRepository)
+    }
+
     func makeBookDetailViewModel(book: BookReference) -> BookDetailViewModel {
         BookDetailViewModel(book: book, libraryRepository: libraryRepository)
     }

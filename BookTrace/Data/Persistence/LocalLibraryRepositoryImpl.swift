@@ -15,7 +15,7 @@ enum LocalLibraryRepositoryError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .entryNotFound(let id):
-            "\(id) kimlikli kitap yerel kütüphanede bulunamadı."
+            "No book with id \(id) was found in your library."
         }
     }
 }

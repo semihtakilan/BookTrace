@@ -28,6 +28,8 @@ private struct ExploreContentView: View {
 
     @Environment(\.navigator) private var navigator
     @State private var isPresentingScanner = false
+    /// Okunan ISBN, sorgu başlamadan önce burada bekler — aşağıdaki nota bakın.
+    @State private var pendingISBN: String?
 
     var body: some View {
         Group {
@@ -66,7 +68,14 @@ private struct ExploreContentView: View {
             await viewModel.loadShelvesIfNeeded()
         }
         .sheet(isPresented: $isPresentingScanner) {
-            scannerSheet
+            BarcodeScannerSheet { isbn in pendingISBN = isbn }
+        }
+        // Sorgu, sayfa tamamen kapandıktan sonra başlar. Kapanış sürerken hata
+        // alert'i açmaya çalışmak UIKit'te sunum çakışmasına yol açıyor.
+        .onChange(of: isPresentingScanner) { _, isPresenting in
+            guard !isPresenting, let isbn = pendingISBN else { return }
+            pendingISBN = nil
+            Task { await viewModel.handleBarcodeScan(isbn: isbn) }
         }
         .onChange(of: viewModel.scannedBook) { _, book in
             guard let book else { return }
@@ -133,25 +142,6 @@ private struct ExploreContentView: View {
         }
     }
 
-    private var scannerSheet: some View {
-        NavigationStack {
-            BarcodeScannerView { isbn in
-                isPresentingScanner = false
-                Task { await viewModel.handleBarcodeScan(isbn: isbn) }
-            } onError: { error in
-                isPresentingScanner = false
-                viewModel.errorMessage = error.localizedDescription
-            }
-            .ignoresSafeArea(edges: .bottom)
-            .navigationTitle("Scan Barcode")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Cancel") { isPresentingScanner = false }
-                }
-            }
-        }
-    }
 }
 
 private struct SubjectShelfRow: View {

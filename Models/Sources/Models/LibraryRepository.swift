@@ -18,6 +18,8 @@ public protocol LibraryRepository: AnyObject {
     func add(_ entry: LibraryEntry) throws
     func update(_ entry: LibraryEntry) throws
     func delete(id: String) throws
+    /// Kütüphaneyi ve tüm okuma oturumlarını siler.
+    func deleteAll() throws
     /// Oturumu kaydeder, ilerlemeyi işler ve güncellenmiş kaydı döndürür.
     @discardableResult
     func appendSession(_ session: ReadingSession, toEntryWith bookID: String) throws -> LibraryEntry

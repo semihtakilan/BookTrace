@@ -13,7 +13,7 @@ import Observation
 @Observable
 final class BooksViewModel {
     private(set) var entries: [LibraryEntry] = []
-    var errorMessage: String?
+    var error: UserFacingError?
 
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
@@ -62,9 +62,9 @@ final class BooksViewModel {
     func load() {
         do {
             entries = try libraryRepository.fetchEntries()
-            errorMessage = nil
+            self.error = nil
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = UserFacingError(error)
         }
     }
 
@@ -73,7 +73,7 @@ final class BooksViewModel {
             try libraryRepository.delete(id: entry.id)
             load()
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = UserFacingError(error)
         }
     }
 }

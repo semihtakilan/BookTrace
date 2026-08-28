@@ -72,6 +72,18 @@ final class LocalLibraryRepositoryImpl: LibraryRepository {
         try save()
     }
 
+    func deleteAll() throws {
+        // Oturumlar cascade ile, kategoriler kayıt kalmayınca öksüz kalacağı için
+        // ayrıca siliniyor.
+        for record in try modelContext.fetch(FetchDescriptor<LocalLibraryEntryModel>()) {
+            modelContext.delete(record)
+        }
+        for category in try modelContext.fetch(FetchDescriptor<LocalCategoryModel>()) {
+            modelContext.delete(category)
+        }
+        try save()
+    }
+
     @discardableResult
     func appendSession(_ session: ReadingSession, toEntryWith bookID: String) throws -> LibraryEntry {
         guard let record = try record(for: bookID) else {

@@ -38,16 +38,16 @@ struct ReadingProgressView: View {
         }
     }
 
-    private func progressLabel(fraction: Double, total: Int) -> String {
+    private func progressLabel(fraction: Double, total: Int) -> LocalizedStringKey {
         switch entry.progressType {
         case .pages:
-            "\(entry.currentPage) / \(total) pages"
+            "\(entry.currentPage) of \(total) pages"
         case .percentage:
-            "%\(Int((fraction * 100).rounded())) · \(entry.currentPage)/\(total)"
+            "\(Int((fraction * 100).rounded()))% of \(total) pages"
         }
     }
 
-    private var remainingText: String? {
+    private var remainingText: LocalizedStringKey? {
         guard let seconds = entry.estimatedRemainingSeconds else { return nil }
         let formatted = DurationFormatter.compact(seconds: seconds)
         return entry.hasPersonalizedSpeed ? "~\(formatted) left" : "~\(formatted) left (estimate)"

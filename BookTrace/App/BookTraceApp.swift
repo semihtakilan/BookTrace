@@ -22,7 +22,8 @@ struct BookTraceApp: App {
         WindowGroup {
             ApplicationRootView(
                 viewModelFactory: dependencies.viewModelFactory,
-                libraryChangeNotifier: dependencies.libraryChangeNotifier
+                libraryChangeNotifier: dependencies.libraryChangeNotifier,
+                settings: dependencies.settings
             )
                 .modelContainer(dependencies.modelContainer)
         }

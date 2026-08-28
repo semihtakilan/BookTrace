@@ -26,10 +26,15 @@ final class ExploreViewModel {
 
     /// Barkod okunduğunda doldurulur; ekran bunu görüp detay sayfasına gider.
     var scannedBook: BookReference?
-    var errorMessage: String?
+    var error: UserFacingError?
 
     @ObservationIgnored
     private let bookSearching: any BookSearching
+
+    /// Raf yüklemesi view'ın `.task`'ına değil, view model'a bağlı.
+    /// Aksi hâlde kullanıcı sekme değiştirince istek iptal oluyor ve raflar
+    /// "iptal edildi" hatasıyla kalıyordu.
+    @ObservationIgnored private var shelvesTask: Task<Void, Never>?
 
     init(bookSearching: any BookSearching) {
         self.bookSearching = bookSearching
@@ -39,11 +44,24 @@ final class ExploreViewModel {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// Rafları yalnızca ilk açılışta doldurur; sekmeye her dönüşte ağa çıkmaz.
-    ///
-    /// Raflar birbirinden bağımsız olduğu için paralel yüklenir — sırayla
-    /// beklemek ilk açılışı gereksiz yere uzatıyordu.
-    func loadShelvesIfNeeded() async {
+    // MARK: - Kategori rafları
+
+    /// Rafları yalnızca bir kez doldurur; sekmeye her dönüşte ağa çıkmaz.
+    func loadShelvesIfNeeded() {
+        guard shelvesTask == nil else { return }
+        shelvesTask = Task { [weak self] in
+            await self?.loadPendingShelves()
+        }
+    }
+
+    /// Tek bir rafı yeniden dener — "Try again" bunu çağırır.
+    func retry(shelf: SubjectShelf) async {
+        guard let index = shelves.firstIndex(where: { $0.id == shelf.id }) else { return }
+        shelves[index].state = .loading
+        shelves[index].state = await state(forShelfAt: index)
+    }
+
+    private func loadPendingShelves() async {
         let pendingIndices = shelves.indices.filter { shelves[$0].state.isIdle }
         guard !pendingIndices.isEmpty else { return }
 
@@ -51,6 +69,7 @@ final class ExploreViewModel {
             shelves[index].state = .loading
         }
 
+        // Raflar birbirinden bağımsız olduğu için paralel yüklenir.
         await withTaskGroup(of: (Int, ViewState<[BookReference]>).self) { group in
             for index in pendingIndices {
                 let subject = shelves[index].subject
@@ -59,7 +78,10 @@ final class ExploreViewModel {
                         let books = try await bookSearching.books(inSubject: subject.query, maxResults: 15)
                         return (index, .loaded(books))
                     } catch {
-                        return (index, .failed(error.localizedDescription))
+                        // İptal bir hata değil: rafı başa alıyoruz ki bir dahaki
+                        // girişte yeniden denensin, kullanıcıya da bir şey gösterilmesin.
+                        guard let userError = UserFacingError(error) else { return (index, .idle) }
+                        return (index, .failed(userError))
                     }
                 }
             }
@@ -68,12 +90,24 @@ final class ExploreViewModel {
                 shelves[index].state = state
             }
         }
+
+        // İptal yüzünden başa dönen raf kaldıysa bir sonraki deneme serbest olsun.
+        if shelves.contains(where: { $0.state.isIdle }) {
+            shelvesTask = nil
+        }
     }
 
-    func retry(shelf: SubjectShelf) async {
-        guard let index = shelves.firstIndex(where: { $0.id == shelf.id }) else { return }
-        await load(shelfAt: index)
+    private func state(forShelfAt index: Int) async -> ViewState<[BookReference]> {
+        do {
+            let books = try await bookSearching.books(inSubject: shelves[index].subject.query, maxResults: 15)
+            return .loaded(books)
+        } catch {
+            guard let userError = UserFacingError(error) else { return .idle }
+            return .failed(userError)
+        }
     }
+
+    // MARK: - Arama
 
     func performSearch() async {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -85,10 +119,13 @@ final class ExploreViewModel {
         searchState = .loading
         do {
             searchState = .loaded(try await bookSearching.searchBooks(query: query, maxResults: 20))
-        } catch is CancellationError {
-            // Kullanıcı yazmaya devam etti; bir sonraki arama sonucu gelecek.
         } catch {
-            searchState = .failed(error.localizedDescription)
+            // Kullanıcı yazmaya devam ettiyse arama iptal edilir; bu bir hata değil.
+            guard let userError = UserFacingError(error) else {
+                searchState = .idle
+                return
+            }
+            searchState = .failed(userError)
         }
     }
 
@@ -97,24 +134,14 @@ final class ExploreViewModel {
         searchState = .idle
     }
 
+    // MARK: - Barkod
+
     /// Barkoddan gelen ISBN'i kitaba çevirir ve detay akışına bağlar.
     func handleBarcodeScan(isbn: String) async {
         do {
             scannedBook = try await bookSearching.findBook(isbn: isbn)
-        } catch {
-            errorMessage = "Scanned \(isbn), but no book matched it: \(error.localizedDescription)"
-        }
-    }
-
-    private func load(shelfAt index: Int) async {
-        let subject = shelves[index].subject
-        shelves[index].state = .loading
-
-        do {
-            let books = try await bookSearching.books(inSubject: subject.query, maxResults: 15)
-            shelves[index].state = .loaded(books)
-        } catch {
-            shelves[index].state = .failed(error.localizedDescription)
+        } catch let scanError {
+            self.error = UserFacingError(scanError)
         }
     }
 }

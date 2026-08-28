@@ -41,6 +41,11 @@ extension Container {
     }
 
     @MainActor
+    var appSettings: Factory<AppSettings> {
+        self { AppSettings() }.singleton
+    }
+
+    @MainActor
     var libraryChangeNotifier: Factory<LibraryChangeNotifier> {
         self { LibraryChangeNotifier() }.singleton
     }
@@ -50,7 +55,9 @@ extension Container {
         self {
             ViewModelFactory(
                 libraryRepository: self.libraryRepository(),
-                bookSearching: self.bookSearching()
+                bookSearching: self.bookSearching(),
+                bookSearchCache: self.bookSearchCache(),
+                settings: self.appSettings()
             )
         }
         .singleton

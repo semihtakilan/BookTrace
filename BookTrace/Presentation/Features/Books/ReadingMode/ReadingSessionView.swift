@@ -106,15 +106,7 @@ private struct ReadingSessionContent: View {
         } message: {
             Text("The elapsed time will not be recorded.")
         }
-        .alert(
-            "Something went wrong",
-            isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            ),
-            actions: { Button("OK", role: .cancel) { viewModel.errorMessage = nil } },
-            message: { Text(viewModel.errorMessage ?? "") }
-        )
+        .errorAlert($viewModel.error)
     }
 }
 

@@ -19,7 +19,7 @@ final class ReadingSessionViewModel {
 
     var isPresentingFinishSheet = false
     var pagesReadText = ""
-    var errorMessage: String?
+    var error: UserFacingError?
 
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
@@ -105,7 +105,7 @@ final class ReadingSessionViewModel {
             isPresentingFinishSheet = false
             didSave = true
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = UserFacingError(error)
         }
     }
 

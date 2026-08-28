@@ -18,10 +18,19 @@ import Observation
 final class ViewModelFactory {
     @ObservationIgnored private let libraryRepository: any LibraryRepository
     @ObservationIgnored private let bookSearching: any BookSearching
+    @ObservationIgnored private let bookSearchCache: any BookSearchCaching
+    @ObservationIgnored private let settings: AppSettings
 
-    init(libraryRepository: any LibraryRepository, bookSearching: any BookSearching) {
+    init(
+        libraryRepository: any LibraryRepository,
+        bookSearching: any BookSearching,
+        bookSearchCache: any BookSearchCaching,
+        settings: AppSettings
+    ) {
         self.libraryRepository = libraryRepository
         self.bookSearching = bookSearching
+        self.bookSearchCache = bookSearchCache
+        self.settings = settings
     }
 
     func makeBooksViewModel() -> BooksViewModel {
@@ -37,7 +46,11 @@ final class ViewModelFactory {
     }
 
     func makeBookDetailViewModel(book: BookReference) -> BookDetailViewModel {
-        BookDetailViewModel(book: book, libraryRepository: libraryRepository)
+        BookDetailViewModel(book: book, libraryRepository: libraryRepository, settings: settings)
+    }
+
+    func makeSettingsViewModel() -> SettingsViewModel {
+        SettingsViewModel(libraryRepository: libraryRepository, bookSearchCache: bookSearchCache)
     }
 
     func makeLibraryEntryDetailViewModel(entry: LibraryEntry) -> LibraryEntryDetailViewModel {

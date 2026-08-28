@@ -52,6 +52,16 @@ final class BookSearchCache: BookSearchCaching, @unchecked Sendable {
         try? data.write(to: fileURL(for: key), options: .atomic)
     }
 
+    func removeAll() {
+        guard let files = try? fileManager.contentsOfDirectory(
+            at: directoryURL,
+            includingPropertiesForKeys: nil
+        ) else { return }
+        for file in files {
+            try? fileManager.removeItem(at: file)
+        }
+    }
+
     /// Anahtarlar `:` ve `"` gibi dosya adında sorun çıkaran karakterler içeriyor,
     /// bu yüzden base64'e çevriliyor.
     private func fileURL(for key: String) -> URL {

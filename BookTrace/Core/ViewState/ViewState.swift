@@ -12,7 +12,7 @@ enum ViewState<Value: Sendable>: Sendable {
     case idle
     case loading
     case loaded(Value)
-    case failed(String)
+    case failed(UserFacingError)
 
     var value: Value? {
         if case .loaded(let value) = self { return value }
@@ -29,8 +29,8 @@ enum ViewState<Value: Sendable>: Sendable {
         return false
     }
 
-    var errorMessage: String? {
-        if case .failed(let message) = self { return message }
+    var error: UserFacingError? {
+        if case .failed(let error) = self { return error }
         return nil
     }
 }

@@ -17,6 +17,7 @@ import SwiftData
 struct AppDependencies {
     let viewModelFactory: ViewModelFactory
     let libraryChangeNotifier: LibraryChangeNotifier
+    let settings: AppSettings
     let modelContainer: ModelContainer
 
     init(container: Container) {
@@ -42,6 +43,7 @@ struct AppDependencies {
             repository
         }
 
+        settings = container.appSettings()
         viewModelFactory = container.viewModelFactory()
     }
 }

@@ -75,15 +75,7 @@ private struct BookLibraryDetailContent: View {
         } message: {
             Text("Reading sessions recorded for this book will also be deleted.")
         }
-        .alert(
-            "Something went wrong",
-            isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            ),
-            actions: { Button("OK", role: .cancel) { viewModel.errorMessage = nil } },
-            message: { Text(viewModel.errorMessage ?? "") }
-        )
+        .errorAlert($viewModel.error)
         .onAppear { viewModel.reload() }
         // Tam ekran okuma oturumu kapanırken bu ekran "yeniden görünmüş" saymadığı
         // için onAppear tetiklenmiyor; oturum kaydı buradan yakalanır.
@@ -142,13 +134,13 @@ private struct BookLibraryDetailContent: View {
                 Menu {
                     Picker("Reading Status", selection: readingStatusBinding) {
                         ForEach(ReadingStatus.allCases, id: \.self) { status in
-                            Label(status.displayName, systemImage: status.systemImage).tag(status)
+                            Label(status.titleKey, systemImage: status.systemImage).tag(status)
                         }
                     }
                 } label: {
                     ActionTile(
                         caption: "Reading Status",
-                        value: entry.readingStatus.displayName,
+                        value: entry.readingStatus.titleKey,
                         systemImage: entry.readingStatus.systemImage
                     )
                 }
@@ -156,13 +148,13 @@ private struct BookLibraryDetailContent: View {
                 Menu {
                     Picker("Ownership Status", selection: ownershipStatusBinding) {
                         ForEach(OwnershipStatus.allCases, id: \.self) { status in
-                            Label(status.displayName, systemImage: status.systemImage).tag(status)
+                            Label(status.titleKey, systemImage: status.systemImage).tag(status)
                         }
                     }
                 } label: {
                     ActionTile(
                         caption: "Ownership",
-                        value: entry.ownershipStatus.displayName,
+                        value: entry.ownershipStatus.titleKey,
                         systemImage: entry.ownershipStatus.systemImage
                     )
                 }
@@ -177,7 +169,7 @@ private struct BookLibraryDetailContent: View {
                 Spacer()
                 Picker("Progress Type", selection: progressTypeBinding) {
                     ForEach(ProgressType.allCases, id: \.self) { type in
-                        Text(type.displayName).tag(type)
+                        Text(type.titleKey).tag(type)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -276,10 +268,10 @@ private struct BookLibraryDetailContent: View {
 
     // MARK: - İlerleme girişi
 
-    private var progressFieldPrompt: String {
+    private var progressFieldPrompt: LocalizedStringKey {
         switch entry.progressType {
-        case .pages:      "Current page (0–\(entry.effectivePageCount ?? 0))"
-        case .percentage: "Completed percentage (0–100)"
+        case .pages:      "Current page (0 to \(entry.effectivePageCount ?? 0))"
+        case .percentage: "Completed percentage (0 to 100)"
         }
     }
 
@@ -306,8 +298,8 @@ private struct BookLibraryDetailContent: View {
 }
 
 private struct ActionTile: View {
-    let caption: String
-    let value: String
+    let caption: LocalizedStringKey
+    let value: LocalizedStringKey
     let systemImage: String
 
     var body: some View {

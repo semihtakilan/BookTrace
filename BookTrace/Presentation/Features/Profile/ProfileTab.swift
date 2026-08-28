@@ -26,6 +26,7 @@ struct ProfileTab: View {
 private struct ProfileContentView: View {
     @Bindable var viewModel: ProfileViewModel
 
+    @Environment(\.navigator) private var navigator
     @Environment(AppRouteTypeManager.self) private var routeManager
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
 
@@ -38,15 +39,17 @@ private struct ProfileContentView: View {
             }
         }
         .navigationTitle("Profile")
-        .alert(
-            "Something went wrong",
-            isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            ),
-            actions: { Button("OK", role: .cancel) { viewModel.errorMessage = nil } },
-            message: { Text(viewModel.errorMessage ?? "") }
-        )
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    navigator.navigate(to: ProfileDestinations.settings)
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+                .accessibilityLabel("Settings")
+            }
+        }
+        .errorAlert($viewModel.error)
         .onAppear { viewModel.load() }
         .onChange(of: libraryChangeNotifier.revision) { _, _ in viewModel.load() }
     }
@@ -73,13 +76,13 @@ private struct ProfileContentView: View {
                 breakdown(
                     title: "Reading Status",
                     rows: viewModel.statusBreakdown.map {
-                        ($0.status.displayName, $0.status.systemImage, $0.count)
+                        ($0.status.titleKey, $0.status.systemImage, $0.count)
                     }
                 )
                 breakdown(
                     title: "Ownership",
                     rows: viewModel.ownershipBreakdown.map {
-                        ($0.status.displayName, $0.status.systemImage, $0.count)
+                        ($0.status.titleKey, $0.status.systemImage, $0.count)
                     }
                 )
                 recentSessions
@@ -148,12 +151,12 @@ private struct ProfileContentView: View {
         }
     }
 
-    private func breakdown(title: String, rows: [(String, String, Int)]) -> some View {
+    private func breakdown(title: LocalizedStringKey, rows: [(LocalizedStringKey, String, Int)]) -> some View {
         ProfileCard(title: title) {
             ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
                 if index > 0 { Divider() }
                 LabeledContent {
-                    Text("\(row.2)")
+                    Text(row.2, format: .number)
                 } label: {
                     Label(row.0, systemImage: row.1)
                 }
@@ -196,7 +199,7 @@ private struct ProfileContentView: View {
 
 private struct SummaryTile: View {
     let value: String
-    let caption: String
+    let caption: LocalizedStringKey
     let systemImage: String
 
     var body: some View {
@@ -217,7 +220,7 @@ private struct SummaryTile: View {
 }
 
 private struct ProfileCard<Content: View>: View {
-    let title: String
+    let title: LocalizedStringKey
     @ViewBuilder let content: Content
 
     var body: some View {

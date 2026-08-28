@@ -47,15 +47,7 @@ private struct BooksContentView: View {
                 }
             }
         }
-        .alert(
-            "Something went wrong",
-            isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            ),
-            actions: { Button("OK", role: .cancel) { viewModel.errorMessage = nil } },
-            message: { Text(viewModel.errorMessage ?? "") }
-        )
+        .errorAlert($viewModel.error)
         .onAppear { viewModel.load() }
         // Explore'dan kitap eklendiğinde veya detayda bir şey değiştiğinde,
         // bu sekme hiç kaybolmamış olsa bile listeyi tazeler.
@@ -84,7 +76,7 @@ private struct BooksContentView: View {
 
                 ForEach(viewModel.entriesByStatus, id: \.status) { group in
                     LibraryShelf(
-                        title: group.status.displayName,
+                        title: Text(group.status.titleKey),
                         systemImage: group.status.systemImage,
                         entries: group.entries,
                         isEditing: isEditing,
@@ -96,7 +88,7 @@ private struct BooksContentView: View {
 
                 ForEach(viewModel.entriesByOwnership, id: \.status) { group in
                     LibraryShelf(
-                        title: group.status.displayName,
+                        title: Text(group.status.titleKey),
                         systemImage: group.status.systemImage,
                         entries: group.entries,
                         isEditing: isEditing,
@@ -109,7 +101,7 @@ private struct BooksContentView: View {
 
                     ForEach(viewModel.entriesByCategory, id: \.category) { group in
                         LibraryShelf(
-                            title: group.category.name,
+                            title: Text(group.category.name),
                             systemImage: "tag",
                             entries: group.entries,
                             isEditing: isEditing,
@@ -124,7 +116,7 @@ private struct BooksContentView: View {
 }
 
 private struct SectionHeader: View {
-    let title: String
+    let title: LocalizedStringKey
 
     var body: some View {
         Text(title)
@@ -192,7 +184,9 @@ private struct NowReadingCard: View {
 }
 
 private struct LibraryShelf: View {
-    let title: String
+    /// Kategori rafları kullanıcı verisi taşıdığı için hazır `Text` alıyoruz;
+    /// durum rafları çevrilebilir anahtardan geliyor.
+    let title: Text
     let systemImage: String
     let entries: [LibraryEntry]
     let isEditing: Bool
@@ -202,9 +196,13 @@ private struct LibraryShelf: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label("\(title) · \(entries.count)", systemImage: systemImage)
-                .font(.headline)
-                .padding(.horizontal)
+            Label {
+                title + Text(" · \(entries.count)")
+            } icon: {
+                Image(systemName: systemImage)
+            }
+            .font(.headline)
+            .padding(.horizontal)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 14) {

@@ -22,7 +22,7 @@ struct BarcodeScannerSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var accessState: CameraAccessState = .checking
-    @State private var sessionErrorMessage: String?
+    @State private var sessionError: UserFacingError?
 
     var body: some View {
         NavigationStack {
@@ -52,12 +52,12 @@ struct BarcodeScannerSheet: View {
                         onScan(barcode)
                         dismiss()
                     },
-                    onError: { message in sessionErrorMessage = message }
+                    onError: { sessionError = $0 }
                 )
                 .ignoresSafeArea(edges: .bottom)
 
-                if let sessionErrorMessage {
-                    Text(sessionErrorMessage)
+                if let sessionError {
+                    Text(sessionError.message)
                         .font(.footnote)
                         .foregroundStyle(.white)
                         .padding()
@@ -135,7 +135,7 @@ enum CameraAccessState {
 /// Yalnızca kamera var ve izin verilmişken oluşturulur.
 private struct CameraPreviewView: UIViewControllerRepresentable {
     let onScan: (String) -> Void
-    let onError: (String) -> Void
+    let onError: (UserFacingError) -> Void
 
     func makeUIViewController(context: Context) -> ScannerViewController {
         let controller = ScannerViewController()
@@ -161,7 +161,9 @@ private struct CameraPreviewView: UIViewControllerRepresentable {
         }
 
         func didFail(with error: Error) {
-            parent.onError(error.localizedDescription)
+            // İptal edilen oturumlar için `UserFacingError` nil döner; gösterilecek bir şey yok.
+            guard let userError = UserFacingError(error) else { return }
+            parent.onError(userError)
         }
     }
 }

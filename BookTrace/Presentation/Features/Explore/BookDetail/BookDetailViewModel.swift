@@ -8,6 +8,7 @@
 import Foundation
 import Models
 import Observation
+import SwiftUI
 
 @MainActor
 @Observable
@@ -17,7 +18,7 @@ final class BookDetailViewModel {
     private(set) var existingEntry: LibraryEntry?
     private(set) var didSave = false
     var isPresentingForm = false
-    var errorMessage: String?
+    var error: UserFacingError?
 
     // MARK: "Add to Library" formunun durumu
     var readingStatus: ReadingStatus = .toRead
@@ -30,16 +31,19 @@ final class BookDetailViewModel {
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
     @ObservationIgnored
+    private let settings: AppSettings
+    @ObservationIgnored
     private var knownCategories: [Models.Category] = []
 
-    init(book: BookReference, libraryRepository: any LibraryRepository) {
+    init(book: BookReference, libraryRepository: any LibraryRepository, settings: AppSettings) {
         self.book = book
         self.libraryRepository = libraryRepository
+        self.settings = settings
     }
 
     var isInLibrary: Bool { existingEntry != nil }
 
-    var primaryActionTitle: String {
+    var primaryActionTitle: LocalizedStringKey {
         isInLibrary ? "Update Library Details" : "Add to Library"
     }
 
@@ -68,7 +72,7 @@ final class BookDetailViewModel {
                     if !result.contains(where: { $0.id == category.id }) { result.append(category) }
                 }
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = UserFacingError(error)
         }
     }
 
@@ -81,9 +85,10 @@ final class BookDetailViewModel {
             pageCountText = entry.effectivePageCount.map(String.init) ?? ""
             selectedCategories = entry.categories
         } else {
-            readingStatus = .toRead
+            // Yeni kitaplar Settings'teki varsayılanlarla açılır.
+            readingStatus = settings.defaultReadingStatus
             ownershipStatus = .notOwned
-            progressType = .pages
+            progressType = settings.defaultProgressType
             pageCountText = book.pageCount.map(String.init) ?? ""
             selectedCategories = []
         }
@@ -130,9 +135,9 @@ final class BookDetailViewModel {
             existingEntry = try libraryRepository.entry(for: book.id)
             isPresentingForm = false
             didSave = true
-            errorMessage = nil
+            self.error = nil
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = UserFacingError(error)
         }
     }
 
@@ -141,7 +146,7 @@ final class BookDetailViewModel {
             try libraryRepository.delete(id: book.id)
             existingEntry = nil
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = UserFacingError(error)
         }
     }
 }

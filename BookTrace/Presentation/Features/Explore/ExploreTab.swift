@@ -64,9 +64,7 @@ private struct ExploreContentView: View {
             }
             await viewModel.performSearch()
         }
-        .task {
-            await viewModel.loadShelvesIfNeeded()
-        }
+        .onAppear { viewModel.loadShelvesIfNeeded() }
         .sheet(isPresented: $isPresentingScanner) {
             BarcodeScannerSheet { isbn in pendingISBN = isbn }
         }
@@ -82,15 +80,7 @@ private struct ExploreContentView: View {
             viewModel.scannedBook = nil
             navigator.navigate(to: ExploreDestinations.bookDetail(book))
         }
-        .alert(
-            "Something went wrong",
-            isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            ),
-            actions: { Button("OK", role: .cancel) { viewModel.errorMessage = nil } },
-            message: { Text(viewModel.errorMessage ?? "") }
-        )
+        .errorAlert($viewModel.error)
     }
 
     // MARK: - Arama sonuçları
@@ -101,12 +91,19 @@ private struct ExploreContentView: View {
         case .idle, .loading:
             ProgressView("Searching…")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        case .failed(let message):
-            ContentUnavailableView(
-                "Search failed",
-                systemImage: "exclamationmark.triangle",
-                description: Text(message)
-            )
+        case .failed(let error):
+            ContentUnavailableView {
+                Label("Search failed", systemImage: "exclamationmark.triangle")
+            } description: {
+                Text(error.message)
+            } actions: {
+                if error.isRetryable {
+                    Button("Try again") {
+                        Task { await viewModel.performSearch() }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
         case .loaded(let books) where books.isEmpty:
             ContentUnavailableView.search(text: viewModel.searchText)
         case .loaded(let books):
@@ -152,7 +149,7 @@ private struct SubjectShelfRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label(shelf.subject.displayName, systemImage: shelf.subject.systemImage)
+            Label(LocalizedStringKey(shelf.subject.displayName), systemImage: shelf.subject.systemImage)
                 .font(.title3.bold())
                 .padding(.horizontal)
 
@@ -161,13 +158,15 @@ private struct SubjectShelfRow: View {
                 ProgressView()
                     .frame(height: 150)
                     .frame(maxWidth: .infinity)
-            case .failed(let message):
+            case .failed(let error):
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(message)
+                    Text(error.message)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
-                    Button("Try again") { Task { await onRetry() } }
-                        .font(.footnote)
+                    if error.isRetryable {
+                        Button("Try again") { Task { await onRetry() } }
+                            .font(.footnote)
+                    }
                 }
                 .padding(.horizontal)
             case .loaded(let books) where books.isEmpty:

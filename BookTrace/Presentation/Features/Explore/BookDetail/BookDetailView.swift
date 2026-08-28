@@ -47,15 +47,7 @@ private struct BookDetailContent: View {
         .sheet(isPresented: $viewModel.isPresentingForm) {
             AddToLibraryForm(viewModel: viewModel)
         }
-        .alert(
-            "Something went wrong",
-            isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            ),
-            actions: { Button("OK", role: .cancel) { viewModel.errorMessage = nil } },
-            message: { Text(viewModel.errorMessage ?? "") }
-        )
+        .errorAlert($viewModel.error)
         .onAppear { viewModel.load() }
     }
 
@@ -149,7 +141,7 @@ private struct AddToLibraryForm: View {
                 Section("Reading Status") {
                     Picker("Reading Status", selection: $viewModel.readingStatus) {
                         ForEach(ReadingStatus.allCases, id: \.self) { status in
-                            Label(status.displayName, systemImage: status.systemImage).tag(status)
+                            Label(status.titleKey, systemImage: status.systemImage).tag(status)
                         }
                     }
                     .pickerStyle(.menu)
@@ -158,7 +150,7 @@ private struct AddToLibraryForm: View {
                 Section {
                     Picker("Progress Type", selection: $viewModel.progressType) {
                         ForEach(ProgressType.allCases, id: \.self) { type in
-                            Text(type.displayName).tag(type)
+                            Text(type.titleKey).tag(type)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -174,7 +166,7 @@ private struct AddToLibraryForm: View {
                 Section("Ownership Status") {
                     Picker("Ownership Status", selection: $viewModel.ownershipStatus) {
                         ForEach(OwnershipStatus.allCases, id: \.self) { status in
-                            Label(status.displayName, systemImage: status.systemImage).tag(status)
+                            Label(status.titleKey, systemImage: status.systemImage).tag(status)
                         }
                     }
                     .pickerStyle(.menu)

@@ -27,7 +27,7 @@ struct RecentReadingSession: Identifiable {
 @Observable
 final class ProfileViewModel {
     private(set) var entries: [LibraryEntry] = []
-    var errorMessage: String?
+    var error: UserFacingError?
 
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
@@ -114,9 +114,9 @@ final class ProfileViewModel {
     func load() {
         do {
             entries = try libraryRepository.fetchEntries()
-            errorMessage = nil
+            self.error = nil
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = UserFacingError(error)
         }
     }
 }

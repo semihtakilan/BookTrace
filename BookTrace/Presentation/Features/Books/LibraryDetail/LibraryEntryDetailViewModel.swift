@@ -14,7 +14,7 @@ import Observation
 final class LibraryEntryDetailViewModel {
     private(set) var entry: LibraryEntry
     private(set) var wasRemoved = false
-    var errorMessage: String?
+    var error: UserFacingError?
 
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
@@ -33,7 +33,7 @@ final class LibraryEntryDetailViewModel {
                 wasRemoved = true
             }
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = UserFacingError(error)
         }
     }
 
@@ -75,7 +75,7 @@ final class LibraryEntryDetailViewModel {
             try libraryRepository.delete(id: entry.id)
             wasRemoved = true
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = UserFacingError(error)
         }
     }
 
@@ -83,9 +83,9 @@ final class LibraryEntryDetailViewModel {
         do {
             try libraryRepository.update(updated)
             entry = updated
-            errorMessage = nil
+            self.error = nil
         } catch {
-            errorMessage = error.localizedDescription
+            self.error = UserFacingError(error)
         }
     }
 }

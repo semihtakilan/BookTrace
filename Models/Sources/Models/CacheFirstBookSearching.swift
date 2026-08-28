@@ -10,6 +10,8 @@ import Foundation
 public protocol BookSearchCaching: Sendable {
     func books(for key: String) -> [BookReference]?
     func store(_ books: [BookReference], for key: String)
+    /// Saklanan tüm arama sonuçlarını siler.
+    func removeAll()
 }
 
 /// Önce cache'e bakan, yoksa uzak kaynağa giden dekoratör.

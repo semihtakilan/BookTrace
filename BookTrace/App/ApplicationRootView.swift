@@ -11,15 +11,21 @@ import NavigatorUI
 struct ApplicationRootView: View {
     private let viewModelFactory: ViewModelFactory
     private let libraryChangeNotifier: LibraryChangeNotifier
+    private let settings: AppSettings
 
     @State private var routeManager = AppRouteTypeManager()
     @State private var booksViewModel: BooksViewModel
     @State private var exploreViewModel: ExploreViewModel
     @State private var profileViewModel: ProfileViewModel
 
-    init(viewModelFactory: ViewModelFactory, libraryChangeNotifier: LibraryChangeNotifier) {
+    init(
+        viewModelFactory: ViewModelFactory,
+        libraryChangeNotifier: LibraryChangeNotifier,
+        settings: AppSettings
+    ) {
         self.viewModelFactory = viewModelFactory
         self.libraryChangeNotifier = libraryChangeNotifier
+        self.settings = settings
         _booksViewModel = State(initialValue: viewModelFactory.makeBooksViewModel())
         _exploreViewModel = State(initialValue: viewModelFactory.makeExploreViewModel())
         _profileViewModel = State(initialValue: viewModelFactory.makeProfileViewModel())
@@ -34,6 +40,10 @@ struct ApplicationRootView: View {
         )
         .environment(viewModelFactory)
         .environment(libraryChangeNotifier)
+        .environment(settings)
+        // Tema ve dil kökten uygulanır; ayar değiştiği anda tüm ekranlar yeniden çizilir.
+        .preferredColorScheme(settings.theme.colorScheme)
+        .environment(\.locale, settings.resolvedLocale)
         .task {
             await routeManager.bootstrap()
         }

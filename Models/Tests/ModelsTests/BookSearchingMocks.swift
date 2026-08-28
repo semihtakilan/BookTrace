@@ -53,4 +53,8 @@ final class BookSearchCacheMock: BookSearchCaching, @unchecked Sendable {
         storeCallCount += 1
         values[key] = books
     }
+
+    func removeAll() {
+        values.removeAll()
+    }
 }

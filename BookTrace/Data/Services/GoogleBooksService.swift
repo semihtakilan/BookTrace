@@ -50,9 +50,22 @@ final class GoogleBooksService: BookSearching {
             switch error.statusCode {
             case 429, 403:
                 throw GoogleBooksServiceError.quotaExceeded(hasAPIKey: apiKey != nil)
+            case 503:
+                throw GoogleBooksServiceError.regionUnavailable(GoogleBooksRegion.current)
+            case nil where error.isDecodingFailure:
+                // NetworkKit'in decode hatası tüm gövdeyi metne gömüyor; onu
+                // kullanıcıya göstermek yerine loglarda bırakıyoruz.
+                throw GoogleBooksServiceError.unreadableResponse
             default:
                 throw error
             }
         }
+    }
+}
+
+private extension NetworkError {
+    var isDecodingFailure: Bool {
+        if case .decodingError = self { return true }
+        return false
     }
 }

@@ -9,6 +9,11 @@ import Foundation
 import Models
 
 /// Google Books'un taşıma formatı; Domain `BookReference`'tan bağımsız tutulur.
+///
+/// Taşıma modelindeki her alan isteğe bağlı. Google zaman zaman başlıksız veya
+/// eksik alanlı ciltler döndürüyor; alanlar zorunlu olsaydı tek bozuk kayıt
+/// tüm sayfanın decode'unu düşürürdü. Eksik kayıtlar `toBookReferences()`
+/// aşamasında sessizce eleniyor.
 struct GoogleBooksSearchResponse: Decodable, Sendable {
     let items: [GoogleBooksVolume]?
 
@@ -21,25 +26,29 @@ struct GoogleBooksSearchResponse: Decodable, Sendable {
         case items
     }
 
-    /// Başlıksız veya kimliği tekrar eden kayıtları eler; Google zaman zaman
-    /// aynı cildi birden fazla baskıyla döndürüyor.
+    /// Kimliği veya başlığı olmayan ve kimliği tekrar eden kayıtları eler.
     nonisolated func toBookReferences() -> [BookReference] {
         var seenIDs = Set<String>()
         return (items ?? [])
-            .filter { !$0.volumeInfo.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .compactMap { $0.toDomain() }
             .filter { seenIDs.insert($0.id).inserted }
-            .map { $0.toDomain() }
     }
 }
 
 struct GoogleBooksVolume: Decodable, Sendable {
-    let id: String
-    let volumeInfo: GoogleBooksVolumeInfo
+    let id: String?
+    let volumeInfo: GoogleBooksVolumeInfo?
 
-    nonisolated func toDomain() -> BookReference {
-        BookReference(
+    /// Kullanılabilir bir kitap üretemiyorsa `nil` döner.
+    nonisolated func toDomain() -> BookReference? {
+        guard let id, !id.isEmpty, let volumeInfo else { return nil }
+
+        let title = volumeInfo.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !title.isEmpty else { return nil }
+
+        return BookReference(
             id: id,
-            title: volumeInfo.title,
+            title: title,
             authors: volumeInfo.authors ?? [],
             coverURL: volumeInfo.coverURL,
             pageCount: volumeInfo.pageCount.flatMap { $0 > 0 ? $0 : nil },
@@ -54,7 +63,7 @@ struct GoogleBooksVolume: Decodable, Sendable {
 }
 
 struct GoogleBooksVolumeInfo: Decodable, Sendable {
-    let title: String
+    let title: String?
     let authors: [String]?
     let pageCount: Int?
     let imageLinks: GoogleBooksImageLinks?
@@ -78,6 +87,6 @@ struct GoogleBooksImageLinks: Decodable, Sendable {
 }
 
 struct GoogleBooksIndustryIdentifier: Decodable, Sendable {
-    let type: String
-    let identifier: String
+    let type: String?
+    let identifier: String?
 }

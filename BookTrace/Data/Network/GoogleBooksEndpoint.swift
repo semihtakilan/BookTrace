@@ -10,6 +10,18 @@ import NetworkKit
 
 private let googleBooksBaseURL = URL(string: "https://www.googleapis.com/books/v1")!
 
+/// İsteğe eklenen ülke kodu.
+///
+/// Google Books, `country` parametresi olmadan gelen çağrılara `503
+/// backendFailed` döndürüyor — ve verilen değeri çağıranın IP'sinden tespit
+/// ettiği ülkeyle karşılaştırıyor, uyuşmazsa yine 503. Bu yüzden sabit bir
+/// değer yerine cihazın bölge ayarını gönderiyoruz.
+nonisolated enum GoogleBooksRegion {
+    static var current: String {
+        Locale.current.region?.identifier ?? "US"
+    }
+}
+
 /// Google Books `volumes` uç noktası.
 ///
 /// Explore'un üç girişi de aynı uç noktaya farklı `q` ifadeleriyle çıkar; bu
@@ -25,7 +37,8 @@ struct GoogleBooksSearchEndpoint: Endpoint {
         var parameters = [
             "q": query,
             "maxResults": String(min(max(maxResults, 1), 40)),
-            "printType": "books"
+            "printType": "books",
+            "country": GoogleBooksRegion.current
         ]
         // Anahtar yoksa istek yine gider; Google anahtarsız çağrıları düşük kotayla karşılar.
         if let apiKey {

@@ -38,6 +38,16 @@ bağlamanız daha güvenli.
 Anahtar bulunamazsa uygulama yine de istek atar; kota hatası alındığında hata
 mesajı kullanıcıyı anahtar eklemeye yönlendirir.
 
+### `country` parametresi
+
+Google Books, `country` parametresi olmadan gelen çağrılara `503 backendFailed`
+döndürüyor — ve verilen değeri çağıranın IP'sinden tespit ettiği ülkeyle
+karşılaştırıyor, uyuşmazsa yine 503. Uygulama bu yüzden isteklere cihazın bölge
+ayarını (`Locale.current.region`) ekliyor.
+
+Simülatörde 503 alıyorsanız simülatörün bölgesi bulunduğunuz ülkeyle
+eşleşmiyordur: Settings → General → Language & Region → Region.
+
 ## Testler
 
 Domain mantığı (ilerleme hesabı, durum geçişleri, cache-first davranışı, okuma

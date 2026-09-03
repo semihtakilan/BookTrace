@@ -10,6 +10,7 @@ Built with **SwiftUI**, **SwiftData**, and local **Swift packages**, the project
 - [Technology stack](#technology-stack)
 - [Requirements](#requirements)
 - [Getting started](#getting-started)
+- [Book data sources](#book-data-sources)
 - [Google Books API configuration](#google-books-api-configuration)
 - [Using BookTrace](#using-booktrace)
 - [Architecture](#architecture)
@@ -113,17 +114,55 @@ The app target uses Swift 5 language mode, while the local packages use Swift 6 
 
 You can explore the library, discovery, and profile flows in the Simulator. Use a physical device to exercise camera scanning.
 
-## Google Books API configuration
+## Book data sources
 
-BookTrace uses the Google Books [volumes endpoint](https://developers.google.com/books/docs/v1/reference/volumes/list) for text search, subject shelves, and ISBN lookup:
+BookTrace reads from two catalogues and routes between them by cost. Google Books enforces a **daily request quota shared by every installation of the app**, while Open Library has no daily ceiling and limits request *rate* per IP — three requests per second for a client that identifies itself. Lists are what generate requests; single books are what need rich data. So:
+
+**Breadth comes from Open Library, depth from Google Books.**
+
+| Flow | Primary | Fallback | Why |
+| --- | --- | --- | --- |
+| Explore shelves | Bundled snapshot, then Open Library | Google Books | Six requests per cold launch became zero |
+| Text search | Open Library | Google Books, when the search returns nothing | Comparable results, including Turkish titles |
+| Book detail | The book's own catalogue | Google Books, only when no description was found | One request for the book actually opened |
+| Barcode / ISBN | Open Library edition record | Google Books | Edition records carry the printing the user scanned |
+
+The app uses public book metadata and keeps its personal library locally. It requires no sign-in to either service.
+
+Text search requests up to 20 results, each subject shelf requests up to 15, and barcode lookup requests one result. Discovery displays a single batch per query; pagination is not implemented.
+
+### Open Library
 
 ```text
-GET https://www.googleapis.com/books/v1/volumes
+GET https://openlibrary.org/search.json      # search and subject shelves
+GET https://openlibrary.org/works/{id}.json  # description and subjects
+GET https://openlibrary.org/isbn/{isbn}.json # edition record for a scanned barcode
 ```
 
-The app uses public book metadata and keeps its personal library locally. It does not require Google sign-in or access a user's Google Books bookshelves.
+No key is required. Requests carry a `User-Agent` naming the app and a contact address, which is what raises the rate limit from one request per second to three; `RequestThrottle` spaces requests so six shelves loading at once stay inside it.
 
-Text search requests up to 20 results, each subject shelf requests up to 15, and barcode lookup requests one result. Discovery currently displays a single batch per query; pagination is not implemented.
+List requests ask for a narrow `fields` set. Adding `isbn` to it grows a 15-result response from 2.6 KB to 191 KB, because Open Library returns the ISBNs of every edition of every work — that data is fetched per book on the detail screen instead. Cover images are addressed by cover id (`/b/id/{id}-M.jpg`) rather than ISBN or OLID, whose routes are capped at 100 requests per IP per five minutes.
+
+### Google Books
+
+```text
+GET https://www.googleapis.com/books/v1/volumes      # search, subject shelves, ISBN
+GET https://www.googleapis.com/books/v1/volumes/{id} # one volume, for enrichment
+```
+
+Every call passes through `DailyRequestBudget`, which caps one device at 25 requests a day and suspends the source for an hour after a quota error. Both limits fail soft: requests fall back to Open Library and the user sees no interruption.
+
+### Shelf snapshot
+
+Explore's six shelves are identical for every user, and Open Library's subject query is slow (measured at 2–4 seconds). `BookTrace/Resources/ShelfSeed.json` ships a snapshot of them, so a first launch fills instantly, spends no request, and works with no connection at all. The cache treats the snapshot as stale, so it refreshes in the background on first use. Regenerate it with:
+
+```bash
+python3 Scripts/generate_shelf_seed.py
+```
+
+The script's field mapping mirrors `OpenLibraryDocument.toDomain()`; `ShelfSeedTests` fails if the two drift apart.
+
+## Google Books API configuration
 
 ### Create an API key
 
@@ -200,6 +239,8 @@ This applies only to launches started by Xcode. An archived or installed app nev
 - `.env` files are not loaded by the app.
 - Requests include a `country` value from `Locale.current.region`, with `US` as the fallback. This follows the device region, independently of the app's selected interface language.
 - The network logger can include the API key in request URLs. Remove the `key` query value before sharing logs.
+- Without a key the app still runs: Open Library answers most requests, and Google Books calls fail with a quota error that routes back to Open Library.
+- Debug builds show the day's Google Books request count under **Profile → Settings → About**.
 
 ## Using BookTrace
 
@@ -219,22 +260,28 @@ BookTrace follows **MVVM with repository abstractions**. Views observe view mode
 ```mermaid
 flowchart TD
     Views[SwiftUI views] --> ViewModels[Observable view models]
-    ViewModels --> Search[BookSearching]
+    ViewModels --> Search[BookSearching / BookDetailFetching]
     ViewModels --> Library[LibraryRepository]
-    Search --> CachedSearch[CacheFirstBookSearching]
-    CachedSearch --> DiskCache[BookSearchCache / JSON files]
-    CachedSearch --> Google[GoogleBooksService]
-    Google --> Network[NetworkKit / URLSession]
-    Network --> API[Google Books API]
+    Search --> Cached[CachedBookSearching<br/>serves stale, refreshes behind]
+    Cached --> Store[SwiftDataBookCacheStore]
+    Store --> Seed[ShelfSeed.json<br/>answers a cold cache]
+    Cached --> Hybrid[HybridBookSearching<br/>routing policy]
+    Hybrid --> OpenLibrary[OpenLibraryService<br/>throttled, no key]
+    Hybrid --> Budget[DailyRequestBudget<br/>cap + circuit breaker]
+    Budget --> Google[GoogleBooksService]
+    OpenLibrary --> Network[NetworkKit / URLSession]
+    Google --> Network
     Library --> Repository[LocalLibraryRepositoryImpl]
     Repository --> Persistence[SwiftData]
 ```
+
+Each layer answers one question. `CachedBookSearching` asks whether the answer is already on the device; `HybridBookSearching` asks which catalogue should answer; `DailyRequestBudget` asks whether the expensive one may be asked at all. View models see none of this — they depend on `BookSearching`, which has not changed.
 
 ### Local packages
 
 | Package | Responsibility |
 | --- | --- |
-| [Models](Models) | Domain values, repository protocols, progress rules, reading-speed estimates, and the cache-first search decorator; independent of SwiftUI and SwiftData |
+| [Models](Models) | Domain values, repository protocols, progress rules, reading-speed estimates, and the source-routing and caching decorators; independent of SwiftUI, SwiftData, and both catalogues |
 | [NetworkKit](NetworkKit) | Typed endpoints, the `NetworkService` actor, HTTP request construction, request/response interceptors, logging, and retries for eligible failures |
 | [NetworkRegistration](NetworkRegistration) | Factory registrations for networking configuration, the environment manager, and request/response interceptors |
 
@@ -242,7 +289,9 @@ flowchart TD
 
 - **Composition root:** `AppDependencies` creates the SwiftData container and connects the concrete repository to Factory registrations.
 - **View model creation:** `ViewModelFactory` supplies dependencies to navigation destinations through the SwiftUI environment.
-- **Portable models:** `BookReference` carries Google Books metadata; `LibraryEntry` adds the user's state. SwiftData models convert to and from these domain values.
+- **Portable models:** `BookReference` carries catalogue metadata; `LibraryEntry` adds the user's state. SwiftData models convert to and from these domain values.
+- **Source-tagged identity:** book ids carry their catalogue (`gb:zyTCAlFPjgYC`, `ol:/works/OL166894W`), so two catalogues cannot collide on one string. An id with no prefix is read as Google Books, which is how entries saved before the second source was added keep working. `BookReference.matchingKey` — ISBN when known, otherwise title, author and year — is what lets the two catalogues agree on a book.
+- **Field-level merging:** a book gathers data as it travels from a shelf to a detail screen to the library. `merging` never lets an empty value overwrite a known one, so the poorer record arriving second cannot erase the richer one.
 - **Tab navigation:** Library, Explore, and Profile each have their own Navigator instance.
 - **Data refresh:** `LibraryChangeNotifier` publishes a revision after successful writes so library details, shelves, and profile statistics refresh after changes.
 - **Error presentation:** `UserFacingError` maps service and persistence errors into localized messages and suppresses cancellation errors.
@@ -324,11 +373,14 @@ The session timer measures elapsed time from timestamps and accumulated active i
 | Data | Storage | Behavior |
 | --- | --- | --- |
 | Library metadata, categories, and sessions | SwiftData | Persisted on the device and available without fetching book details again |
-| Search, subject, and ISBN results | JSON files in the app's `BookSearchCache` cache directory | Reused for up to 24 hours; expired entries are removed when read |
+| Search, subject, and ISBN results | SwiftData store in the app's cache directory, separate from the library | Served immediately, refreshed in the background once stale: searches after a day, shelves after a week, ISBN lookups after a month |
+| Books themselves | One row per book in the same store | Deduplicated across shelves and enriched in place as detail data arrives |
 | Cover images | Kingfisher cache | Cached separately from search results; a generated placeholder appears while unavailable |
 | Theme, language, and new-book defaults | UserDefaults | Restored on subsequent launches |
 
-Library management, saved progress, session recording, and profile calculations work locally. Discovery can reuse a matching, unexpired cache entry while offline; new or expired queries require a connection. An uncached cover image also needs a download.
+Library management, saved progress, session recording, and profile calculations work locally. Explore's shelves work offline on a first launch too, from the bundled snapshot. Discovery serves any cached entry while offline — including one past its refresh window, which is shown as-is rather than withheld; queries never seen before require a connection. An uncached cover image also needs a download.
+
+Keeping the cache in its own SwiftData store means clearing it is a file deletion that cannot touch library data, and the OS may purge it under storage pressure without consequence.
 
 **Clear search cache** removes the stored discovery results. It does not erase library entries, reading sessions, or Kingfisher's image cache, and already displayed results may remain in memory. **Erase library** removes all saved books, their sessions, and stored categories after confirmation.
 
@@ -372,10 +424,21 @@ The existing Swift Testing suites cover:
 | --- | --- |
 | `LibraryEntryTests` | Defaults, page-count overrides, progress calculations, session application, and status transitions |
 | `ReadingSpeedEstimatorTests` | Default pace, measured pace, and remaining-time estimates |
-| `CacheFirstBookSearchingTests` | Cache hits and misses, separate query keys, and ISBN lookup behavior |
+| `CachedBookSearchingTests` | Cache hits and misses, query normalisation, and stale data being served while it refreshes |
+| `BookQueryTests` | Cache keys per query kind and the invariant that every query refreshes before it expires |
+| `HybridBookSearchingTests` | Which source answers, when the fallback is allowed, and what a cancelled or quota-limited request does |
+| `BookIdentifierTests` | Source-prefixed ids, unprefixed ids read as Google Books, and cross-catalogue matching |
+| `BookReferenceMergingTests` | An empty value never overwriting a known one |
 | `EndpointTests` | URL construction, query encoding, HTTP methods, request bodies, and default endpoint behavior |
 
-These tests use local values and mocks; they do not call Google Books or require an API key. Swift Package Manager may need network access to resolve dependencies before the first run. The repository currently has no app-level UI test target, and `NetworkRegistration` has no dedicated test target.
+The app target adds suites for the SwiftData cache store, the bundled shelf snapshot, the request budget, and Open Library response decoding:
+
+```bash
+xcodebuild test -project BookTrace.xcodeproj -scheme BookTrace \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+```
+
+These tests use local values and mocks; they call neither catalogue and need no API key. Swift Package Manager may need network access to resolve dependencies before the first run. The repository currently has no app-level UI test target, and `NetworkRegistration` has no dedicated test target.
 
 ## Troubleshooting
 
@@ -387,7 +450,9 @@ These tests use local values and mocks; they do not call Google Books or require
 | Scanning reports no camera | Use a physical device. In the Simulator, search by title or enter an `isbn:` query instead. |
 | Camera access is off | Use **Open Settings** from the scanner to enable camera access for BookTrace. |
 | Percentage progress or remaining time is missing | Provide a positive page count in the book's library details. |
-| Discovery results have not changed | Results are cached for 24 hours. Clear the search cache in Settings and relaunch to reload shelves already held in memory. |
+| Discovery results have not changed | Cached results are shown first and refreshed in the background, so a change appears on the next visit. Clear the search cache in Settings and relaunch to force a reload. |
+| A shelf shows the same books on a brand-new install with no connection | That is the bundled snapshot in `BookTrace/Resources/ShelfSeed.json`. It refreshes from Open Library as soon as a request succeeds. |
+| Search returns nothing for a title you can find on Google Books | Open Library answers search first. Confirm the daily Google Books budget is not spent (debug builds show it under **Settings → About**) and that a fallback request is not being blocked by a quota suspension. |
 | Xcode reports a missing local package | Check that all three package directories are present beside `BookTrace.xcodeproj`. |
 | Swift tools version is unsupported | Select an Xcode installation that includes Swift 6.2 or newer and check the active command-line toolchain. |
 | Device signing fails | Set your development team and, if needed, a bundle identifier available to that team. |
@@ -401,5 +466,6 @@ The following work remains planned:
 - Author search, author profiles, and bibliographies.
 - Recommendations based on library subjects and categories.
 - Reading goals, streak calendars, and reading trends with Swift Charts.
+- A backend proxy for the Google Books key, the only way to keep the quota fully private.
 
 See [Plan.md](Plan.md) for the original phased development plan, written in Turkish. Its phase checklists predate some of the implemented profile and settings features described here.

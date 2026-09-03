@@ -11,21 +11,47 @@ import FactoryKit
 
 @main
 struct BookTraceApp: App {
-    private let dependencies: AppDependencies
+    @State private var startup: StartupState
 
     init() {
         Container.shared.autoRegister()
-        dependencies = AppDependencies(container: .shared)
+        _startup = State(initialValue: .make())
     }
 
     var body: some Scene {
         WindowGroup {
-            ApplicationRootView(
-                viewModelFactory: dependencies.viewModelFactory,
-                libraryChangeNotifier: dependencies.libraryChangeNotifier,
-                settings: dependencies.settings
-            )
-                .modelContainer(dependencies.modelContainer)
+            switch startup {
+            case .ready(let dependencies):
+                ApplicationRootView(
+                    viewModelFactory: dependencies.viewModelFactory,
+                    libraryChangeNotifier: dependencies.libraryChangeNotifier,
+                    settings: dependencies.settings
+                )
+                    .modelContainer(dependencies.modelContainer)
+
+            case .storageUnavailable(let reason):
+                StorageUnavailableView(reason: reason) {
+                    startup = .make()
+                }
+            }
+        }
+    }
+}
+
+/// Açılışın iki olası sonucu.
+///
+/// Kalıcı mağaza açılamadığında uygulama çökmek yerine kullanıcıya bir çıkış
+/// yolu sunar: yeniden dene, ya da son çare olarak yerel veriyi sıfırla.
+enum StartupState {
+    case ready(AppDependencies)
+    case storageUnavailable(String)
+
+    @MainActor
+    static func make() -> StartupState {
+        do {
+            return .ready(try AppDependencies(container: .shared))
+        } catch {
+            return .storageUnavailable(error.localizedDescription)
         }
     }
 }

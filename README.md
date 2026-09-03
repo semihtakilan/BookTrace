@@ -134,39 +134,64 @@ Text search requests up to 20 results, each subject shelf requests up to 15, and
 
 Google documents API keys as an application identifier for public-data requests. See the [Google Books API guide](https://developers.google.com/books/docs/v1/using) for credential requirements. Configure your own key for discovery; although the client still attempts requests when no key is available, those requests can fail with access or quota errors.
 
-### Option A: Xcode scheme environment variable
+### Supply the key through `Config/Secrets.xcconfig`
 
-For local development:
+The project is wired to read the key from a build configuration file that Git ignores. Create it once per checkout:
 
-1. Open **Product → Scheme → Edit Scheme**.
-2. Select **Run → Arguments**.
-3. Add and enable this entry under **Environment Variables**:
+```bash
+cp Config/Secrets.example.xcconfig Config/Secrets.xcconfig
+```
 
-   | Name | Value |
-   | --- | --- |
-   | `GOOGLE_BOOKS_API_KEY` | Your Google Books API key |
-
-4. Stop and relaunch the app from Xcode.
-
-Keep the key in your local user scheme; do not commit a shared scheme containing credentials. A Run environment variable is supplied by Xcode at launch and is not embedded in an archived or installed app.
-
-### Option B: App bundle configuration
-
-For launches that do not receive an Xcode Run environment, the app also reads a string named `GOOGLE_BOOKS_API_KEY` from its `Info.plist`.
-
-The project generates its `Info.plist` through Xcode. Add the following entry under **BookTrace target → Info → Custom iOS Target Properties**:
-
-| Property | Type | Value |
-| --- | --- | --- |
-| `GOOGLE_BOOKS_API_KEY` | String | `$(GOOGLE_BOOKS_API_KEY)` |
-
-Supply the corresponding build setting through your build environment or a local `Secrets.xcconfig` attached to the appropriate build configuration. For example, that local configuration can define:
+Open the copy and replace the placeholder with your key:
 
 ```xcconfig
 GOOGLE_BOOKS_API_KEY = YOUR_GOOGLE_BOOKS_API_KEY
 ```
 
-`Secrets.xcconfig` is ignored by Git, but the repository does not create or attach it automatically. A value embedded in the app bundle remains readable from that bundle.
+`Config/Secrets.xcconfig` is listed in `.gitignore`, so it never travels with a commit, a clone, or a merge. It also has no entry in the Xcode project navigator by design; the build reads it from disk.
+
+The key reaches the app through this chain:
+
+```text
+Config/Secrets.xcconfig    Git-ignored, holds the real key
+    |  #include?           Skipped silently when the file is absent
+Config/Shared.xcconfig     Base configuration of the app target (Debug and Release)
+    |  $(GOOGLE_BOOKS_API_KEY)
+Config/Info.plist          INFOPLIST_FILE; Xcode merges its generated entries on top
+    |  Bundle.main.object(forInfoDictionaryKey:)
+GoogleBooksAPIKey.value
+```
+
+Because `#include?` tolerates a missing file, a fresh clone builds and runs without any setup; the key is simply empty and discovery requests fail with a quota error.
+
+Verify that a key resolved:
+
+```bash
+xcodebuild -project BookTrace.xcodeproj -target BookTrace -configuration Release -showBuildSettings | grep GOOGLE_BOOKS_API_KEY
+```
+
+### Restrict the key before distributing
+
+**A key inside an iOS binary is not a secret.** Anyone who downloads the app can read it out of `Info.plist`, and obfuscation does not change that. What protects the key is the restriction configured in Google Cloud:
+
+- **Application restrictions → iOS apps** → add the bundle identifier `com.semihtakilan.BookTrace`. The app sends an `X-Ios-Bundle-Identifier` header on every request, which is what Google matches against this list.
+- **API restrictions → Restrict key** → select **Books API** only, so a leaked key cannot bill any other Google service.
+
+Keeping the quota entirely private requires holding the key on a server and proxying requests through it. The app would then ship a backend URL instead of a key.
+
+### Continuous integration
+
+`Config/Secrets.xcconfig` is not in the repository, so CI has to write it before building. Store the key as a CI secret and generate the file:
+
+```bash
+printf 'GOOGLE_BOOKS_API_KEY = %s\n' "$GOOGLE_BOOKS_API_KEY" > Config/Secrets.xcconfig
+```
+
+### Scheme environment variable (development only)
+
+To try a different key without touching the file, add `GOOGLE_BOOKS_API_KEY` under **Product → Scheme → Edit Scheme → Run → Arguments → Environment Variables**. The environment value takes precedence over the bundled one.
+
+This applies only to launches started by Xcode. An archived or installed app never receives it, so distribution always depends on the xcconfig path above.
 
 ### Configuration behavior
 
@@ -356,7 +381,7 @@ These tests use local values and mocks; they do not call Google Books or require
 
 | Symptom | What to check |
 | --- | --- |
-| Discovery displays a quota or access error | Confirm that `GOOGLE_BOOKS_API_KEY` is supplied to the running app, Books API is enabled, and the key's restrictions and project quotas allow the request. The app groups HTTP 403 and 429 into its quota message. |
+| Discovery displays a quota or access error | Confirm that `Config/Secrets.xcconfig` exists and defines `GOOGLE_BOOKS_API_KEY`, Books API is enabled, and the key's restrictions and project quotas allow the request. The app groups HTTP 403 and 429 into its quota message. |
 | The key works from Xcode but not when launching the installed app | A scheme variable is supplied only during an Xcode launch. Configure the bundled value for other launch paths. |
 | Requests return HTTP 503 | Retry, then check the device or Simulator region under **Settings → General → Language & Region → Region**, including any difference introduced by a VPN. The request uses that region; a 503 can also be a service-side failure. |
 | Scanning reports no camera | Use a physical device. In the Simulator, search by title or enter an `isbn:` query instead. |

@@ -38,6 +38,17 @@ struct GoogleBooksSearchEndpoint: Endpoint {
     var queryParameters: [String: String]?
     var baseURL: URL { GoogleBooksHost.baseURL }
 
+    /// Google, anahtara konan "iOS uygulamaları" kısıtlamasını bu başlıkla
+    /// doğruluyor. Başlık gönderilmezse kısıtlanmış bir anahtar 403 döner —
+    /// yani kısıtlamayı açmadan önce bunun yerinde olması gerekiyor.
+    var headers: [String: String] {
+        var headers = ["Content-Type": "application/json"]
+        if let bundleIdentifier = Bundle.main.bundleIdentifier {
+            headers["X-Ios-Bundle-Identifier"] = bundleIdentifier
+        }
+        return headers
+    }
+
     private init(query: String, maxResults: Int, apiKey: String?) {
         var parameters = [
             "q": query,

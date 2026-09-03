@@ -63,6 +63,12 @@ Reading Mode tracks time spent reading a book outside the app; BookTrace does no
 - Set the default reading status and progress type for newly added books.
 - Clear the search cache independently of the personal library.
 
+## Reading experience
+
+The interface uses a shared paper-and-ink design system with light and dark appearances, Dynamic Type, and English, Turkish, and German copy. Library cards start reading sessions directly; status filters combine with search, sorting, and grouping. Explore provides subject filters and wider book covers. Book editing and session completion keep their save actions above the keyboard. The Journal tab shows real reading time, seven days of activity, and personal pace.
+
+See the [simulator design review](Documentation/DesignReview/Review.md) for the baseline critique, screenshot feedback, corrections, and validation evidence.
+
 ## Technology stack
 
 | Area | Technology | Role |
@@ -89,7 +95,7 @@ Dependencies are managed through Swift Package Manager. The committed Xcode [dep
 | Book discovery | Internet access and a Google Books API key |
 | Barcode scanning | A physical device with an available camera and camera permission |
 
-The app target uses Swift 5 language mode, while the local packages use Swift 6 tools. In particular, `Models/Package.swift` requires Swift tools version 6.2. Use the app target's iOS 17.6 deployment setting when checking device compatibility; it overrides the project-level default.
+The app target uses Swift 6 language mode, while the local packages use Swift 6 tools. In particular, `Models/Package.swift` requires Swift tools version 6.2. Use the app target's iOS 17.6 deployment setting when checking device compatibility; it overrides the project-level default.
 
 ## Getting started
 
@@ -240,7 +246,7 @@ This applies only to launches started by Xcode. An archived or installed app nev
 - Requests include a `country` value from `Locale.current.region`, with `US` as the fallback. This follows the device region, independently of the app's selected interface language.
 - The network logger can include the API key in request URLs. Remove the `key` query value before sharing logs.
 - Without a key the app still runs: Open Library answers most requests, and Google Books calls fail with a quota error that routes back to Open Library.
-- Debug builds show the day's Google Books request count under **Profile → Settings → About**.
+- Debug builds show the day's Google Books request count under **Journal → Settings → About**.
 
 ## Using BookTrace
 

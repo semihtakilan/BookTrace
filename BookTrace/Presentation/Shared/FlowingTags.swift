@@ -43,7 +43,7 @@ struct FlowLayout: Layout {
         for row in rows {
             var x = bounds.minX
             for index in row.indices {
-                let size = subviews[index].sizeThatFits(.unspecified)
+                let size = subviews[index].sizeThatFits(ProposedViewSize(width: bounds.width, height: nil))
                 subviews[index].place(
                     at: CGPoint(x: x, y: y),
                     anchor: .topLeading,
@@ -66,7 +66,7 @@ struct FlowLayout: Layout {
         var current = Row()
 
         for index in subviews.indices {
-            let size = subviews[index].sizeThatFits(.unspecified)
+            let size = subviews[index].sizeThatFits(ProposedViewSize(width: maxWidth.isFinite ? maxWidth : nil, height: nil))
             let projectedWidth = current.indices.isEmpty ? size.width : current.width + spacing + size.width
 
             if projectedWidth > maxWidth, !current.indices.isEmpty {

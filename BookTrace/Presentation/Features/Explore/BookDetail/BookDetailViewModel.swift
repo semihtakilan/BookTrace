@@ -69,7 +69,8 @@ final class BookDetailViewModel {
     }
 
     var canSave: Bool {
-        pageCountText.isEmpty || Int(pageCountText.trimmingCharacters(in: .whitespaces)) != nil
+        let text = pageCountText.trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.isEmpty || (Int(text).map { $0 > 0 } ?? false)
     }
 
     /// Sayfa alanının ipucu metni: kaynağın verdiği değer.
@@ -150,6 +151,7 @@ final class BookDetailViewModel {
     }
 
     func save() {
+        guard canSave else { return }
         let pageCount = Int(pageCountText.trimmingCharacters(in: .whitespaces))
 
         // Mevcut kayıt varsa ilerlemesi ve oturumları korunur; yalnızca

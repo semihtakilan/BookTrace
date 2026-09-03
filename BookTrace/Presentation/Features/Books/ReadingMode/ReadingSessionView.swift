@@ -1,121 +1,112 @@
-//
-//  ReadingSessionView.swift
-//  ReadingMode
-//
-//  Created by Semih TAKILAN on 28.08.2026.
-//
-
 import SwiftUI
 import NavigatorUI
 import Models
 
-/// Okuma oturumu sayaç ekranı.
 struct ReadingSessionView: View {
     private let entry: LibraryEntry
-
     @Environment(ViewModelFactory.self) private var viewModelFactory
     @State private var holder = ViewModelHolder<ReadingSessionViewModel>()
 
-    init(entry: LibraryEntry) {
-        self.entry = entry
-    }
+    init(entry: LibraryEntry) { self.entry = entry }
 
     var body: some View {
-        ReadingSessionContent(
-            viewModel: holder { viewModelFactory.makeReadingSessionViewModel(entry: entry) }
-        )
+        ReadingSessionContent(viewModel: holder { viewModelFactory.makeReadingSessionViewModel(entry: entry) })
     }
 }
 
 private struct ReadingSessionContent: View {
     @State var viewModel: ReadingSessionViewModel
-
     @Environment(\.navigator) private var navigator
     @Environment(\.scenePhase) private var scenePhase
-    /// Sayaç her saniye animasyonla değişiyor; hareket azaltma açıkken
-    /// saniyede bir dönen rakamlar tam da kaçınılması istenen şey.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isConfirmingDiscard = false
+    @ScaledMetric(relativeTo: .largeTitle) private var timerSize: CGFloat = 66
 
     var body: some View {
-        VStack(spacing: 32) {
-            Spacer()
-
-            VStack(spacing: 8) {
-                Text(viewModel.bookTitle)
-                    .font(.headline)
-                    .multilineTextAlignment(.center)
-                Text(viewModel.isRunning ? "Reading" : "Paused")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Text(DurationFormatter.timer(seconds: viewModel.elapsedSeconds))
-                .font(.system(size: 64, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-                .contentTransition(reduceMotion ? .identity : .numericText())
-                .accessibilityLabel("Elapsed time")
-                .accessibilityValue(viewModel.elapsedDisplay)
-
-            Button {
-                viewModel.togglePause()
-            } label: {
-                Label(
-                    viewModel.isRunning ? "Pause" : "Resume",
-                    systemImage: viewModel.isRunning ? "pause.fill" : "play.fill"
-                )
+        GeometryReader { geometry in
+        let compact = geometry.size.height < 560
+        ScrollView {
+            VStack(spacing: compact ? 16 : 30) {
+                VStack(spacing: 10) {
+                    ReadingEyebrow(title: "A MOMENT FOR YOURSELF")
+                    Text("Settle into your story.").font(ReadingStyle.title(compact ? .title2 : .title))
+                        .multilineTextAlignment(.center)
+                }
+                if !dynamicTypeSize.isAccessibilitySize {
+                RemoteBookCover(url: viewModel.entry.book.coverURL, width: compact ? 64 : 104, height: compact ? 96 : 156, contentMode: .fit,
+                                fallbackTitle: viewModel.bookTitle, fallbackAuthor: viewModel.entry.book.author)
+                    .shadow(color: .black.opacity(0.18), radius: 18, x: 0, y: 10)
+                }
+                VStack(spacing: 8) {
+                    Text(viewModel.bookTitle).font(.system(.title3, design: .serif)).multilineTextAlignment(.center)
+                    Text(viewModel.entry.book.author).font(.subheadline).foregroundStyle(ReadingStyle.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                VStack(spacing: 12) {
+                    HStack(spacing: 8) {
+                        Circle().fill(viewModel.isRunning ? ReadingStyle.accent : ReadingStyle.gold).frame(width: 6, height: 6)
+                            .accessibilityHidden(true)
+                        Text(viewModel.isRunning ? "Reading" : "Paused")
+                            .font(.caption.weight(.medium)).tracking(1.5).textCase(.uppercase)
+                    }
+                    Text(DurationFormatter.timer(seconds: viewModel.elapsedSeconds))
+                        .font(.system(size: timerSize, weight: .regular, design: .serif))
+                        .monospacedDigit()
+                        .lineLimit(1).minimumScaleFactor(0.4)
+                        .contentTransition(reduceMotion ? .identity : .numericText())
+                        .accessibilityLabel("Elapsed time")
+                        .accessibilityValue(viewModel.elapsedDisplay)
+                    Text("Just you and the next page.")
+                        .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
+                }
                 .frame(maxWidth: .infinity)
+                .padding(.vertical, compact ? 12 : 22)
+                .background(ReadingStyle.sage.opacity(0.5), in: .rect(cornerRadius: 28))
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-            .padding(.horizontal, 40)
-
-            Spacer()
+            .padding(.horizontal, 24).padding(.vertical, compact ? 12 : 24)
+            .frame(maxWidth: 600).frame(maxWidth: .infinity)
         }
-        .padding()
+        }
+        .readingBackground()
         .navigationTitle("Reading Mode")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button("Cancel") { isConfirmingDiscard = true }
+                Button { isConfirmingDiscard = true } label: { Image(systemName: "xmark") }
+                    .accessibilityLabel("Cancel session")
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Finish") { viewModel.beginFinishing() }
-                    .fontWeight(.semibold)
+        }
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 12) {
+                Button { viewModel.togglePause() } label: {
+                    Label(viewModel.isRunning ? "Pause" : "Resume", systemImage: viewModel.isRunning ? "pause.fill" : "play.fill")
+                }
+                .buttonStyle(ReadingButtonStyle(prominent: false))
+                Button("Finish reading") { viewModel.beginFinishing() }
+                    .buttonStyle(ReadingButtonStyle())
             }
+            .padding(.horizontal, 24).padding(.vertical, 12)
+            .frame(maxWidth: 600).frame(maxWidth: .infinity)
+            .background(ReadingStyle.background)
         }
         .task {
             viewModel.start()
-            // Saniyelik tik yalnızca görüntüyü tazeler; süre tarihlerden hesaplanır.
             while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(1))
+                do { try await Task.sleep(for: .seconds(1)) } catch { break }
                 viewModel.tick()
             }
         }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active { viewModel.tick() }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { viewModel.tick() } }
+        .onChange(of: viewModel.didSave) { _, saved in if saved { navigator.dismiss() } }
+        .navigationDestination(isPresented: $viewModel.isFinishing) { FinishSessionView(viewModel: viewModel) }
+        .onChange(of: viewModel.isFinishing) { _, finishing in
+            if !finishing { viewModel.resumeAfterFinishing() }
         }
-        .onChange(of: viewModel.didSave) { _, didSave in
-            if didSave { navigator.dismiss() }
-        }
-        .navigationDestination(isPresented: $viewModel.isFinishing) {
-            FinishSessionView(viewModel: viewModel)
-        }
-        // Sistem geri butonu veya kaydırma `isFinishing`'i kendisi kapatıyor;
-        // kaydedilmeden dönüldüyse sayaç devam etsin.
-        .onChange(of: viewModel.isFinishing) { _, isFinishing in
-            if !isFinishing { viewModel.resumeAfterFinishing() }
-        }
-        .confirmationDialog(
-            "Discard this session?",
-            isPresented: $isConfirmingDiscard,
-            titleVisibility: .visible
-        ) {
+        .confirmationDialog("Discard this session?", isPresented: $isConfirmingDiscard, titleVisibility: .visible) {
             Button("Discard", role: .destructive) { navigator.dismiss() }
             Button("Keep Reading", role: .cancel) {}
-        } message: {
-            Text("The elapsed time will not be recorded.")
-        }
+        } message: { Text("The elapsed time will not be recorded.") }
         .errorAlert($viewModel.error)
     }
 }

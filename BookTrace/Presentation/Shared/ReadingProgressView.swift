@@ -22,20 +22,27 @@ struct ReadingProgressView: View {
             if let fraction = entry.progressFraction, let total = entry.effectivePageCount {
                 ProgressView(value: fraction)
                     .progressViewStyle(.linear)
+                    .tint(ReadingStyle.accent)
                     // Ekranın en önemli bilgisi bu çubukta; değeri açıkça
                     // verilmezse VoiceOver kullanıcısına hiç ulaşmıyor.
                     .accessibilityLabel("Reading progress")
                     .accessibilityValue("\(Int((fraction * 100).rounded()))% complete")
 
-                HStack {
+                ViewThatFits(in: .horizontal) {
+                    HStack {
+                        Text(progressLabel(fraction: fraction, total: total))
+                        Spacer(minLength: 8)
+                        if let remainingText { Text(remainingText) }
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
                     Text(progressLabel(fraction: fraction, total: total))
-                    Spacer(minLength: 8)
                     if let remainingText {
                         Text(remainingText)
                     }
+                    }
                 }
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(ReadingStyle.secondary)
             } else {
                 Text("Add a page count to track progress")
                     .font(.caption)

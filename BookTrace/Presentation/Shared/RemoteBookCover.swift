@@ -38,7 +38,7 @@ struct RemoteBookCover: View {
             if let url {
                 // Kingfisher indirme sırasında ve hata durumunda placeholder'ı gösterir.
                 KFImage(url)
-                    .placeholder { fallbackView }
+                    .placeholder { fallbackView.frame(width: width, height: height) }
                     .resizable()
                     .aspectRatio(contentMode: contentMode)
             } else {
@@ -56,7 +56,7 @@ struct RemoteBookCover: View {
     private var fallbackView: some View {
         ZStack {
             LinearGradient(
-                colors: [.accentColor.opacity(0.6), .accentColor.opacity(0.85)],
+                colors: [Color(red: 0.25, green: 0.37, blue: 0.30), Color(red: 0.13, green: 0.24, blue: 0.19)],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

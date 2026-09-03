@@ -1,118 +1,89 @@
-//
-//  FinishSessionView.swift
-//  ReadingMode
-//
-//  Created by Semih TAKILAN on 28.08.2026.
-//
-
 import SwiftUI
 import NavigatorUI
 import Models
 
-/// Okuma oturumunu kapatma ekranı.
-///
-/// Sayaç ekranından itilerek açılır: üstte geçen sürenin ayrıntılı hâli, ortada
-/// sayfa girişi, altta yan yana Discard ve Save.
 struct FinishSessionView: View {
     @Bindable var viewModel: ReadingSessionViewModel
-
     @Environment(\.navigator) private var navigator
     @FocusState private var isPagesFieldFocused: Bool
+    @State private var isConfirmingDiscard = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            elapsedHeader
-            Spacer(minLength: 24)
-            pagesInput
-            Spacer(minLength: 24)
-            actions
+        ScrollView {
+            VStack(spacing: 28) {
+                if isPagesFieldFocused {
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text(viewModel.bookTitle)
+                            .font(.system(.subheadline, design: .serif)).lineLimit(2)
+                        Spacer(minLength: 0)
+                        Label(viewModel.elapsedDisplay, systemImage: "clock")
+                            .font(.subheadline.monospacedDigit()).foregroundStyle(ReadingStyle.accent)
+                    }
+                } else {
+                    VStack(spacing: 14) {
+                        Image(systemName: "book.closed.fill").font(.title2)
+                            .foregroundStyle(ReadingStyle.accent)
+                            .frame(width: 62, height: 62).background(ReadingStyle.sage, in: .circle)
+                            .accessibilityHidden(true)
+                        Text("A few pages further.").font(ReadingStyle.title(.title))
+                        Text(viewModel.bookTitle).font(.subheadline).foregroundStyle(ReadingStyle.secondary)
+                        Label(viewModel.elapsedDisplay, systemImage: "clock")
+                            .font(.title3.monospacedDigit()).foregroundStyle(ReadingStyle.accent)
+                            .accessibilityLabel("Session length").accessibilityValue(viewModel.elapsedDisplay)
+                    }
+                    .multilineTextAlignment(.center)
+                }
+                VStack(spacing: 16) {
+                    Text("How many pages did you read?").font(.headline).multilineTextAlignment(.center)
+                    TextField("0", text: $viewModel.pagesReadText)
+                        .keyboardType(.numberPad)
+                        .focused($isPagesFieldFocused)
+                        .multilineTextAlignment(.center)
+                        .font(.system(.largeTitle, design: .serif)).monospacedDigit()
+                        .padding(.vertical, 20)
+                        .background(ReadingStyle.surface, in: .rect(cornerRadius: 18))
+                        .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(isPagesFieldFocused ? ReadingStyle.accent : ReadingStyle.line, lineWidth: 1) }
+                        .accessibilityLabel("Pages read")
+                    if let message = viewModel.pagesLimitMessage {
+                        Text(message).foregroundStyle(.red)
+                    } else if let pages = viewModel.pagesReadValue, pages < 0 {
+                        Text("Enter zero or more pages.").foregroundStyle(.red)
+                    } else if let projectedPage = viewModel.projectedPage {
+                        Text("Progress will move to page \(projectedPage).")
+                            .foregroundStyle(ReadingStyle.secondary)
+                    } else {
+                        Text("You can save your time even if you read zero pages.")
+                            .foregroundStyle(ReadingStyle.secondary)
+                    }
+                }
+                .font(.footnote).multilineTextAlignment(.center)
+            }
+            .padding(24).frame(maxWidth: 600).frame(maxWidth: .infinity)
         }
-        .padding()
+        .scrollDismissesKeyboard(.interactively)
+        .readingBackground()
         .navigationTitle("Finish Session")
         .navigationBarTitleDisplayMode(.inline)
-        // Ekranın tek girişi bu; Discard ve Save klavyenin üstünde kaldığı için
-        // klavyeyi açık başlatmak bir dokunuş kazandırıyor.
-        .task { isPagesFieldFocused = true }
-    }
-
-    // MARK: - Bölümler
-
-    private var elapsedHeader: some View {
-        VStack(spacing: 6) {
-            Text(viewModel.bookTitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-
-            Text(viewModel.elapsedDisplay)
-                .font(.system(size: 56, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-
-            Text("Session length")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 8)
-    }
-
-    private var pagesInput: some View {
-        VStack(spacing: 12) {
-            Text("How many pages did you read?")
-                .font(.headline)
-                .multilineTextAlignment(.center)
-
-            TextField("0", text: $viewModel.pagesReadText)
-                .keyboardType(.numberPad)
-                .focused($isPagesFieldFocused)
-                .multilineTextAlignment(.center)
-                .font(.system(size: 44, weight: .semibold, design: .rounded))
-                .monospacedDigit()
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-                .background(.regularMaterial, in: .rect(cornerRadius: 16))
-                // Alanın tamamı dokunulabilir olsun; sadece rakamların üstü değil.
-                .contentShape(.rect)
-                .onTapGesture { isPagesFieldFocused = true }
-
-            Text("Pages read")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            if let pagesLimitMessage = viewModel.pagesLimitMessage {
-                Text(pagesLimitMessage)
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.center)
-            } else if let projectedPage = viewModel.projectedPage {
-                Text("Progress will move to page \(projectedPage).")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { isPagesFieldFocused = false }
             }
         }
-    }
-
-    private var actions: some View {
-        HStack(spacing: 12) {
-            Button(role: .destructive) {
-                navigator.dismiss()
-            } label: {
-                Text("Discard")
-                    .frame(maxWidth: .infinity)
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 4) {
+                Button { viewModel.save() } label: { Label("Save Session", systemImage: "checkmark") }
+                    .buttonStyle(ReadingButtonStyle()).disabled(!viewModel.canSave)
+                Button("Discard session", role: .destructive) { isConfirmingDiscard = true }
+                    .font(.footnote).frame(minHeight: 44)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-
-            Button {
-                viewModel.save()
-            } label: {
-                Text("Save Session")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .disabled(!viewModel.canSave)
+            .padding(.horizontal, 24).padding(.top, 12)
+            .frame(maxWidth: 600).frame(maxWidth: .infinity)
+            .background(ReadingStyle.background)
         }
+        .confirmationDialog("Discard this session?", isPresented: $isConfirmingDiscard, titleVisibility: .visible) {
+            Button("Discard", role: .destructive) { navigator.dismiss() }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("The elapsed time will not be recorded.") }
     }
 }

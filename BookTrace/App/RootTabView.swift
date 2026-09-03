@@ -26,8 +26,10 @@ struct RootTabView: View {
                 .tag(AppTab.explore)
             ProfileTab(viewModel: profileViewModel)
                 .navigationRoot(routeManager.profileNavigator)
-                .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                .tabItem { Label("Journal", systemImage: "chart.bar.xaxis") }
                 .tag(AppTab.profile)
         }
+        .tint(ReadingStyle.accent)
+        .toolbarBackground(ReadingStyle.background, for: .tabBar)
     }
 }

@@ -58,6 +58,7 @@ final class BooksViewModel {
     private(set) var sections: [LibrarySection] = []
 
     var searchText = "" { didSet { guard searchText != oldValue else { return }; rebuild() } }
+    var statusFilter: ReadingStatus? { didSet { guard statusFilter != oldValue else { return }; rebuild() } }
     var grouping: LibraryGrouping = .status { didSet { guard grouping != oldValue else { return }; rebuild() } }
     var sort: LibrarySort = .recentlyAdded { didSet { guard sort != oldValue else { return }; rebuild() } }
 
@@ -81,7 +82,8 @@ final class BooksViewModel {
     /// Arama sürerken "Now Reading" gizlenir; aksi hâlde arama sonucuyla
     /// ilgisi olmayan kitaplar listenin başında durmaya devam eder.
     var isShowingNowReading: Bool {
-        searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !nowReading.isEmpty
+        (grouping == .all || grouping == .status) && statusFilter == nil
+            && searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !nowReading.isEmpty
     }
 
     func load() {
@@ -129,6 +131,7 @@ final class BooksViewModel {
     }
 
     private func filtered(_ entries: [LibraryEntry]) -> [LibraryEntry] {
+        let entries = entries.filter { statusFilter == nil || $0.readingStatus == statusFilter }
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return entries }
 

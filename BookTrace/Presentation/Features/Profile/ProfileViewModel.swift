@@ -18,6 +18,12 @@ struct RecentReadingSession: Identifiable {
     let pagesRead: Int
 }
 
+struct ReadingDay: Identifiable {
+    let date: Date
+    let seconds: Int
+    var id: Date { date }
+}
+
 /// Profil sekmesinin verisi.
 ///
 /// Hepsi kütüphanedeki kayıtlardan türetilir; ağ çağrısı yoktur. Hız hesabı
@@ -55,6 +61,7 @@ final class ProfileViewModel {
     private(set) var statusBreakdown: [(status: ReadingStatus, count: Int)] = []
     private(set) var ownershipBreakdown: [(status: OwnershipStatus, count: Int)] = []
     private(set) var recentSessions: [RecentReadingSession] = []
+    private(set) var recentDays: [ReadingDay] = []
 
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
@@ -65,17 +72,17 @@ final class ProfileViewModel {
 
     var isEmpty: Bool { entries.isEmpty }
 
-    func load() {
+    func load(now: Date = Date(), calendar: Calendar = .current) {
         do {
             entries = try libraryRepository.fetchEntries()
             self.error = nil
         } catch {
             self.error = UserFacingError(error)
         }
-        recalculate()
+        recalculate(now: now, calendar: calendar)
     }
 
-    private func recalculate() {
+    private func recalculate(now: Date, calendar: Calendar) {
         bookCount = entries.count
         finishedCount = entries.filter { $0.readingStatus == .finished }.count
         readingCount = entries.filter { $0.readingStatus == .reading }.count
@@ -96,6 +103,14 @@ final class ProfileViewModel {
         statusBreakdown = makeStatusBreakdown()
         ownershipBreakdown = makeOwnershipBreakdown()
         recentSessions = makeRecentSessions()
+        // Bucket by local calendar days; never invent activity for empty dates.
+        let today = calendar.startOfDay(for: now)
+        recentDays = (-6...0).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { return nil }
+            let seconds = allSessions.filter { calendar.isDate($0.startDate, inSameDayAs: date) }
+                .reduce(0) { $0 + $1.durationSeconds }
+            return ReadingDay(date: date, seconds: seconds)
+        }
     }
 
     /// Kalan süre, hemen altındaki "Your Pace" kartının gösterdiği hızın

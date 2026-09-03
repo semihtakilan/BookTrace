@@ -177,5 +177,12 @@ struct BookDetailViewModelTests {
 
         viewModel.pageCountText = "three hundred"
         #expect(!viewModel.canSave)
+
+        viewModel.pageCountText = "-20"
+        #expect(!viewModel.canSave)
+        viewModel.pageCountText = "0"
+        #expect(!viewModel.canSave)
+        viewModel.pageCountText = "  "
+        #expect(viewModel.canSave)
     }
 }

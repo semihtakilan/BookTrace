@@ -56,6 +56,7 @@ struct ApplicationRootView: View {
         .id(settings.language)
         // Tema kökten uygulanır; ağacın kimliğinden bağımsız.
         .preferredColorScheme(settings.theme.colorScheme)
+        .tint(ReadingStyle.accent)
         .task {
             await routeManager.bootstrap()
         }

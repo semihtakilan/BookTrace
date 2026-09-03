@@ -30,6 +30,28 @@ struct ProfileViewModelTests {
         #expect(viewModel.estimatedRemainingSeconds == nil)
     }
 
+    @Test func activityUsesLocalCalendarDaysAndIncludesEmptyDays() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(secondsFromGMT: 3 * 3600))
+        let today = try #require(calendar.date(from: DateComponents(year: 2026, month: 9, day: 4)))
+        let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
+        let oldDay = try #require(calendar.date(byAdding: .day, value: -7, to: today))
+        let viewModel = makeViewModel([
+            makeEntry(sessions: [
+                ReadingSession(startDate: today.addingTimeInterval(60), durationSeconds: 300, pagesRead: 4),
+                ReadingSession(startDate: today.addingTimeInterval(600), durationSeconds: 120, pagesRead: 2),
+                ReadingSession(startDate: yesterday.addingTimeInterval(60), durationSeconds: 90, pagesRead: 1),
+                ReadingSession(startDate: oldDay, durationSeconds: 900, pagesRead: 10)
+            ])
+        ])
+        viewModel.load(now: today.addingTimeInterval(3600), calendar: calendar)
+
+        #expect(viewModel.recentDays.count == 7)
+        #expect(viewModel.recentDays.last?.date == today)
+        #expect(viewModel.recentDays.map(\.seconds) == [0, 0, 0, 0, 0, 90, 420])
+        #expect(viewModel.totalReadSeconds == 1410)
+    }
+
     @Test func paceIsMeasuredAcrossTheWholeLibrary() {
         let viewModel = makeViewModel([
             makeEntry(id: "a", pageCount: 100, currentPage: 20,

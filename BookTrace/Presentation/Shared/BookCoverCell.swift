@@ -14,29 +14,30 @@ struct BookCoverCell: View {
     let coverURL: URL?
     /// Sabit genişlik erişilebilirlik punto boyutlarında başlığı kesiyordu;
     /// hücre metinle birlikte büyür.
-    @ScaledMetric(relativeTo: .caption) var width: CGFloat = 100
+    @ScaledMetric(relativeTo: .caption) var width: CGFloat = 116
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 9) {
             RemoteBookCover(
                 url: coverURL,
                 width: width,
                 height: width * 1.5,
-                contentMode: .fill,
+                contentMode: .fit,
                 fallbackTitle: title,
                 fallbackAuthor: author
             )
+            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 4)
 
             Text(title)
-                .font(.caption.bold())
-                .lineLimit(2)
-                .foregroundStyle(.primary)
+                .font(.system(.subheadline, design: .serif, weight: .medium))
+                .lineLimit(3, reservesSpace: true)
+                .foregroundStyle(ReadingStyle.ink)
 
             if !author.isEmpty {
                 Text(author)
                     .font(.caption2)
                     .lineLimit(1)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(ReadingStyle.secondary)
             }
         }
         .frame(width: width, alignment: .leading)

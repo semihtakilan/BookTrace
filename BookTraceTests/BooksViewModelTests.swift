@@ -112,6 +112,27 @@ struct BooksViewModelTests {
 
     // MARK: - Sıralama
 
+    @Test func statusFilterCombinesWithSearchAndCanBeCleared() {
+        let (viewModel, _) = makeViewModel(library)
+        viewModel.statusFilter = .toRead
+        #expect(viewModel.sections.flatMap(\.entries).map(\.id) == ["b"])
+        #expect(!viewModel.isShowingNowReading)
+
+        viewModel.searchText = "Dune"
+        #expect(viewModel.hasNoMatches)
+        #expect(!viewModel.isEmpty)
+        viewModel.statusFilter = nil
+        #expect(viewModel.sections.flatMap(\.entries).map(\.id) == ["a"])
+
+        viewModel.searchText = ""
+        #expect(viewModel.isShowingNowReading)
+        #expect(viewModel.sections.flatMap(\.entries).count == 3)
+
+        viewModel.grouping = .category
+        #expect(!viewModel.isShowingNowReading)
+        #expect(viewModel.sections.flatMap(\.entries).contains { $0.id == "a" })
+    }
+
     @Test func sortingIsAppliedWithinEverySection() {
         let (viewModel, _) = makeViewModel(library)
         viewModel.grouping = .all

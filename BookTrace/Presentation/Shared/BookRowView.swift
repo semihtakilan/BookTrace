@@ -20,21 +20,21 @@ struct BookRowView: View {
                 url: coverURL,
                 width: 56,
                 height: 84,
-                contentMode: .fill,
+                contentMode: .fit,
                 fallbackTitle: title,
                 fallbackAuthor: author
             )
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.headline)
-                    .lineLimit(2)
-                    .foregroundStyle(.primary)
+                    .font(.system(.headline, design: .serif))
+                    .lineLimit(3)
+                    .foregroundStyle(ReadingStyle.ink)
 
                 if !author.isEmpty {
                     Text(author)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(ReadingStyle.secondary)
                         .lineLimit(1)
                 }
 
@@ -42,7 +42,7 @@ struct BookRowView: View {
                     // `.tertiary` açık temada WCAG AA sınırının altına düşüyordu.
                     Text(subtitle)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(ReadingStyle.secondary)
                         .lineLimit(1)
                 }
             }

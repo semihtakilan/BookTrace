@@ -26,6 +26,8 @@ final class ExploreViewModel {
 
     /// Barkod okunduğunda doldurulur; ekran bunu görüp detay sayfasına gider.
     var scannedBook: BookReference?
+    /// ISBN sorgusu sürerken ekranda bir şey dönüyor olsun diye.
+    private(set) var isResolvingBarcode = false
     var error: UserFacingError?
 
     @ObservationIgnored
@@ -137,7 +139,13 @@ final class ExploreViewModel {
     // MARK: - Barkod
 
     /// Barkoddan gelen ISBN'i kitaba çevirir ve detay akışına bağlar.
+    ///
+    /// Sheet kapandıktan sonra sorgu birkaç saniye sürebiliyor; bu sürede
+    /// ekranda hiçbir şey olmayınca uygulama donmuş görünüyordu.
     func handleBarcodeScan(isbn: String) async {
+        isResolvingBarcode = true
+        defer { isResolvingBarcode = false }
+
         do {
             scannedBook = try await bookSearching.findBook(isbn: isbn)
         } catch let scanError {

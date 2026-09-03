@@ -66,6 +66,8 @@ final class LocalLibraryRepositoryImpl: LibraryRepository {
         }
 
         record.apply(entry, categories: try resolveCategories(entry.categories))
+        try modelContext.save()
+        try pruneOrphanedCategories()
         try save()
     }
 
@@ -75,6 +77,10 @@ final class LocalLibraryRepositoryImpl: LibraryRepository {
         }
 
         modelContext.delete(record)
+        // İlişkinin güncellenmesi için önce yazılıyor; ardından bu kayıtla
+        // birlikte sahipsiz kalan etiketler siliniyor.
+        try modelContext.save()
+        try pruneOrphanedCategories()
         try save()
     }
 
@@ -118,6 +124,17 @@ final class LocalLibraryRepositoryImpl: LibraryRepository {
         changeNotifier.notifyChanged()
     }
 
+    /// Hiçbir kayda bağlı olmayan etiketleri siler.
+    ///
+    /// İlişki `.nullify` olduğu için kitap silindiğinde etiket kaydı duruyordu;
+    /// kullanıcıya görünmüyordu ama zamanla birikiyordu.
+    private func pruneOrphanedCategories() throws {
+        let categories = try modelContext.fetch(FetchDescriptor<LocalCategoryModel>())
+        for category in categories where category.entries.isEmpty {
+            modelContext.delete(category)
+        }
+    }
+
     private func record(for bookID: String) throws -> LocalLibraryEntryModel? {
         var descriptor = FetchDescriptor<LocalLibraryEntryModel>(
             predicate: #Predicate { $0.bookID == bookID }
@@ -136,7 +153,8 @@ final class LocalLibraryRepositoryImpl: LibraryRepository {
 
         return categories.map { category in
             if let record = byID[category.id] {
-                record.apply(category)
+                // Var olan etiketin adı korunur: ikinci kitaba farklı yazımla
+                // ("deep-work" / "Deep Work") eklemek birincinin adını değiştirmemeli.
                 return record
             }
             let record = LocalCategoryModel(category: category)

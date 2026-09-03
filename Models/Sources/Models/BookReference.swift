@@ -62,7 +62,7 @@ public struct BookReference: Identifiable, Hashable, Sendable, Codable {
         components.day = componentCount > 2 ? numbers[2] : 1
 
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? calendar.timeZone
         return calendar.date(from: components)
     }
 

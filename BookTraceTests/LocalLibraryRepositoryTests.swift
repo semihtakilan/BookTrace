@@ -118,6 +118,31 @@ struct LocalLibraryRepositoryTests {
         #expect(notifier.revision == 3)
     }
 
+    @Test func deletingABookRemovesTagsNothingElseUses() throws {
+        let (repository, _) = try makeInMemoryRepository()
+        try repository.add(makeEntry(id: "a", categories: [
+            Models.Category(name: "Work"),
+            Models.Category(name: "Shared"),
+        ]))
+        try repository.add(makeEntry(id: "b", categories: [Models.Category(name: "Shared")]))
+
+        try repository.delete(id: "a")
+
+        // İlişki `.nullify` olduğu için etiketler kitapla birlikte silinmiyordu;
+        // "Shared" hâlâ b'ye bağlı, "Work" ise sahipsiz kaldı.
+        #expect(try repository.fetchCategories().map(\.name) == ["Shared"])
+    }
+
+    @Test func aTagStopsBeingRenamedByASecondBook() throws {
+        let (repository, _) = try makeInMemoryRepository()
+        try repository.add(makeEntry(id: "a", categories: [Models.Category(name: "Deep Work")]))
+
+        // Aynı kimlik, farklı yazım: ilk kitaptaki adı değiştirmemeli.
+        try repository.add(makeEntry(id: "b", categories: [Models.Category(name: "deep-work")]))
+
+        #expect(try repository.fetchCategories().map(\.name) == ["Deep Work"])
+    }
+
     @Test func erasingTheLibraryClearsBooksAndTags() throws {
         let (repository, _) = try makeInMemoryRepository()
         try repository.add(makeEntry(id: "a", categories: [Models.Category(name: "Work")]))

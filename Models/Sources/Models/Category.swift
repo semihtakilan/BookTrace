@@ -31,11 +31,15 @@ public struct Category: Identifiable, Hashable, Sendable, Codable {
         self.colorHex = colorHex
     }
 
+    /// Ad → kimlik.
+    ///
+    /// Ardışık boşluklar tek ayraca iner: "Book  Club" ile "Book Club" aynı
+    /// etiket olmalı, `book--club` diye ikinci bir kayıt doğmamalı.
     public static func normalizedID(for name: String) -> String {
         name
-            .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
-            .replacingOccurrences(of: " ", with: "-")
+            .split(whereSeparator: { $0.isWhitespace || $0 == "-" })
+            .joined(separator: "-")
     }
 
     /// "Add to Library" ekranında hazır sunulan etiketler.

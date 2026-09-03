@@ -63,6 +63,12 @@ final class ExploreViewModel {
         shelves[index].state = await state(forShelfAt: index)
     }
 
+    /// Aynı anda kaç rafın istek attığı.
+    ///
+    /// Altısı birden gidince Google Books isteklerin bir kısmına 503 dönüyordu ve
+    /// kullanıcı ilk açılışta yarısı hatalı bir ekran görüyordu.
+    private static let shelfConcurrencyLimit = 3
+
     private func loadPendingShelves() async {
         let pendingIndices = shelves.indices.filter { shelves[$0].state.isIdle }
         guard !pendingIndices.isEmpty else { return }
@@ -71,25 +77,26 @@ final class ExploreViewModel {
             shelves[index].state = .loading
         }
 
-        // Raflar birbirinden bağımsız olduğu için paralel yüklenir.
         await withTaskGroup(of: (Int, ViewState<[BookReference]>).self) { group in
-            for index in pendingIndices {
+            var remaining = pendingIndices.makeIterator()
+
+            for _ in 0..<Self.shelfConcurrencyLimit {
+                guard let index = remaining.next() else { break }
                 let subject = shelves[index].subject
                 group.addTask { [bookSearching] in
-                    do {
-                        let books = try await bookSearching.books(inSubject: subject.query, maxResults: 15)
-                        return (index, .loaded(books))
-                    } catch {
-                        // İptal bir hata değil: rafı başa alıyoruz ki bir dahaki
-                        // girişte yeniden denensin, kullanıcıya da bir şey gösterilmesin.
-                        guard let userError = UserFacingError(error) else { return (index, .idle) }
-                        return (index, .failed(userError))
-                    }
+                    (index, await Self.loadShelf(subject: subject, using: bookSearching))
                 }
             }
 
-            for await (index, state) in group {
+            // Biten her rafın yerine bir yenisi girer; pencere hiç genişlemez.
+            while let (index, state) = await group.next() {
                 shelves[index].state = state
+
+                guard let next = remaining.next() else { continue }
+                let subject = shelves[next].subject
+                group.addTask { [bookSearching] in
+                    (next, await Self.loadShelf(subject: subject, using: bookSearching))
+                }
             }
         }
 
@@ -97,6 +104,32 @@ final class ExploreViewModel {
         if shelves.contains(where: { $0.state.isIdle }) {
             shelvesTask = nil
         }
+    }
+
+    /// Rafı yükler; geçici bir hatada kısa bir gecikmeyle bir kez daha dener.
+    ///
+    /// Elle "Try again"e basıldığında raflar ilk seferde geliyordu, yani bu
+    /// hatalar kalıcı değil — kullanıcıya göstermeden önce bir şans daha veriyoruz.
+    private static func loadShelf(
+        subject: BookSubject,
+        using bookSearching: any BookSearching
+    ) async -> ViewState<[BookReference]> {
+        let attemptLimit = 2
+
+        for attempt in 1...attemptLimit {
+            do {
+                return .loaded(try await bookSearching.books(inSubject: subject.query, maxResults: 15))
+            } catch {
+                // İptal bir hata değil: raf başa döner, sonraki girişte yeniden denenir.
+                guard let userError = UserFacingError(error) else { return .idle }
+                guard userError.isRetryable, attempt < attemptLimit else { return .failed(userError) }
+
+                try? await Task.sleep(for: .milliseconds(600))
+                if Task.isCancelled { return .idle }
+            }
+        }
+
+        return .idle
     }
 
     private func state(forShelfAt index: Int) async -> ViewState<[BookReference]> {

@@ -29,7 +29,6 @@ private struct ProfileContentView: View {
     @Environment(\.navigator) private var navigator
     @Environment(AppRouteTypeManager.self) private var routeManager
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
-    @Environment(AppSettings.self) private var settings
 
     var body: some View {
         Group {
@@ -39,7 +38,7 @@ private struct ProfileContentView: View {
                 content
             }
         }
-        .navigationTitle(settings.localized("Profile"))
+        .navigationTitle("Profile")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

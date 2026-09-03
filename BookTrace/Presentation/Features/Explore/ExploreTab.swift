@@ -40,7 +40,7 @@ private struct ExploreContentView: View {
                 subjectShelves
             }
         }
-        .navigationTitle(settings.localized("Explore"))
+        .navigationTitle("Explore")
         .searchable(text: $viewModel.searchText, prompt: "Title, author or ISBN")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

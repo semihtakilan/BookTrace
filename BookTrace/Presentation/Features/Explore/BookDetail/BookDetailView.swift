@@ -137,7 +137,6 @@ private struct AddToLibraryForm: View {
     @Bindable var viewModel: BookDetailViewModel
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(AppSettings.self) private var settings
 
     var body: some View {
         NavigationStack {
@@ -208,7 +207,7 @@ private struct AddToLibraryForm: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .navigationTitle(settings.localized(viewModel.isInLibrary ? "Library Details" : "Add to Library"))
+            .navigationTitle(viewModel.isInLibrary ? "Library Details" : "Add to Library")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

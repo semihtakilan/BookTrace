@@ -32,7 +32,6 @@ private struct ReadingSessionContent: View {
 
     @Environment(\.navigator) private var navigator
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(AppSettings.self) private var settings
     /// Sayaç her saniye animasyonla değişiyor; hareket azaltma açıkken
     /// saniyede bir dönen rakamlar tam da kaçınılması istenen şey.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -74,7 +73,7 @@ private struct ReadingSessionContent: View {
             Spacer()
         }
         .padding()
-        .navigationTitle(settings.localized("Reading Mode"))
+        .navigationTitle("Reading Mode")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {

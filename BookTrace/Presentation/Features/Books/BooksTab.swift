@@ -26,7 +26,6 @@ struct BooksTab: View {
 private struct BooksContentView: View {
     @Environment(AppRouteTypeManager.self) private var routeManager
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
-    @Environment(AppSettings.self) private var settings
     @Bindable var viewModel: BooksViewModel
 
     var body: some View {
@@ -37,7 +36,7 @@ private struct BooksContentView: View {
                 libraryContent
             }
         }
-        .navigationTitle(settings.localized("Library"))
+        .navigationTitle("Library")
         .toolbar {
             if !viewModel.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) { sortMenu }

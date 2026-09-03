@@ -21,14 +21,13 @@ struct BarcodeScannerSheet: View {
     let onScan: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(AppSettings.self) private var settings
     @State private var accessState: CameraAccessState = .checking
     @State private var sessionError: UserFacingError?
 
     var body: some View {
         NavigationStack {
             content
-                .navigationTitle(settings.localized("Scan Barcode"))
+                .navigationTitle("Scan Barcode")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {

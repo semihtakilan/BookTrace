@@ -17,7 +17,6 @@ struct FinishSessionView: View {
     @Bindable var viewModel: ReadingSessionViewModel
 
     @Environment(\.navigator) private var navigator
-    @Environment(AppSettings.self) private var settings
     @FocusState private var isPagesFieldFocused: Bool
 
     var body: some View {
@@ -29,7 +28,7 @@ struct FinishSessionView: View {
             actions
         }
         .padding()
-        .navigationTitle(settings.localized("Finish Session"))
+        .navigationTitle("Finish Session")
         .navigationBarTitleDisplayMode(.inline)
     }
 

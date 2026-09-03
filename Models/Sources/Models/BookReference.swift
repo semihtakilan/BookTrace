@@ -66,6 +66,33 @@ public struct BookReference: Identifiable, Hashable, Sendable, Codable {
         return calendar.date(from: components)
     }
 
+    /// İki kaynaktan gelen aynı kitabı tek kayda indirir.
+    ///
+    /// Kural: dolu alan boşla ezilmez. Liste uçları az alan döndürüyor (Open
+    /// Library'nin arama sonucunda açıklama yok), detay uçları çok; ikisi
+    /// sırasıyla geldiğinde ikincisi birincinin üstüne yazılırsa kullanıcı
+    /// gördüğü kapağı ya da sayfa sayısını kaybeder. Açıklamada uzun olan
+    /// kazanır — kısa olan çoğu zaman kırpılmış bir özet.
+    public func merging(_ other: BookReference) -> BookReference {
+        BookReference(
+            id: id,
+            title: other.title.isEmpty ? title : other.title,
+            authors: other.authors.isEmpty ? authors : other.authors,
+            coverURL: other.coverURL ?? coverURL,
+            pageCount: other.pageCount ?? pageCount,
+            publishedDate: other.publishedDate ?? publishedDate,
+            description: BookReference.richer(description, other.description),
+            isbn13: other.isbn13 ?? isbn13,
+            subjects: other.subjects.isEmpty ? subjects : other.subjects
+        )
+    }
+
+    private static func richer(_ first: String?, _ second: String?) -> String? {
+        guard let first else { return second }
+        guard let second else { return first }
+        return second.count > first.count ? second : first
+    }
+
     public init(
         id: String,
         title: String,

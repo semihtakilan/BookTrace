@@ -18,18 +18,11 @@ extension Container: @retroactive AutoRegistering {
 }
 
 extension Container {
-    var bookSearching: Factory<any BookSearching> {
-        self {
-            CacheFirstBookSearching(
-                remote: GoogleBooksService(networkService: self.networkService()),
-                cache: self.bookSearchCache()
-            )
-        }
-        .singleton
-    }
-
-    var bookSearchCache: Factory<any BookSearchCaching> {
-        self { BookSearchCache() }.singleton
+    /// Uzak kaynak. Cache sarmalaması burada değil composition root'ta yapılıyor:
+    /// mağaza `ModelContainer`'a bağlı ve o açılamayabilir, Factory kayıtları ise
+    /// hata fırlatamıyor.
+    var remoteBookSearching: Factory<any BookSearching> {
+        self { GoogleBooksService(networkService: self.networkService()) }.singleton
     }
 
     @MainActor

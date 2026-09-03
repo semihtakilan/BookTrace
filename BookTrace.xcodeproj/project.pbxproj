@@ -29,10 +29,10 @@
 		D846A9CB301A8EEC00477B1E /* NetworkKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = NetworkKit; sourceTree = "<group>"; };
 		D846AA27301B35E800477B1E /* NetworkRegistration */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = NetworkRegistration; sourceTree = "<group>"; };
 		D846AA7C301B3B2100477B1E /* Models */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Models; sourceTree = "<group>"; };
-		D9C1A0000000000000000010 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
-		D9C1A0000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		D9C1A0000000000000000011 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
 		D9C1A0000000000000000002 /* BookTraceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookTraceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9C1A0000000000000000010 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
+		D9C1A0000000000000000011 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
+		D9C1A0000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -85,16 +85,6 @@
 			);
 			sourceTree = "<group>";
 		};
-		D9C1A0000000000000000012 /* Config */ = {
-			isa = PBXGroup;
-			children = (
-				D9C1A0000000000000000010 /* Shared.xcconfig */,
-				D9C1A0000000000000000011 /* Secrets.example.xcconfig */,
-				D9C1A0000000000000000013 /* Info.plist */,
-			);
-			path = Config;
-			sourceTree = "<group>";
-		};
 		D846A993301A8E4C00477B1E /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -109,6 +99,16 @@
 			children = (
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D9C1A0000000000000000012 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				D9C1A0000000000000000010 /* Shared.xcconfig */,
+				D9C1A0000000000000000011 /* Secrets.example.xcconfig */,
+				D9C1A0000000000000000013 /* Info.plist */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

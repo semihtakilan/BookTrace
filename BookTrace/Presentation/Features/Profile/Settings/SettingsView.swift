@@ -78,7 +78,7 @@ private struct SettingsContentView: View {
             }
 
             Section {
-                Button("Clear search cache") { viewModel.clearSearchCache() }
+                Button("Clear search cache") { Task { await viewModel.clearSearchCache() } }
 
                 Button(role: .destructive) {
                     isConfirmingErase = true

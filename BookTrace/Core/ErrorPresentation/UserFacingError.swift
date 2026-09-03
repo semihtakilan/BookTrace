@@ -42,7 +42,7 @@ nonisolated enum UserFacingError: Equatable, Sendable {
             case .unreadableResponse:         self = .unexpectedResponse
             }
 
-        case is CacheFirstBookSearchingError:
+        case is CachedBookSearchingError:
             self = .bookNotFound
 
         case is LocalLibraryRepositoryError:

@@ -36,7 +36,7 @@ struct UserFacingErrorTests {
     }
 
     @Test func domainAndScannerErrorsMapToTheirOwnCases() {
-        #expect(UserFacingError(CacheFirstBookSearchingError.bookNotFound) == .bookNotFound)
+        #expect(UserFacingError(CachedBookSearchingError.bookNotFound) == .bookNotFound)
         #expect(UserFacingError(LocalLibraryRepositoryError.entryNotFound("book-1")) == .notInLibrary)
         #expect(UserFacingError(ScannerError.noCameraAvailable) == .cameraUnavailable)
         #expect(UserFacingError(ScannerError.cannotAddInput) == .cameraUnavailable)

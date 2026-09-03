@@ -18,11 +18,11 @@ final class SettingsViewModel {
     private(set) var confirmation: SettingsConfirmation?
 
     @ObservationIgnored private let libraryRepository: any LibraryRepository
-    @ObservationIgnored private let bookSearchCache: any BookSearchCaching
+    @ObservationIgnored private let bookCacheStore: any BookCacheStore
 
-    init(libraryRepository: any LibraryRepository, bookSearchCache: any BookSearchCaching) {
+    init(libraryRepository: any LibraryRepository, bookCacheStore: any BookCacheStore) {
         self.libraryRepository = libraryRepository
-        self.bookSearchCache = bookSearchCache
+        self.bookCacheStore = bookCacheStore
     }
 
     var appVersion: String {
@@ -41,8 +41,8 @@ final class SettingsViewModel {
     }
 
     /// Diskteki arama sonuçlarını siler. Kütüphaneye dokunmaz.
-    func clearSearchCache() {
-        bookSearchCache.removeAll()
+    func clearSearchCache() async {
+        await bookCacheStore.removeAll()
         confirmation = .cacheCleared
     }
 

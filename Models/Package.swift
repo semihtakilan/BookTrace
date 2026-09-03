@@ -5,7 +5,10 @@ import PackageDescription
 
 let package = Package(
     name: "Models",
-    platforms: [.iOS(.v17)],
+    // macOS sürümü de bildiriliyor: paket yalnızca iOS uygulamasında
+    // kullanılıyor ama testler Mac'te derleniyor ve platform belirtilmeyince
+    // varsayılan 10.13'e düşüp yapılandırılmış eşzamanlılığı kapatıyor.
+    platforms: [.iOS(.v17), .macOS(.v14)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(

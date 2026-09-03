@@ -6,6 +6,7 @@
 //
 
 import FactoryKit
+import Models
 import SwiftData
 
 /// Uygulamanın composition root'u.
@@ -36,10 +37,24 @@ struct AppDependencies {
             changeNotifier: libraryChangeNotifier
         )
 
+        // Cache mağazası açılamazsa uygulama yine çalışmalı: her istek ağa
+        // gider, kütüphane etkilenmez. Bu yüzden hata yukarı fırlatılmıyor.
+        let cacheStore: any BookCacheStore
+        if let cacheContainer = try? BookCacheStorage.makeContainer() {
+            let store = SwiftDataBookCacheStore(modelContainer: cacheContainer)
+            cacheStore = store
+            Task.detached(priority: .utility) { await store.prune() }
+        } else {
+            cacheStore = DisabledBookCacheStore()
+        }
+
         viewModelFactory = ViewModelFactory(
             libraryRepository: repository,
-            bookSearching: container.bookSearching(),
-            bookSearchCache: container.bookSearchCache(),
+            bookSearching: CachedBookSearching(
+                remote: container.remoteBookSearching(),
+                store: cacheStore
+            ),
+            bookCacheStore: cacheStore,
             settings: settings
         )
     }

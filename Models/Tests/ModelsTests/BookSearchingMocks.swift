@@ -12,8 +12,10 @@ func makeReference(id: String, title: String = "Swift", pageCount: Int? = nil) -
     BookReference(id: id, title: title, authors: ["Author"], pageCount: pageCount)
 }
 
-final class BookSearchingMock: BookSearching, @unchecked Sendable {
-    let result: [BookReference]
+/// Sayaçları aktörle koruyor: `CachedBookSearching` tazelemeyi `Task.detached`
+/// içinde yapıyor, yani çağrılar iki farklı görevden gelebiliyor.
+actor BookSearchingMock: BookSearching {
+    private let result: [BookReference]
     private(set) var receivedQuery: String?
     private(set) var searchCallCount = 0
     private(set) var subjectCallCount = 0
@@ -36,25 +38,50 @@ final class BookSearchingMock: BookSearching, @unchecked Sendable {
 
     func findBook(isbn: String) async throws -> BookReference {
         isbnCallCount += 1
-        guard let first = result.first else { throw CacheFirstBookSearchingError.bookNotFound }
+        guard let first = result.first else { throw CachedBookSearchingError.bookNotFound }
         return first
     }
 }
 
-final class BookSearchCacheMock: BookSearchCaching, @unchecked Sendable {
-    var values: [String: [BookReference]] = [:]
+/// Bellekte duran cache mağazası; tazelik penceresini test elle kurar.
+actor BookCacheStoreMock: BookCacheStore {
+    private struct Entry {
+        var books: [BookReference]
+        var isStale: Bool
+    }
+
+    private var entries: [String: Entry] = [:]
+    private var singleBooks: [String: BookReference] = [:]
     private(set) var storeCallCount = 0
 
-    func books(for key: String) -> [BookReference]? {
-        values[key]
+    func seed(_ books: [BookReference], for query: BookQuery, isStale: Bool = false) {
+        entries[query.cacheKey] = Entry(books: books, isStale: isStale)
     }
 
-    func store(_ books: [BookReference], for key: String) {
+    func storedBooks(for query: BookQuery) -> [BookReference]? {
+        entries[query.cacheKey]?.books
+    }
+
+    func books(for query: BookQuery) async -> CachedBooks? {
+        guard let entry = entries[query.cacheKey] else { return nil }
+        return CachedBooks(books: entry.books, isStale: entry.isStale)
+    }
+
+    func store(_ books: [BookReference], for query: BookQuery) async {
         storeCallCount += 1
-        values[key] = books
+        entries[query.cacheKey] = Entry(books: books, isStale: false)
     }
 
-    func removeAll() {
-        values.removeAll()
+    func book(id: String) async -> BookReference? {
+        singleBooks[id]
+    }
+
+    func merge(_ book: BookReference) async {
+        singleBooks[book.id] = singleBooks[book.id]?.merging(book) ?? book
+    }
+
+    func removeAll() async {
+        entries.removeAll()
+        singleBooks.removeAll()
     }
 }

@@ -1,0 +1,1063 @@
+{
+  "shelves": [
+    {
+      "subject": "fiction",
+      "maxResults": 15,
+      "books": [
+        {
+          "id": "ol:/works/OL17508740W",
+          "title": "The Summer I Turned Pretty Trilogy",
+          "authors": [
+            "Jenny Han"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/7719210-M.jpg",
+          "pageCount": 851,
+          "publishedDate": "2009"
+        },
+        {
+          "id": "ol:/works/OL8193416W",
+          "title": "The Picture of Dorian Gray",
+          "authors": [
+            "Oscar Wilde"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/14314858-M.jpg",
+          "pageCount": 246,
+          "publishedDate": "1890"
+        },
+        {
+          "id": "ol:/works/OL16014245W",
+          "title": "Shatter Me",
+          "authors": [
+            "Tahereh Mafi"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6974992-M.jpg",
+          "pageCount": 357,
+          "publishedDate": "2011"
+        },
+        {
+          "id": "ol:/works/OL19096402W",
+          "title": "The Silent Patient",
+          "authors": [
+            "Alex Michaelides"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/9407338-M.jpg",
+          "pageCount": 352,
+          "publishedDate": "2018"
+        },
+        {
+          "id": "ol:/works/OL450063W",
+          "title": "Frankenstein; or, The Modern Prometheus",
+          "authors": [
+            "Mary Shelley"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/12356249-M.jpg",
+          "pageCount": 240,
+          "publishedDate": "1818"
+        },
+        {
+          "id": "ol:/works/OL17850410W",
+          "title": "The Cruel Prince",
+          "authors": [
+            "Holly Black"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8361789-M.jpg",
+          "pageCount": 370,
+          "publishedDate": "2018"
+        },
+        {
+          "id": "ol:/works/OL8483260W",
+          "title": "Diary of a Wimpy Kid",
+          "authors": [
+            "Jeff Kinney"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/14376136-M.jpg",
+          "pageCount": 224,
+          "publishedDate": "2007"
+        },
+        {
+          "id": "ol:/works/OL18020194W",
+          "title": "It Ends With Us",
+          "authors": [
+            "Colleen Hoover"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/10473609-M.jpg",
+          "pageCount": 384,
+          "publishedDate": "2012"
+        },
+        {
+          "id": "ol:/works/OL52266W",
+          "title": "The Invisible Man",
+          "authors": [
+            "H. G. Wells"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6419199-M.jpg",
+          "pageCount": 170
+        },
+        {
+          "id": "ol:/works/OL34774028W",
+          "title": "Powerless",
+          "authors": [
+            "Lauren Roberts"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/14567864-M.jpg",
+          "pageCount": 600,
+          "publishedDate": "2023"
+        },
+        {
+          "id": "ol:/works/OL2895536W",
+          "title": "Carmilla",
+          "authors": [
+            "Sheridan Le Fanu"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/973851-M.jpg",
+          "pageCount": 90,
+          "publishedDate": "1871"
+        },
+        {
+          "id": "ol:/works/OL19963111W",
+          "title": "Unravel me",
+          "authors": [
+            "Tahereh Mafi"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/12727567-M.jpg",
+          "pageCount": 443,
+          "publishedDate": "2013"
+        },
+        {
+          "id": "ol:/works/OL52267W",
+          "title": "The Time Machine",
+          "authors": [
+            "H. G. Wells"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/9009316-M.jpg",
+          "pageCount": 120,
+          "publishedDate": "1895"
+        },
+        {
+          "id": "ol:/works/OL5819962W",
+          "title": "The Summer I Turned Pretty",
+          "authors": [
+            "Jenny Han"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8783502-M.jpg",
+          "pageCount": 272,
+          "publishedDate": "2000"
+        },
+        {
+          "id": "ol:/works/OL257746W",
+          "title": "The Eyes of Darkness",
+          "authors": [
+            "Dean Koontz"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/12547107-M.jpg",
+          "pageCount": 340,
+          "publishedDate": "1981"
+        }
+      ]
+    },
+    {
+      "subject": "science fiction",
+      "maxResults": 15,
+      "books": [
+        {
+          "id": "ol:/works/OL17610507W",
+          "title": "Death's End (The Three-Body Problem Series Book 3)",
+          "authors": [
+            "刘慈欣"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/7893958-M.jpg",
+          "pageCount": 724,
+          "publishedDate": "2010"
+        },
+        {
+          "id": "ol:/works/OL46401W",
+          "title": "The Caves of Steel",
+          "authors": [
+            "Isaac Asimov"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/13790511-M.jpg",
+          "pageCount": 259,
+          "publishedDate": "1953"
+        },
+        {
+          "id": "ol:/works/OL1963251W",
+          "title": "The Fall of Hyperion",
+          "authors": [
+            "Dan Simmons"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/484900-M.jpg",
+          "pageCount": 561,
+          "publishedDate": "1990"
+        },
+        {
+          "id": "ol:/works/OL46398W",
+          "title": "The Naked Sun",
+          "authors": [
+            "Isaac Asimov"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6542967-M.jpg",
+          "pageCount": 226,
+          "publishedDate": "1954"
+        },
+        {
+          "id": "ol:/works/OL52266W",
+          "title": "The Invisible Man",
+          "authors": [
+            "H. G. Wells"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6419199-M.jpg",
+          "pageCount": 170
+        },
+        {
+          "id": "ol:/works/OL7967812W",
+          "title": "Roadside Picnic",
+          "authors": [
+            "Аркадий Стругацкий",
+            "Борис Стругацкий",
+            "Arkady and Boris Strugatsky"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6752719-M.jpg",
+          "pageCount": 170,
+          "publishedDate": "1978"
+        },
+        {
+          "id": "ol:/works/OL16314245W",
+          "title": "The Dark Forest (The Three-Body Problem Series Book 2)",
+          "authors": [
+            "刘慈欣"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/10526598-M.jpg",
+          "pageCount": 562,
+          "publishedDate": "2008"
+        },
+        {
+          "id": "ol:/works/OL46390W",
+          "title": "The Foundation Trilogy",
+          "authors": [
+            "Isaac Asimov"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6502517-M.jpg",
+          "pageCount": 605,
+          "publishedDate": "1950"
+        },
+        {
+          "id": "ol:/works/OL46374W",
+          "title": "Nightfall",
+          "authors": [
+            "Isaac Asimov"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/9302081-M.jpg",
+          "pageCount": 339,
+          "publishedDate": "1969"
+        },
+        {
+          "id": "ol:/works/OL1737320W",
+          "title": "I Have No Mouth and I Must Scream",
+          "authors": [
+            "Harlan Ellison"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/5540875-M.jpg",
+          "pageCount": 178,
+          "publishedDate": "1972"
+        },
+        {
+          "id": "ol:/works/OL450063W",
+          "title": "Frankenstein; or, The Modern Prometheus",
+          "authors": [
+            "Mary Shelley"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/12356249-M.jpg",
+          "pageCount": 240,
+          "publishedDate": "1818"
+        },
+        {
+          "id": "ol:/works/OL21745884W",
+          "title": "Project Hail Mary",
+          "authors": [
+            "Andy Weir"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/11200092-M.jpg",
+          "pageCount": 496,
+          "publishedDate": "2021"
+        },
+        {
+          "id": "ol:/works/OL46108W",
+          "title": "The End of Eternity",
+          "authors": [
+            "Isaac Asimov"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6622699-M.jpg",
+          "pageCount": 255,
+          "publishedDate": "1955"
+        },
+        {
+          "id": "ol:/works/OL15331302W",
+          "title": "The Mote in God's Eye",
+          "authors": [
+            "Larry Niven",
+            "Jerry Pournelle",
+            "L.J. Ganser"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/408133-M.jpg",
+          "pageCount": 560,
+          "publishedDate": "1974"
+        },
+        {
+          "id": "ol:/works/OL46125W",
+          "title": "Foundation",
+          "authors": [
+            "Isaac Asimov"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/14612610-M.jpg",
+          "pageCount": 240,
+          "publishedDate": "1951"
+        }
+      ]
+    },
+    {
+      "subject": "history",
+      "maxResults": 15,
+      "books": [
+        {
+          "id": "ol:/works/OL14909099W",
+          "title": "Debt",
+          "authors": [
+            "David Graeber"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6299464-M.jpg",
+          "pageCount": 544,
+          "publishedDate": "2011"
+        },
+        {
+          "id": "ol:/works/OL1073898W",
+          "title": "The Story of Philosophy",
+          "authors": [
+            "Will Durant",
+            "讀書新聞社"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/405360-M.jpg",
+          "pageCount": 543,
+          "publishedDate": "1926"
+        },
+        {
+          "id": "ol:/works/OL50283W",
+          "title": "A People's History of the United States",
+          "authors": [
+            "Howard Zinn",
+            "Kathy Emery",
+            "Ellen Reeves",
+            "Matt Damon",
+            "Howard Zinn"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/10592817-M.jpg",
+          "pageCount": 695,
+          "publishedDate": "1980"
+        },
+        {
+          "id": "ol:/works/OL18170596W",
+          "title": "Ringkasan sejarat filsafat",
+          "authors": [
+            "K. Bertens"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8333070-M.jpg",
+          "pageCount": 94,
+          "publishedDate": "1975"
+        },
+        {
+          "id": "ol:/works/OL15683250W",
+          "title": "Capitalist Realism",
+          "authors": [
+            "Mark Fisher",
+            "MARK FISHER"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6707037-M.jpg",
+          "pageCount": 123,
+          "publishedDate": "2009"
+        },
+        {
+          "id": "ol:/works/OL47181W",
+          "title": "The Rise and Fall of the Third Reich",
+          "authors": [
+            "William L. Shirer"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6558536-M.jpg",
+          "pageCount": 1245,
+          "publishedDate": "1901"
+        },
+        {
+          "id": "ol:/works/OL1810842W",
+          "title": "The great conversation",
+          "authors": [
+            "Norman Melchert"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/1454089-M.jpg",
+          "pageCount": 627,
+          "publishedDate": "1991"
+        },
+        {
+          "id": "ol:/works/OL1751683W",
+          "title": "Freedom at Midnight",
+          "authors": [
+            "Dominique Lapierre",
+            "Larry Collins"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/4410-M.jpg",
+          "pageCount": 564,
+          "publishedDate": "1975"
+        },
+        {
+          "id": "ol:/works/OL244537W",
+          "title": "The Art of War",
+          "authors": [
+            "孙武 (Sun Tzu)",
+            "Stephen F. Kaufman",
+            "Lionel Giles",
+            "Onésimo Colavidas"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/4849549-M.jpg",
+          "pageCount": 90,
+          "publishedDate": "1900"
+        },
+        {
+          "id": "ol:/works/OL17075811W",
+          "title": "Sapiens",
+          "authors": [
+            "Yuval Noah Harari"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8634250-M.jpg",
+          "pageCount": 456,
+          "publishedDate": "2011"
+        },
+        {
+          "id": "ol:/works/OL686193W",
+          "title": "The story of art",
+          "authors": [
+            "E. H. Gombrich"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/538390-M.jpg",
+          "pageCount": 488,
+          "publishedDate": "1950"
+        },
+        {
+          "id": "ol:/works/OL495659W",
+          "title": "The Age of Revolution",
+          "authors": [
+            "Eric Hobsbawm"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/4765129-M.jpg",
+          "pageCount": 413,
+          "publishedDate": "1962"
+        },
+        {
+          "id": "ol:/works/OL307247W",
+          "title": "Bumi Manusia",
+          "authors": [
+            "Pramoedya Ananta Toer"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6643692-M.jpg",
+          "pageCount": 360,
+          "publishedDate": "1972"
+        },
+        {
+          "id": "ol:/works/OL3477033W",
+          "title": "A history of the modern world",
+          "authors": [
+            "R. R. Palmer",
+            "Palmer",
+            "Joel G. Colton"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6286058-M.jpg",
+          "pageCount": 1101,
+          "publishedDate": "1950"
+        },
+        {
+          "id": "ol:/works/OL17917961W",
+          "title": "21 Lessons for the 21st Century",
+          "authors": [
+            "Yuval Noah Harari"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/10108277-M.jpg",
+          "pageCount": 400,
+          "publishedDate": "2018"
+        }
+      ]
+    },
+    {
+      "subject": "philosophy",
+      "maxResults": 15,
+      "books": [
+        {
+          "id": "ol:/works/OL98174W",
+          "title": "Jenseits von Gut und Böse",
+          "authors": [
+            "Friedrich Nietzsche"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8245356-M.jpg",
+          "pageCount": 178,
+          "publishedDate": "1885"
+        },
+        {
+          "id": "ol:/works/OL1073898W",
+          "title": "The Story of Philosophy",
+          "authors": [
+            "Will Durant",
+            "讀書新聞社"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/405360-M.jpg",
+          "pageCount": 543,
+          "publishedDate": "1926"
+        },
+        {
+          "id": "ol:/works/OL1317211W",
+          "title": "Meditations",
+          "authors": [
+            "Marcus Aurelius"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/211529-M.jpg",
+          "pageCount": 203,
+          "publishedDate": "1626"
+        },
+        {
+          "id": "ol:/works/OL45499W",
+          "title": "Tao te Ching",
+          "authors": [
+            "老子"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/662232-M.jpg",
+          "pageCount": 124,
+          "publishedDate": "1842"
+        },
+        {
+          "id": "ol:/works/OL1230601W",
+          "title": "Le mythe de Sisyphe",
+          "authors": [
+            "Albert Camus"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/1014395-M.jpg",
+          "pageCount": 169,
+          "publishedDate": "1941"
+        },
+        {
+          "id": "ol:/works/OL1230690W",
+          "title": "The Myth of Sisyphus and Other Essays",
+          "authors": [
+            "Albert Camus"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/12726570-M.jpg",
+          "pageCount": 212,
+          "publishedDate": "1955"
+        },
+        {
+          "id": "ol:/works/OL51948W",
+          "title": "Ἀπολογία Σωκράτους",
+          "authors": [
+            "Plato"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/14407561-M.jpg",
+          "pageCount": 110,
+          "publishedDate": "1675"
+        },
+        {
+          "id": "ol:/works/OL1810842W",
+          "title": "The great conversation",
+          "authors": [
+            "Norman Melchert"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/1454089-M.jpg",
+          "pageCount": 627,
+          "publishedDate": "1991"
+        },
+        {
+          "id": "ol:/works/OL266158W",
+          "title": "The Wisdom of Insecurity",
+          "authors": [
+            "Alan Watts"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/254059-M.jpg",
+          "pageCount": 144,
+          "publishedDate": "1951"
+        },
+        {
+          "id": "ol:/works/OL28521353W",
+          "title": "Meditations",
+          "authors": [
+            "Marcus Aurelius",
+            "Gregory Hays",
+            "Ryan Holiday"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/13202688-M.jpg",
+          "pageCount": 158,
+          "publishedDate": "2006"
+        },
+        {
+          "id": "ol:/works/OL18170596W",
+          "title": "Ringkasan sejarat filsafat",
+          "authors": [
+            "K. Bertens"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8333070-M.jpg",
+          "pageCount": 94,
+          "publishedDate": "1975"
+        },
+        {
+          "id": "ol:/works/OL1088357W",
+          "title": "A History of Western Philosophy",
+          "authors": [
+            "Bertrand Russell"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/405359-M.jpg",
+          "pageCount": 895,
+          "publishedDate": "1945"
+        },
+        {
+          "id": "ol:/works/OL1088577W",
+          "title": "The Problems of Philosophy",
+          "authors": [
+            "Bertrand Russell"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6947403-M.jpg",
+          "pageCount": 114,
+          "publishedDate": "1900"
+        },
+        {
+          "id": "ol:/works/OL11354728W",
+          "title": "Why I am an atheist",
+          "authors": [
+            "Bhagat Singh"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/15088375-M.jpg",
+          "pageCount": 30,
+          "publishedDate": "2008"
+        },
+        {
+          "id": "ol:/works/OL1151518W",
+          "title": "Discours de la méthode",
+          "authors": [
+            "René Descartes"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8236442-M.jpg",
+          "pageCount": 182,
+          "publishedDate": "1644"
+        }
+      ]
+    },
+    {
+      "subject": "computers",
+      "maxResults": 15,
+      "books": [
+        {
+          "id": "ol:/works/OL5603179W",
+          "title": "Hacking",
+          "authors": [
+            "Jon Erickson",
+            "Jon Erickson"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/1984286-M.jpg",
+          "pageCount": 384,
+          "publishedDate": "2003"
+        },
+        {
+          "id": "ol:/works/OL17618370W",
+          "title": "Clean Code",
+          "authors": [
+            "Robert C. Martin"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8065615-M.jpg",
+          "pageCount": 444,
+          "publishedDate": "2008"
+        },
+        {
+          "id": "ol:/works/OL804638W",
+          "title": "Hackers",
+          "authors": [
+            "Steven Levy"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/106396-M.jpg",
+          "pageCount": 456,
+          "publishedDate": "1984"
+        },
+        {
+          "id": "ol:/works/OL3267304W",
+          "title": "Structure and Interpretation of Computer Programs (SICP)",
+          "authors": [
+            "Harold Abelson",
+            "Gerald Jay Sussman",
+            "Julie Sussman"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/149338-M.jpg",
+          "pageCount": 542,
+          "publishedDate": "1985"
+        },
+        {
+          "id": "ol:/works/OL17357767W",
+          "title": "Algorithms to Live By",
+          "authors": [
+            "Brian Christian",
+            "Tom Griffiths",
+            "Brian Christian"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8042539-M.jpg",
+          "pageCount": 359,
+          "publishedDate": "2016"
+        },
+        {
+          "id": "ol:/works/OL1972516W",
+          "title": "Code",
+          "authors": [
+            "Charles Petzold",
+            "Charles Petzold"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/460968-M.jpg",
+          "pageCount": 393,
+          "publishedDate": "1999"
+        },
+        {
+          "id": "ol:/works/OL17192141W",
+          "title": "Automate the Boring Stuff with Python",
+          "authors": [
+            "Al Sweigart"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/7363640-M.jpg",
+          "pageCount": 506,
+          "publishedDate": "2015"
+        },
+        {
+          "id": "ol:/works/OL5957689W",
+          "title": "Masters of Doom",
+          "authors": [
+            "David Kushner"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/606299-M.jpg",
+          "pageCount": 336,
+          "publishedDate": "2003"
+        },
+        {
+          "id": "ol:/works/OL6035941W",
+          "title": "Hacking for Dummies",
+          "authors": [
+            "Kevin Beaver",
+            "Jutta Schmidt"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/299671-M.jpg",
+          "pageCount": 396,
+          "publishedDate": "2004"
+        },
+        {
+          "id": "ol:/works/OL2373712W",
+          "title": "Computer Concepts",
+          "authors": [
+            "June Jamrich Parsons",
+            "Dan Oja"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/9289977-M.jpg",
+          "pageCount": 336,
+          "publishedDate": "1996"
+        },
+        {
+          "id": "ol:/works/OL2784125W",
+          "title": "Learning Python",
+          "authors": [
+            "Mark Lutz",
+            "David Ascher"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/1312568-M.jpg",
+          "pageCount": 591,
+          "publishedDate": "1999"
+        },
+        {
+          "id": "ol:/works/OL16495169W",
+          "title": "Social Engineering",
+          "authors": [
+            "Christopher Hadnagy"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/10661809-M.jpg",
+          "pageCount": 320,
+          "publishedDate": "2011"
+        },
+        {
+          "id": "ol:/works/OL3510570W",
+          "title": "The Mythical Man-Month",
+          "authors": [
+            "Frederick P. Brooks"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6915361-M.jpg",
+          "pageCount": 195,
+          "publishedDate": "1974"
+        },
+        {
+          "id": "ol:/works/OL3502985W",
+          "title": "Discrete Mathematics with Applications",
+          "authors": [
+            "Susanna S. Epp",
+            "Susanna Epp"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/9295752-M.jpg",
+          "pageCount": 889,
+          "publishedDate": "1990"
+        },
+        {
+          "id": "ol:/works/OL19809141W",
+          "title": "Clean Architecture",
+          "authors": [
+            "Robert C. Martin"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8605114-M.jpg",
+          "pageCount": 432,
+          "publishedDate": "2017"
+        }
+      ]
+    },
+    {
+      "subject": "biography",
+      "maxResults": 15,
+      "books": [
+        {
+          "id": "ol:/works/OL1037811W",
+          "title": "Wings of Fire",
+          "authors": [
+            "A. P. J. Abdul Kalam"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/9153819-M.jpg",
+          "pageCount": 180,
+          "publishedDate": "1999"
+        },
+        {
+          "id": "ol:/works/OL27294413W",
+          "title": "The Diary of a Young Girl- Anne Frank",
+          "authors": [
+            "Anne Frank"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/13526331-M.jpg",
+          "pageCount": 320,
+          "publishedDate": "2001"
+        },
+        {
+          "id": "ol:/works/OL528094W",
+          "title": "Autobiography of a Yogi",
+          "authors": [
+            "Yogananda Paramahansa"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/805448-M.jpg",
+          "pageCount": 514,
+          "publishedDate": "1946"
+        },
+        {
+          "id": "ol:/works/OL26663382W",
+          "title": "I'm Glad My Mom Died",
+          "authors": [
+            "Jennette McCurdy",
+            "Jannettte Mcury"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/12855985-M.jpg",
+          "pageCount": 320,
+          "publishedDate": "2022"
+        },
+        {
+          "id": "ol:/works/OL18139176W",
+          "title": "Educated",
+          "authors": [
+            "Tara Westover"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8314077-M.jpg",
+          "pageCount": 388,
+          "publishedDate": "2018"
+        },
+        {
+          "id": "ol:/works/OL158041W",
+          "title": "Fear and Loathing in Las Vegas",
+          "authors": [
+            "Hunter S. Thompson"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/13396-M.jpg",
+          "pageCount": 205,
+          "publishedDate": "1971"
+        },
+        {
+          "id": "ol:/works/OL1847023W",
+          "title": "The worldly philosophers",
+          "authors": [
+            "Robert L. Heilbroner"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/15106531-M.jpg",
+          "pageCount": 342,
+          "publishedDate": "1953"
+        },
+        {
+          "id": "ol:/works/OL20715162W",
+          "title": "Persepolis 1 & 2",
+          "authors": [
+            "Marjane Satrapi"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/12648909-M.jpg",
+          "pageCount": 160,
+          "publishedDate": "2003"
+        },
+        {
+          "id": "ol:/works/OL2625422W",
+          "title": "走ることについて語るときに僕の語ること",
+          "authors": [
+            "村上春樹"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/7167416-M.jpg",
+          "pageCount": 192,
+          "publishedDate": "2006"
+        },
+        {
+          "id": "ol:/works/OL69178W",
+          "title": "Narrative of the life of Frederick Douglass",
+          "authors": [
+            "Frederick Douglass"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8247724-M.jpg",
+          "pageCount": 127,
+          "publishedDate": "1845"
+        },
+        {
+          "id": "ol:/works/OL15474046W",
+          "title": "Just Kids",
+          "authors": [
+            "Patti Smith",
+            "Patti Smith"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/6671097-M.jpg",
+          "pageCount": 320,
+          "publishedDate": "2006"
+        },
+        {
+          "id": "ol:/works/OL17824318W",
+          "title": "Born a Crime",
+          "authors": [
+            "Trevor Noah"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/8294078-M.jpg",
+          "pageCount": 304,
+          "publishedDate": "2016"
+        },
+        {
+          "id": "ol:/works/OL1933963W",
+          "title": "Gifted hands",
+          "authors": [
+            "Ben Carson",
+            "Cecil Murphey",
+            "Benjamin S. Carson Sr."
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/4942228-M.jpg",
+          "pageCount": 232,
+          "publishedDate": "1990"
+        },
+        {
+          "id": "ol:/works/OL1853064W",
+          "title": "Pimp",
+          "authors": [
+            "Iceberg Slim",
+            "Beck, Robert",
+            "Irvine Welsh"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/13539771-M.jpg",
+          "pageCount": 317,
+          "publishedDate": "1967"
+        },
+        {
+          "id": "ol:/works/OL3954921W",
+          "title": "Girl, interrupted",
+          "authors": [
+            "Susanna Kaysen"
+          ],
+          "subjects": [],
+          "coverURL": "https://covers.openlibrary.org/b/id/3956219-M.jpg",
+          "pageCount": 168,
+          "publishedDate": "1993"
+        }
+      ]
+    }
+  ]
+}

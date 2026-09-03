@@ -20,18 +20,33 @@ actor SwiftDataBookCacheStore: BookCacheStore {
     /// Bir satır birkaç yüz bayt; bu bütçe pratikte birkaç megabayt demek.
     private static let bookLimit = 2_000
 
+    /// Cache boşken cevap verebilen gömülü anlık görüntü.
+    ///
+    /// Dışarıdan enjekte edilmiyor, varsayılan değerle kuruluyor: `@ModelActor`
+    /// initializer'ı üretiyor ve tohumun ilk okumadan önce yerinde olması
+    /// gerekiyor. Sonradan atanan bir tohum, Explore'un daha erken sorması
+    /// hâlinde boş ekran gösterirdi.
+    private var seed: any BookSeedProviding = ShelfSeed()
+
+    /// Testler kendi tohumlarını koyabilsin diye.
+    func use(seed: any BookSeedProviding) {
+        self.seed = seed
+    }
+
     func books(for query: BookQuery) async -> CachedBooks? {
         let key = query.cacheKey
         var descriptor = FetchDescriptor<CachedQueryModel>(predicate: #Predicate { $0.key == key })
         descriptor.fetchLimit = 1
 
-        guard let record = try? modelContext.fetch(descriptor).first else { return nil }
+        guard let record = try? modelContext.fetch(descriptor).first else {
+            return seededBooks(for: query)
+        }
 
         let now = Date()
         guard now < record.expiresAt else {
             modelContext.delete(record)
             try? modelContext.save()
-            return nil
+            return seededBooks(for: query)
         }
 
         // Kitaplardan biri budandıysa liste eksik demektir; eksik bir rafı
@@ -130,6 +145,18 @@ actor SwiftDataBookCacheStore: BookCacheStore {
         }
 
         try? modelContext.save()
+    }
+
+    /// Iskalanan sorguyu gömülü anlık görüntüden karşılar.
+    ///
+    /// Kayıt **bayat** yazılıyor: ekran anında doluyor, `CachedBookSearching`
+    /// arka planda gerçek veriyi çekiyor. Taze yazsaydık kullanıcı günlerce
+    /// uygulamanın içinde donmuş bir rafa bakardı.
+    private func seededBooks(for query: BookQuery) -> CachedBooks? {
+        guard let books = seed.books(for: query), !books.isEmpty else { return nil }
+
+        store(books, for: query, writtenAt: Date().addingTimeInterval(-query.refreshInterval))
+        return CachedBooks(books: books, isStale: true)
     }
 
     private func upsert(_ book: BookReference) {

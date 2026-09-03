@@ -40,8 +40,11 @@ private struct ExploreContentView: View {
                 subjectShelves
             }
         }
-        .navigationTitle(settings.localized("Explore"))
+        .navigationTitle("Explore")
         .searchable(text: $viewModel.searchText, prompt: "Title, author or ISBN")
+        // Kitap adları ve ISBN'ler sözlükte yok; düzeltme sorguyu bozuyor.
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -81,7 +84,27 @@ private struct ExploreContentView: View {
             viewModel.scannedBook = nil
             navigator.navigate(to: ExploreDestinations.bookDetail(book))
         }
+        .overlay {
+            if viewModel.isResolvingBarcode { barcodeLookupOverlay }
+        }
         .errorAlert($viewModel.error)
+    }
+
+    /// Barkod okunduktan sonra ISBN sorgusu sürerken gösterilir.
+    private var barcodeLookupOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.35)
+                .ignoresSafeArea()
+
+            VStack(spacing: 12) {
+                ProgressView()
+                Text("Looking up that barcode…")
+                    .font(.footnote)
+            }
+            .padding(24)
+            .background(.regularMaterial, in: .rect(cornerRadius: 16))
+        }
+        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Arama sonuçları

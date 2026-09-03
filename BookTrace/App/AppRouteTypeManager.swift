@@ -40,14 +40,15 @@ final class AppRouteTypeManager {
         guard !didBootstrap else { return }
         didBootstrap = true
 
-        async let minimumDisplay: Void = Task.sleep(for: .seconds(1))
-        async let realWork: Void = performStartupTasks()   // ileride auth/cache/config
-
-        _ = try? await (minimumDisplay, realWork)
+        await performStartupTasks()
         rootType = .tabbed
     }
 
+    /// İleride auth, uzak yapılandırma veya cache ısıtma buraya girer.
+    ///
+    /// Şu an gerçek bir iş yok; bu yüzden splash da görünmüyor. Önceden burada
+    /// bir saniyelik "minimum gösterim süresi" vardı — uygulama hiçbir şey
+    /// beklemezken kullanıcıyı her soğuk başlatmada bir saniye bekletiyordu.
     private func performStartupTasks() async {
-        // şimdilik boş, ileride buraya gerçek iş girer
     }
 }

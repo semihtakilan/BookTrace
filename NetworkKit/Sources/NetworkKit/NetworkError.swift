@@ -4,7 +4,6 @@ import Foundation
 
 public enum NetworkError: Error, Sendable, LocalizedError {
     case invalidURL(String? = nil)
-    case noData
     case timeout(duration: TimeInterval? = nil)
     case cancelled
     case decodingError(Error, data: Data? = nil)
@@ -16,15 +15,15 @@ public enum NetworkError: Error, Sendable, LocalizedError {
     case notFound(resource: String? = nil)
     case rateLimited(retryAfter: TimeInterval? = nil)
     case serverError(statusCode: Int? = nil)
-    case retryRequired
-    case sslPinningFailed
     case requestTooLarge
     case badRequest(message: String? = nil)
+
+    /// Sunucunun bildirdiği bekleme süresi bundan uzunsa tekrar denemenin anlamı yok.
+    public static let maxHonoredRetryAfter: TimeInterval = 5
 
     public var errorDescription: String? {
         switch self {
         case .invalidURL(let url):        return url.map { "Invalid URL: \($0)" } ?? "Invalid URL"
-        case .noData:                     return "No data received from server"
         case .timeout(let d):             return d.map { "Request timed out after \($0)s" } ?? "Request timed out"
         case .cancelled:                  return "Request was cancelled"
         case .decodingError(let e, let d):
@@ -39,8 +38,6 @@ public enum NetworkError: Error, Sendable, LocalizedError {
         case .notFound(let r):            return r.map { "Not found: \($0)" } ?? "Not found"
         case .rateLimited(let r):         return r.map { "Rate limited — retry after \($0)s" } ?? "Rate limited"
         case .serverError(let c):         return c.map { "Server error (\($0))" } ?? "Server error"
-        case .retryRequired:              return "Request should be retried"
-        case .sslPinningFailed:           return "SSL pinning validation failed"
         case .requestTooLarge:            return "Request payload too large"
         case .badRequest(let m):          return m ?? "Bad request"
         }
@@ -48,10 +45,29 @@ public enum NetworkError: Error, Sendable, LocalizedError {
 
     public var isRetryable: Bool {
         switch self {
-        case .timeout, .networkError, .rateLimited, .serverError, .retryRequired: return true
-        case .httpError(let c, _, _): return [408, 429, 500, 502, 503, 504].contains(c)
-        default: return false
+        case .timeout, .networkError, .serverError:
+            return true
+
+        // Kota hatasını körlemesine yeniden denemek sorunu katlıyor: Explore
+        // açılışta altı rafı paralel yüklüyor, üç denemeyle bu on sekiz isteğe
+        // çıkıyordu — hem de kotası zaten dolmuş bir API'ye. Yalnızca sunucu ne
+        // kadar bekleneceğini söylediyse ve süre kısaysa yeniden denenir.
+        case .rateLimited(let retryAfter):
+            guard let retryAfter else { return false }
+            return retryAfter <= NetworkError.maxHonoredRetryAfter
+
+        case .httpError(let code, _, _):
+            return [408, 500, 502, 503, 504].contains(code)
+
+        default:
+            return false
         }
+    }
+
+    /// Sunucunun `Retry-After` ile bildirdiği bekleme süresi.
+    public var retryAfter: TimeInterval? {
+        if case .rateLimited(let seconds) = self { return seconds }
+        return nil
     }
 
     public var statusCode: Int? {

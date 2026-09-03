@@ -35,6 +35,37 @@ public struct BookReference: Identifiable, Hashable, Sendable, Codable {
         return String(publishedDate.prefix(4))
     }
 
+    /// Gün bilgisi de varsa tarih. Ekranda ham ISO dizesi yerine yerelleştirilmiş
+    /// biçimde gösterilebilsin diye.
+    public var publicationDay: Date? {
+        BookReference.date(from: publishedDate, componentCount: 3)
+    }
+
+    /// Yalnızca yıl ve ay verilmişse.
+    public var publicationMonth: Date? {
+        BookReference.date(from: publishedDate, componentCount: 2)
+    }
+
+    /// `DateFormatter` yerine elle ayrıştırılıyor: biçim sabit (ISO), formatter
+    /// ise `Sendable` değil ve statik olarak paylaşılamıyor.
+    private static func date(from value: String?, componentCount: Int) -> Date? {
+        guard let value else { return nil }
+        let parts = value.split(separator: "-").map(String.init)
+        guard parts.count == componentCount else { return nil }
+
+        let numbers = parts.compactMap { Int($0) }
+        guard numbers.count == componentCount else { return nil }
+
+        var components = DateComponents()
+        components.year = numbers[0]
+        components.month = componentCount > 1 ? numbers[1] : 1
+        components.day = componentCount > 2 ? numbers[2] : 1
+
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? calendar.timeZone
+        return calendar.date(from: components)
+    }
+
     public init(
         id: String,
         title: String,

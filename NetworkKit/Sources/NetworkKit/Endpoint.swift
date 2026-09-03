@@ -1,10 +1,10 @@
 import Foundation
-import FactoryKit
 
 // MARK: - Endpoint Protocol
 public protocol Endpoint: Sendable {
     associatedtype Response: Decodable & Sendable
     var path: String { get set }
+    /// Her endpoint kendi hostunu bildirir; ortamdan türetilen bir varsayılan yok.
     var baseURL: URL { get }
     var httpMethod: HTTPMethod { get }
     var headers: [String: String] { get }
@@ -17,7 +17,6 @@ public protocol Endpoint: Sendable {
 }
 
 public extension Endpoint {
-    var baseURL: URL { Container.shared.environmentManager().currentEnvironment.baseURL }
     var httpMethod: HTTPMethod { .GET }
     var headers: [String: String] { ["Content-Type": "application/json"] }
     var queryParameters: [String: String]? { nil }

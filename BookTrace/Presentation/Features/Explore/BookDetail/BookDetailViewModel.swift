@@ -62,34 +62,43 @@ final class BookDetailViewModel {
         pageCountText.isEmpty || Int(pageCountText.trimmingCharacters(in: .whitespaces)) != nil
     }
 
+    /// Sayfa alanının ipucu metni: kaynağın verdiği değer.
+    ///
+    /// Bu değer alana yazılmaz, yalnızca gösterilir — bkz. `presentForm()`.
+    var pageCountPlaceholder: String {
+        book.pageCount.map(String.init) ?? "0"
+    }
+
     func load() {
         do {
             existingEntry = try libraryRepository.entry(for: book.id)
-            knownCategories = try libraryRepository
-                .fetchEntries()
-                .flatMap(\.categories)
-                .reduce(into: [Models.Category]()) { result, category in
-                    if !result.contains(where: { $0.id == category.id }) { result.append(category) }
-                }
+            knownCategories = try libraryRepository.fetchCategories()
         } catch {
             self.error = UserFacingError(error)
         }
     }
 
     /// Formu açar; kitap zaten kütüphanedeyse mevcut seçimlerle doldurur.
+    ///
+    /// Sayfa alanına yalnızca kullanıcının kendi girdiği değer yazılır.
+    /// Kaynağın (Google Books) verdiği sayı alana konsaydı, kullanıcı hiçbir
+    /// şey yazmadan kaydettiğinde o değer `pageCount`'a kullanıcı girdisi
+    /// olarak geçer ve modelin bilinçli olarak koruduğu "kaynaktan gelen" /
+    /// "kullanıcının girdiği" ayrımı kaybolurdu. Kaynağın değeri alanın
+    /// ipucu (`pageCountPlaceholder`) olarak gösterilir.
     func presentForm() {
         if let entry = existingEntry {
             readingStatus = entry.readingStatus
             ownershipStatus = entry.ownershipStatus
             progressType = entry.progressType
-            pageCountText = entry.effectivePageCount.map(String.init) ?? ""
+            pageCountText = entry.pageCount.map(String.init) ?? ""
             selectedCategories = entry.categories
         } else {
             // Yeni kitaplar Settings'teki varsayılanlarla açılır.
             readingStatus = settings.defaultReadingStatus
             ownershipStatus = .notOwned
             progressType = settings.defaultProgressType
-            pageCountText = book.pageCount.map(String.init) ?? ""
+            pageCountText = ""
             selectedCategories = []
         }
         newCategoryName = ""
@@ -127,7 +136,8 @@ final class BookDetailViewModel {
         entry.readingStatus = readingStatus
         entry.ownershipStatus = ownershipStatus
         entry.progressType = progressType
-        entry.pageCount = pageCount
+        // Sayfa sayısı düşürüldüyse ilerleme de yeni tavana çekilir.
+        entry.setPageCount(pageCount)
         entry.categories = selectedCategories
 
         do {
@@ -136,15 +146,6 @@ final class BookDetailViewModel {
             isPresentingForm = false
             didSave = true
             self.error = nil
-        } catch {
-            self.error = UserFacingError(error)
-        }
-    }
-
-    func removeFromLibrary() {
-        do {
-            try libraryRepository.delete(id: book.id)
-            existingEntry = nil
         } catch {
             self.error = UserFacingError(error)
         }

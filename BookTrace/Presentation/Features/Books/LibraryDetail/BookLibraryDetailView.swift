@@ -17,6 +17,7 @@ struct BookLibraryDetailView: View {
     private let entry: LibraryEntry
 
     @Environment(ViewModelFactory.self) private var viewModelFactory
+    @State private var holder = ViewModelHolder<LibraryEntryDetailViewModel>()
 
     init(entry: LibraryEntry) {
         self.entry = entry
@@ -24,7 +25,7 @@ struct BookLibraryDetailView: View {
 
     var body: some View {
         BookLibraryDetailContent(
-            viewModel: viewModelFactory.makeLibraryEntryDetailViewModel(entry: entry)
+            viewModel: holder { viewModelFactory.makeLibraryEntryDetailViewModel(entry: entry) }
         )
     }
 }
@@ -34,6 +35,7 @@ private struct BookLibraryDetailContent: View {
 
     @Environment(\.navigator) private var navigator
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
+    @Environment(\.locale) private var locale
     @State private var isPresentingProgressEditor = false
     @State private var isConfirmingRemoval = false
     @State private var progressInput = ""
@@ -202,7 +204,7 @@ private struct BookLibraryDetailContent: View {
                 Text("Reading Sessions").font(.headline)
                 Spacer()
                 if !entry.readingSessions.isEmpty {
-                    Text("\(DurationFormatter.compact(seconds: entry.totalReadSeconds)) · \(entry.totalPagesRead) pages")
+                    Text("\(DurationFormatter.compact(seconds: entry.totalReadSeconds, locale: locale)) · \(entry.totalPagesRead) pages")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -223,11 +225,12 @@ private struct BookLibraryDetailContent: View {
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Text(DurationFormatter.compact(seconds: session.durationSeconds))
+                        Text(DurationFormatter.compact(seconds: session.durationSeconds, locale: locale))
                             .font(.subheadline.monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 4)
+                    .accessibilityElement(children: .combine)
                     Divider()
                 }
             }

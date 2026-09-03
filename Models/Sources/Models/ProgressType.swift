@@ -15,11 +15,4 @@ import Foundation
 public enum ProgressType: String, CaseIterable, Codable, Sendable {
     case pages
     case percentage
-
-    public var displayName: String {
-        switch self {
-        case .pages:      "Pages"
-        case .percentage: "Percentage"
-        }
-    }
 }

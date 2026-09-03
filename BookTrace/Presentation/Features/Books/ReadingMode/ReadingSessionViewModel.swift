@@ -8,6 +8,7 @@
 import Foundation
 import Models
 import Observation
+import SwiftUI
 
 @MainActor
 @Observable
@@ -44,9 +45,19 @@ final class ReadingSessionViewModel {
         Int(pagesReadText.trimmingCharacters(in: .whitespaces))
     }
 
+    /// Bu oturumda kaydedilebilecek en fazla sayfa; kitabın kalanı.
+    var maximumPages: Int? { entry.remainingPages }
+
     var canSave: Bool {
-        guard let pages = pagesReadValue else { return false }
-        return pages >= 0 && elapsedSeconds > 0
+        guard let pages = pagesReadValue, pages >= 0, elapsedSeconds > 0 else { return false }
+        guard let maximumPages else { return true }
+        return pages <= maximumPages
+    }
+
+    /// Save neden pasif — girilen değer kitabın kalanını aşıyorsa açıklar.
+    var pagesLimitMessage: LocalizedStringKey? {
+        guard let pages = pagesReadValue, let maximumPages, pages > maximumPages else { return nil }
+        return "This book only has \(maximumPages) pages left."
     }
 
     /// Kaydedilecek oturumun kitabı nereye taşıyacağının önizlemesi.

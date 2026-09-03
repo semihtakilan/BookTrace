@@ -16,12 +16,8 @@ public struct NetworkRegistrations {
         customRequestInterceptors: [RequestInterceptor] = [],
         customResponseInterceptors: [ResponseInterceptor] = []
     ) {
-        Container.shared.environmentManager.register {
-            EnvironmentManager()
-        }
-
         Container.shared.networkConfiguration.register {
-            Container.shared.environmentManager().getCurrentConfiguration()
+            NetworkConfiguration(environment: .current)
         }
 
         Container.shared.networkLogger.register {
@@ -48,8 +44,9 @@ public struct NetworkRegistrations {
                 UserAgentInterceptor(appName: "Book Trace", appVersion: "1.0", systemInfo: "iOS")
             )
 
-            var responseInterceptors = customResponseInterceptors
-            responseInterceptors.append(ResponseValidationInterceptor())
+            // Durum kodu doğrulaması `NetworkService` içinde, interceptor'lardan
+            // önce yapılıyor; ayrı bir doğrulama interceptor'ı onu gölgeliyordu.
+            let responseInterceptors = customResponseInterceptors
 
             return NetworkService(
                 configuration: configuration,

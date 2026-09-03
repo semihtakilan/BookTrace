@@ -13,13 +13,16 @@ struct BookDetailView: View {
     private let book: BookReference
 
     @Environment(ViewModelFactory.self) private var viewModelFactory
+    @State private var holder = ViewModelHolder<BookDetailViewModel>()
 
     init(book: BookReference) {
         self.book = book
     }
 
     var body: some View {
-        BookDetailContent(viewModel: viewModelFactory.makeBookDetailViewModel(book: book))
+        BookDetailContent(
+            viewModel: holder { viewModelFactory.makeBookDetailViewModel(book: book) }
+        )
     }
 }
 
@@ -103,8 +106,17 @@ private struct BookDetailContent: View {
             if let pageCount = book.pageCount {
                 LabeledContent("Pages", value: String(pageCount))
             }
-            if let publishedDate = book.publishedDate {
-                LabeledContent("Published", value: publishedDate)
+            // Google'ın ham "2019-01-24" dizesi yerine yerelleştirilmiş tarih.
+            if let publicationDay = book.publicationDay {
+                LabeledContent("Published") {
+                    Text(publicationDay, format: .dateTime.year().month(.abbreviated).day())
+                }
+            } else if let publicationMonth = book.publicationMonth {
+                LabeledContent("Published") {
+                    Text(publicationMonth, format: .dateTime.year().month(.wide))
+                }
+            } else if let publicationYear = book.publicationYear {
+                LabeledContent("Published", value: publicationYear)
             }
             if let isbn13 = book.isbn13 {
                 LabeledContent("ISBN-13", value: isbn13)
@@ -134,7 +146,6 @@ private struct AddToLibraryForm: View {
     @Bindable var viewModel: BookDetailViewModel
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(AppSettings.self) private var settings
 
     var body: some View {
         NavigationStack {
@@ -156,12 +167,15 @@ private struct AddToLibraryForm: View {
                     }
                     .pickerStyle(.segmented)
 
-                    TextField("Page count", text: $viewModel.pageCountText)
-                        .keyboardType(.numberPad)
+                    LabeledContent("Page count") {
+                        TextField(viewModel.pageCountPlaceholder, text: $viewModel.pageCountText)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                    }
                 } header: {
                     Text("Progress")
                 } footer: {
-                    Text("The page count drives your progress bar and the estimated time left.")
+                    Text("The page count drives your progress bar and the estimated time left. Leave it empty to use the count Google Books reports.")
                 }
 
                 Section("Ownership Status") {
@@ -177,6 +191,10 @@ private struct AddToLibraryForm: View {
                     HStack {
                         TextField("New category", text: $viewModel.newCategoryName)
                             .onSubmit { viewModel.addTypedCategory() }
+                            // Etiket adı serbest kullanıcı verisi; otomatik
+                            // düzeltme "Sci Fi"yi "sci fı" yapıp öyle kaydediyordu.
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.words)
                         Button("Add") { viewModel.addTypedCategory() }
                             .disabled(viewModel.newCategoryName.trimmingCharacters(in: .whitespaces).isEmpty)
                     }
@@ -202,7 +220,7 @@ private struct AddToLibraryForm: View {
                         .frame(maxWidth: .infinity)
                 }
             }
-            .navigationTitle(settings.localized(viewModel.isInLibrary ? "Library Details" : "Add to Library"))
+            .navigationTitle(viewModel.isInLibrary ? "Library Details" : "Add to Library")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

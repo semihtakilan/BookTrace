@@ -9,10 +9,15 @@ import SwiftUI
 import NavigatorUI
 import Models
 
-enum BooksDestinations: NavigationDestination {
+enum BooksDestinations: Hashable {
     case entryDetail(LibraryEntry)
     case readingSession(LibraryEntry)
+}
 
+// Swift 6.2, protokol yalıtımının uyum noktasında açık olmasını istiyor:
+// `NavigationDestination` `@MainActor` bir protokol, uyum da bunu tekrar
+// söylemek zorunda. Uyumun extension'a alınması da aynı kuralın gereği.
+extension BooksDestinations: @MainActor NavigationDestination {
     var body: some View {
         switch self {
         case .entryDetail(let entry):

@@ -19,58 +19,6 @@ public struct AuthenticationInterceptor: RequestInterceptor {
     }
 }
 
-// MARK: - Logging Interceptor
-
-public struct LoggingInterceptor: RequestInterceptor, ResponseInterceptor {
-    private let logger: NetworkLogger
-
-    public init(
-        logLevel: LogLevel = .debug,
-        includeHeaders: Bool = true,
-        includeBody: Bool = true,
-        includeResponse: Bool = true
-    ) {
-        self.logger = NetworkLogger(
-            logLevel: logLevel,
-            includeHeaders: includeHeaders,
-            includeBody: includeBody,
-            includeResponse: includeResponse
-        )
-    }
-
-    public func intercept(_ request: URLRequest) async throws -> URLRequest {
-        await logger.logRequest(request)
-        return request
-    }
-
-    public func intercept(_ response: NetworkResponse) async throws -> NetworkResponse {
-        await logger.logResponse(response, data: response.data)
-        return response
-    }
-}
-
-// MARK: - Custom Headers Interceptor
-
-public struct CustomHeadersInterceptor: RequestInterceptor {
-    private let headers: [String: String]
-    private let overrideExisting: Bool
-
-    public init(headers: [String: String], overrideExisting: Bool = false) {
-        self.headers = headers
-        self.overrideExisting = overrideExisting
-    }
-
-    public func intercept(_ request: URLRequest) async throws -> URLRequest {
-        var req = request
-        for (key, value) in headers {
-            if overrideExisting || req.value(forHTTPHeaderField: key) == nil {
-                req.setValue(value, forHTTPHeaderField: key)
-            }
-        }
-        return req
-    }
-}
-
 // MARK: - Request ID Interceptor
 
 public struct RequestIDInterceptor: RequestInterceptor {
@@ -79,56 +27,6 @@ public struct RequestIDInterceptor: RequestInterceptor {
     public func intercept(_ request: URLRequest) async throws -> URLRequest {
         var req = request
         req.setValue(UUID().uuidString, forHTTPHeaderField: "X-Request-ID")
-        return req
-    }
-}
-
-// MARK: - Response Validation Interceptor
-
-public struct ResponseValidationInterceptor: ResponseInterceptor {
-    private let validStatusCodes: Range<Int>
-
-    public init(validStatusCodes: Range<Int> = 200..<300) {
-        self.validStatusCodes = validStatusCodes
-    }
-
-    public func intercept(_ response: NetworkResponse) async throws -> NetworkResponse {
-        guard validStatusCodes.contains(response.statusCode) else {
-            throw NetworkError.httpError(
-                statusCode: response.statusCode,
-                message: HTTPURLResponse.localizedString(forStatusCode: response.statusCode)
-            )
-        }
-        return response
-    }
-}
-
-// MARK: - Cache Control Interceptor
-
-public struct CacheControlInterceptor: RequestInterceptor {
-    public enum CachePolicy: Sendable {
-        case noCache
-        case noStore
-        case maxAge(TimeInterval)
-        case custom(String)
-
-        var headerValue: String {
-            switch self {
-            case .noCache:         return "no-cache"
-            case .noStore:         return "no-store"
-            case .maxAge(let s):   return "max-age=\(Int(s))"
-            case .custom(let v):   return v
-            }
-        }
-    }
-
-    private let cachePolicy: CachePolicy
-
-    public init(cachePolicy: CachePolicy) { self.cachePolicy = cachePolicy }
-
-    public func intercept(_ request: URLRequest) async throws -> URLRequest {
-        var req = request
-        req.setValue(cachePolicy.headerValue, forHTTPHeaderField: "Cache-Control")
         return req
     }
 }

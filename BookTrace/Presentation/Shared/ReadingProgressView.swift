@@ -15,11 +15,17 @@ import Models
 struct ReadingProgressView: View {
     let entry: LibraryEntry
 
+    @Environment(\.locale) private var locale
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let fraction = entry.progressFraction, let total = entry.effectivePageCount {
                 ProgressView(value: fraction)
                     .progressViewStyle(.linear)
+                    // Ekranın en önemli bilgisi bu çubukta; değeri açıkça
+                    // verilmezse VoiceOver kullanıcısına hiç ulaşmıyor.
+                    .accessibilityLabel("Reading progress")
+                    .accessibilityValue("\(Int((fraction * 100).rounded()))% complete")
 
                 HStack {
                     Text(progressLabel(fraction: fraction, total: total))
@@ -49,7 +55,7 @@ struct ReadingProgressView: View {
 
     private var remainingText: LocalizedStringKey? {
         guard let seconds = entry.estimatedRemainingSeconds else { return nil }
-        let formatted = DurationFormatter.compact(seconds: seconds)
+        let formatted = DurationFormatter.compact(seconds: seconds, locale: locale)
         return entry.hasPersonalizedSpeed ? "~\(formatted) left" : "~\(formatted) left (estimate)"
     }
 }

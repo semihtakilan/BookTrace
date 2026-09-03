@@ -14,6 +14,11 @@ import Foundation
 @MainActor
 public protocol LibraryRepository: AnyObject {
     func fetchEntries() throws -> [LibraryEntry]
+    /// Kullanıcının daha önce kullandığı etiketler.
+    ///
+    /// Etiket önerisi için tüm kütüphaneyi materyalize etmeye gerek yok;
+    /// kategoriler zaten ayrı bir tabloda duruyor.
+    func fetchCategories() throws -> [Category]
     func entry(for bookID: String) throws -> LibraryEntry?
     func add(_ entry: LibraryEntry) throws
     func update(_ entry: LibraryEntry) throws

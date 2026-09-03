@@ -17,7 +17,6 @@ struct FinishSessionView: View {
     @Bindable var viewModel: ReadingSessionViewModel
 
     @Environment(\.navigator) private var navigator
-    @Environment(AppSettings.self) private var settings
     @FocusState private var isPagesFieldFocused: Bool
 
     var body: some View {
@@ -29,8 +28,11 @@ struct FinishSessionView: View {
             actions
         }
         .padding()
-        .navigationTitle(settings.localized("Finish Session"))
+        .navigationTitle("Finish Session")
         .navigationBarTitleDisplayMode(.inline)
+        // Ekranın tek girişi bu; Discard ve Save klavyenin üstünde kaldığı için
+        // klavyeyi açık başlatmak bir dokunuş kazandırıyor.
+        .task { isPagesFieldFocused = true }
     }
 
     // MARK: - Bölümler
@@ -77,7 +79,12 @@ struct FinishSessionView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            if let projectedPage = viewModel.projectedPage {
+            if let pagesLimitMessage = viewModel.pagesLimitMessage {
+                Text(pagesLimitMessage)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+            } else if let projectedPage = viewModel.projectedPage {
                 Text("Progress will move to page \(projectedPage).")
                     .font(.footnote)
                     .foregroundStyle(.secondary)

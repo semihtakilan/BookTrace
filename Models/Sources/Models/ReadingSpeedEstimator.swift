@@ -17,13 +17,15 @@ public enum ReadingSpeedEstimator {
     public static let defaultSecondsPerPage: TimeInterval = 120
 
     public static func hasPersonalizedSpeed(for sessions: [ReadingSession]) -> Bool {
-        totalPages(in: sessions) > 0 && totalSeconds(in: sessions) > 0
+        let measured = measurable(sessions)
+        return totalPages(in: measured) > 0 && totalSeconds(in: measured) > 0
     }
 
     /// Oturumların toplam süresi ÷ toplam okunan sayfa. Ölçüm yoksa varsayılan.
     public static func secondsPerPage(for sessions: [ReadingSession]) -> TimeInterval {
-        let pages = totalPages(in: sessions)
-        let seconds = totalSeconds(in: sessions)
+        let measured = measurable(sessions)
+        let pages = totalPages(in: measured)
+        let seconds = totalSeconds(in: measured)
         guard pages > 0, seconds > 0 else { return defaultSecondsPerPage }
         return TimeInterval(seconds) / TimeInterval(pages)
     }
@@ -31,6 +33,19 @@ public enum ReadingSpeedEstimator {
     public static func estimatedRemainingSeconds(for entry: LibraryEntry) -> TimeInterval? {
         guard let remaining = entry.remainingPages, remaining > 0 else { return nil }
         return TimeInterval(remaining) * secondsPerPage(for: entry.readingSessions)
+    }
+
+    /// Hız hesabına yalnızca sayfa okunmuş oturumlar girer.
+    ///
+    /// Sayfa girilmemiş bir oturum süreyi paya ekler, paydaya hiçbir şey
+    /// eklemez; tek bir "45 dakika okudum, sayfa girmedim" kaydı o kitabın
+    /// sayfa başına süresini kalıcı olarak şişirir. Oturum silme arayüzü
+    /// olmadığı için kullanıcının bunu düzeltme yolu da yok. Bu yüzden filtre
+    /// hesabın kendisinde: geçmişte kaydedilmiş bozuk veriler de böylece
+    /// tahmini bozmaktan çıkar. Süre toplamları (`LibraryEntry.totalReadSeconds`)
+    /// bu filtreden etkilenmez — o oturumlar gerçekten okunmuş zamandır.
+    private static func measurable(_ sessions: [ReadingSession]) -> [ReadingSession] {
+        sessions.filter { $0.pagesRead > 0 }
     }
 
     private static func totalPages(in sessions: [ReadingSession]) -> Int {

@@ -33,14 +33,6 @@ extension Container {
     }
 
     @MainActor
-    var libraryRepository: Factory<any LibraryRepository> {
-        self {
-            fatalError("LibraryRepository is registered when AppDependencies creates the SwiftData container.")
-        }
-        .singleton
-    }
-
-    @MainActor
     var appSettings: Factory<AppSettings> {
         self { AppSettings() }.singleton
     }
@@ -48,18 +40,5 @@ extension Container {
     @MainActor
     var libraryChangeNotifier: Factory<LibraryChangeNotifier> {
         self { LibraryChangeNotifier() }.singleton
-    }
-
-    @MainActor
-    var viewModelFactory: Factory<ViewModelFactory> {
-        self {
-            ViewModelFactory(
-                libraryRepository: self.libraryRepository(),
-                bookSearching: self.bookSearching(),
-                bookSearchCache: self.bookSearchCache(),
-                settings: self.appSettings()
-            )
-        }
-        .singleton
     }
 }

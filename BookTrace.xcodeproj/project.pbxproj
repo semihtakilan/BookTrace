@@ -14,17 +14,33 @@
 		E00000010000000000000001 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = E00000020000000000000002 /* Kingfisher */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		D9C1A000000000000000000B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D846A98A301A8E4C00477B1E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D846A991301A8E4C00477B1E;
+			remoteInfo = BookTrace;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		D846A992301A8E4C00477B1E /* BookTrace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BookTrace.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D846A9CB301A8EEC00477B1E /* NetworkKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = NetworkKit; sourceTree = "<group>"; };
 		D846AA27301B35E800477B1E /* NetworkRegistration */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = NetworkRegistration; sourceTree = "<group>"; };
 		D846AA7C301B3B2100477B1E /* Models */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Models; sourceTree = "<group>"; };
+		D9C1A0000000000000000002 /* BookTraceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookTraceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D846A994301A8E4C00477B1E /* BookTrace */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = BookTrace;
+			sourceTree = "<group>";
+		};
+		D9C1A0000000000000000006 /* BookTraceTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BookTraceTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -42,6 +58,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D9C1A0000000000000000004 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -52,6 +75,7 @@
 				D846AA27301B35E800477B1E /* NetworkRegistration */,
 				D846A9CB301A8EEC00477B1E /* NetworkKit */,
 				D846A994301A8E4C00477B1E /* BookTrace */,
+				D9C1A0000000000000000006 /* BookTraceTests */,
 				D846AA24301B351000477B1E /* Frameworks */,
 				D846A993301A8E4C00477B1E /* Products */,
 			);
@@ -61,6 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				D846A992301A8E4C00477B1E /* BookTrace.app */,
+				D9C1A0000000000000000002 /* BookTraceTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -102,6 +127,29 @@
 			productReference = D846A992301A8E4C00477B1E /* BookTrace.app */;
 			productType = "com.apple.product-type.application";
 		};
+		D9C1A0000000000000000001 /* BookTraceTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D9C1A0000000000000000007 /* Build configuration list for PBXNativeTarget "BookTraceTests" */;
+			buildPhases = (
+				D9C1A0000000000000000003 /* Sources */,
+				D9C1A0000000000000000004 /* Frameworks */,
+				D9C1A0000000000000000005 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D9C1A000000000000000000A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D9C1A0000000000000000006 /* BookTraceTests */,
+			);
+			name = BookTraceTests;
+			packageProductDependencies = (
+			);
+			productName = BookTraceTests;
+			productReference = D9C1A0000000000000000002 /* BookTraceTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -114,6 +162,10 @@
 				TargetAttributes = {
 					D846A991301A8E4C00477B1E = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					D9C1A0000000000000000001 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = D846A991301A8E4C00477B1E;
 					};
 				};
 			};
@@ -138,12 +190,20 @@
 			projectRoot = "";
 			targets = (
 				D846A991301A8E4C00477B1E /* BookTrace */,
+				D9C1A0000000000000000001 /* BookTraceTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		D846A990301A8E4C00477B1E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D9C1A0000000000000000005 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -160,7 +220,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D9C1A0000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D9C1A000000000000000000A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D846A991301A8E4C00477B1E /* BookTrace */;
+			targetProxy = D9C1A000000000000000000B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		D846A99B301A8E4D00477B1E /* Debug */ = {
@@ -199,7 +274,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = LT5K4Z2RQ4;
+				DEVELOPMENT_TEAM = 7U7CA9M6T2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -217,7 +292,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -266,7 +341,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = LT5K4Z2RQ4;
+				DEVELOPMENT_TEAM = 7U7CA9M6T2;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -278,7 +353,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -311,7 +386,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.batuhanbaran.BookTrace;
+				PRODUCT_BUNDLE_IDENTIFIER = com.semihtakilan.BookTrace;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -322,8 +397,8 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -348,7 +423,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.batuhanbaran.BookTrace;
+				PRODUCT_BUNDLE_IDENTIFIER = com.semihtakilan.BookTrace;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -359,8 +434,52 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		D9C1A0000000000000000008 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7U7CA9M6T2;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.semihtakilan.BookTraceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BookTrace.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BookTrace";
+			};
+			name = Debug;
+		};
+		D9C1A0000000000000000009 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7U7CA9M6T2;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.semihtakilan.BookTraceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BookTrace.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BookTrace";
 			};
 			name = Release;
 		};
@@ -381,6 +500,15 @@
 			buildConfigurations = (
 				D846A99E301A8E4D00477B1E /* Debug */,
 				D846A99F301A8E4D00477B1E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D9C1A0000000000000000007 /* Build configuration list for PBXNativeTarget "BookTraceTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9C1A0000000000000000008 /* Debug */,
+				D9C1A0000000000000000009 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

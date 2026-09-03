@@ -12,7 +12,9 @@ struct BookCoverCell: View {
     let title: String
     let author: String
     let coverURL: URL?
-    var width: CGFloat = 100
+    /// Sabit genişlik erişilebilirlik punto boyutlarında başlığı kesiyordu;
+    /// hücre metinle birlikte büyür.
+    @ScaledMetric(relativeTo: .caption) var width: CGFloat = 100
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -38,5 +40,8 @@ struct BookCoverCell: View {
             }
         }
         .frame(width: width, alignment: .leading)
+        // Kapak, başlık ve yazar tek bir öğe olarak okunur; aksi hâlde
+        // VoiceOver her rafı parça parça geziyor.
+        .accessibilityElement(children: .combine)
     }
 }

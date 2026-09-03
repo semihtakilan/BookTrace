@@ -34,11 +34,3 @@ enum ViewState<Value: Sendable>: Sendable {
         return nil
     }
 }
-
-extension ViewState where Value: Collection {
-    /// Yüklenmiş ama boş dönen sonucu, henüz yüklenmemiş olandan ayırmak için.
-    var isEmptyResult: Bool {
-        guard case .loaded(let value) = self else { return false }
-        return value.isEmpty
-    }
-}

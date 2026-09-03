@@ -24,25 +24,114 @@
         }
       }
     },
+    "%@ and every reading session recorded for it will be deleted.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ and every reading session recorded for it will be deleted."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ve bu kitap için kaydedilmiş tüm okuma oturumları silinecek."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ und alle dafür erfassten Lesesitzungen werden gelöscht."
+          }
+        }
+      }
+    },
     "%@ · %lld pages": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ · %lld pages"
+            "value": "%1$@ · %#@arg2@"
+          },
+          "substitutions": {
+            "arg2": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg page"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg pages"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ · %lld sayfa"
+            "value": "%1$@ · %#@arg2@"
+          },
+          "substitutions": {
+            "arg2": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg sayfa"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg sayfa"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ · %lld Seiten"
+            "value": "%1$@ · %#@arg2@"
+          },
+          "substitutions": {
+            "arg2": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Seite"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Seiten"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -53,19 +142,85 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld of %lld pages"
+            "value": "%1$lld of %#@arg2@"
+          },
+          "substitutions": {
+            "arg2": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg page"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg pages"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld / %lld sayfa"
+            "value": "%1$lld / %#@arg2@"
+          },
+          "substitutions": {
+            "arg2": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg sayfa"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg sayfa"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld von %lld Seiten"
+            "value": "%1$lld von %#@arg2@"
+          },
+          "substitutions": {
+            "arg2": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Seite"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Seiten"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -74,21 +229,80 @@
       "extractionState": "manual",
       "localizations": {
         "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld page"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld pages"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld sayfa"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld sayfa"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Seite"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Seiten"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld%% complete": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld pages"
+            "value": "%lld%% complete"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld sayfa"
+            "value": "%%%lld tamamlandı"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld Seiten"
+            "value": "%lld%% abgeschlossen"
           }
         }
       }
@@ -99,19 +313,108 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld%% of %lld pages"
+            "value": "%1$lld%% of %#@arg2@"
+          },
+          "substitutions": {
+            "arg2": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg page"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg pages"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%%%lld · %lld sayfa"
+            "value": "%%%1$lld · %#@arg2@"
+          },
+          "substitutions": {
+            "arg2": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg sayfa"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg sayfa"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld%% von %lld Seiten"
+            "value": "%1$lld%% von %#@arg2@"
+          },
+          "substitutions": {
+            "arg2": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Seite"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Seiten"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "0": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "0"
           }
         }
       }
@@ -254,6 +557,52 @@
         }
       }
     },
+    "All": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümü"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        }
+      }
+    },
+    "All Books": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Books"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm Kitaplar"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Bücher"
+          }
+        }
+      }
+    },
     "Already in your library": {
       "extractionState": "manual",
       "localizations": {
@@ -346,6 +695,29 @@
         }
       }
     },
+    "Biography": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biography"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biyografi"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biografie"
+          }
+        }
+      }
+    },
     "Book data": {
       "extractionState": "manual",
       "localizations": {
@@ -365,6 +737,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Buchdaten"
+          }
+        }
+      }
+    },
+    "BookTrace couldn't open the reading data stored on this device.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BookTrace couldn't open the reading data stored on this device."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BookTrace bu cihazda saklanan okuma verisini açamadı."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BookTrace konnte die auf diesem Gerät gespeicherten Lesedaten nicht öffnen."
           }
         }
       }
@@ -691,48 +1086,25 @@
         }
       }
     },
-    "Done": {
+    "Elapsed time": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Done"
+            "value": "Elapsed time"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bitti"
+            "value": "Geçen süre"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fertig"
-          }
-        }
-      }
-    },
-    "Edit": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edit"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Düzenle"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bearbeiten"
+            "value": "Verstrichene Zeit"
           }
         }
       }
@@ -806,6 +1178,29 @@
         }
       }
     },
+    "Every book and reading session stored on this device will be deleted. This cannot be undone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every book and reading session stored on this device will be deleted. This cannot be undone."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihazda saklanan her kitap ve okuma oturumu silinecek. Bu işlem geri alınamaz."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jedes auf diesem Gerät gespeicherte Buch und jede Lesesitzung wird gelöscht. Das kann nicht rückgängig gemacht werden."
+          }
+        }
+      }
+    },
     "Explore": {
       "extractionState": "manual",
       "localizations": {
@@ -825,6 +1220,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Entdecken"
+          }
+        }
+      }
+    },
+    "Fiction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiction"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurgu"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belletristik"
           }
         }
       }
@@ -1032,6 +1450,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "Google Books hat eine Antwort geliefert, die wir nicht lesen konnten."
+          }
+        }
+      }
+    },
+    "Group by": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Group by"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupla"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gruppieren nach"
+          }
+        }
+      }
+    },
+    "History": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarih"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschichte"
           }
         }
       }
@@ -1262,6 +1726,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hell"
+          }
+        }
+      }
+    },
+    "Looking up that barcode…": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Looking up that barcode…"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barkod aranıyor…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barcode wird gesucht…"
           }
         }
       }
@@ -1795,6 +2282,29 @@
         }
       }
     },
+    "Philosophy": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Philosophy"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Felsefe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Philosophie"
+          }
+        }
+      }
+    },
     "Point the camera at the barcode on the back cover": {
       "extractionState": "manual",
       "localizations": {
@@ -2071,6 +2581,29 @@
         }
       }
     },
+    "Reading progress": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading progress"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Okuma ilerlemesi"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lesefortschritt"
+          }
+        }
+      }
+    },
     "Reading sessions recorded for this book will also be deleted.": {
       "extractionState": "manual",
       "localizations": {
@@ -2140,6 +2673,29 @@
         }
       }
     },
+    "Recently added": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recently added"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son eklenen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt hinzugefügt"
+          }
+        }
+      }
+    },
     "Remove": {
       "extractionState": "manual",
       "localizations": {
@@ -2205,6 +2761,75 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aus der Bibliothek entfernen?"
+          }
+        }
+      }
+    },
+    "Reset": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıfırla"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset library data": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset library data"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kütüphane verisini sıfırla"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliotheksdaten zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset library data?": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset library data?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kütüphane verisi sıfırlansın mı?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliotheksdaten zurücksetzen?"
           }
         }
       }
@@ -2324,6 +2949,29 @@
         }
       }
     },
+    "Science Fiction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Science Fiction"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilim Kurgu"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Science-Fiction"
+          }
+        }
+      }
+    },
     "Search failed": {
       "extractionState": "manual",
       "localizations": {
@@ -2351,21 +2999,57 @@
       "extractionState": "manual",
       "localizations": {
         "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Search results are cached on this device for a day. Erasing the library removes all %lld books and their reading sessions."
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Search results are cached on this device for a day. Erasing the library removes your %lld book and its reading sessions."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Search results are cached on this device for a day. Erasing the library removes all %lld books and their reading sessions."
+                }
+              }
+            }
           }
         },
         "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Arama sonuçları bu cihazda bir gün saklanır. Kütüphaneyi silmek %lld kitabın tamamını ve okuma oturumlarını kaldırır."
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Arama sonuçları bu cihazda bir gün saklanır. Kütüphaneyi silmek %lld kitabın tamamını ve okuma oturumlarını kaldırır."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Arama sonuçları bu cihazda bir gün saklanır. Kütüphaneyi silmek %lld kitabın tamamını ve okuma oturumlarını kaldırır."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Suchergebnisse werden einen Tag lang auf diesem Gerät gespeichert. Das Löschen der Bibliothek entfernt alle %lld Bücher und ihre Lesesitzungen."
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Suchergebnisse werden einen Tag lang auf diesem Gerät gespeichert. Das Löschen der Bibliothek entfernt dein %lld Buch und seine Lesesitzungen."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Suchergebnisse werden einen Tag lang auf diesem Gerät gespeichert. Das Löschen der Bibliothek entfernt alle %lld Bücher und ihre Lesesitzungen."
+                }
+              }
+            }
           }
         }
       }
@@ -2554,6 +3238,52 @@
         }
       }
     },
+    "Sort books": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort books"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kitapları sırala"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bücher sortieren"
+          }
+        }
+      }
+    },
+    "Sort by": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sort by"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sırala"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sortieren nach"
+          }
+        }
+      }
+    },
     "Splash": {
       "extractionState": "manual",
       "localizations": {
@@ -2573,6 +3303,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Splash"
+          }
+        }
+      }
+    },
+    "Status": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durum"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
           }
         }
       }
@@ -2619,6 +3372,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "System"
+          }
+        }
+      }
+    },
+    "Tags": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tags"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiketler"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tags"
+          }
+        }
+      }
+    },
+    "Technology": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Technology"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teknoloji"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Technik"
           }
         }
       }
@@ -2715,25 +3514,25 @@
         }
       }
     },
-    "The page count drives your progress bar and the estimated time left.": {
+    "The page count drives your progress bar and the estimated time left. Leave it empty to use the count Google Books reports.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The page count drives your progress bar and the estimated time left."
+            "value": "The page count drives your progress bar and the estimated time left. Leave it empty to use the count Google Books reports."
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sayfa sayısı ilerleme çubuğunu ve kalan süre tahminini belirler."
+            "value": "Sayfa sayısı ilerleme çubuğunu ve kalan süre tahminini belirler. Boş bırakırsan Google Books'un verdiği değer kullanılır."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Seitenzahl bestimmt deinen Fortschrittsbalken und die geschätzte Restzeit."
+            "value": "Die Seitenzahl bestimmt deinen Fortschrittsbalken und die geschätzte Restzeit. Leer lassen, um den von Google Books gemeldeten Wert zu verwenden."
           }
         }
       }
@@ -2780,6 +3579,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Design"
+          }
+        }
+      }
+    },
+    "This book only has %lld pages left.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This book only has %lld pages left."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kitapta yalnızca %lld sayfa kaldı."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In diesem Buch sind nur noch %lld Seiten übrig."
           }
         }
       }
@@ -2876,6 +3698,29 @@
         }
       }
     },
+    "Title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlık"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel"
+          }
+        }
+      }
+    },
     "Title, author or ISBN": {
       "extractionState": "manual",
       "localizations": {
@@ -2895,6 +3740,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Titel, Autor oder ISBN"
+          }
+        }
+      }
+    },
+    "Title, author or tag": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title, author or tag"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlık, yazar veya etiket"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel, Autor oder Tag"
           }
         }
       }
@@ -2922,6 +3790,29 @@
         }
       }
     },
+    "Track what you read": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Track what you read"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ne okuduğunu takip et"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verfolge, was du liest"
+          }
+        }
+      }
+    },
     "Try again": {
       "extractionState": "manual",
       "localizations": {
@@ -2941,6 +3832,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erneut versuchen"
+          }
+        }
+      }
+    },
+    "Untagged": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untagged"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiketsiz"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Tag"
           }
         }
       }
@@ -3106,6 +4020,29 @@
         }
       }
     },
+    "Your library couldn't be opened": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your library couldn't be opened"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kütüphanen açılamadı"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Bibliothek konnte nicht geöffnet werden"
+          }
+        }
+      }
+    },
     "Your library is empty": {
       "extractionState": "manual",
       "localizations": {
@@ -3194,167 +4131,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "noch ~%@ (geschätzt)"
-          }
-        }
-      }
-    },
-    "0": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "0"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "0"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "0"
-          }
-        }
-      }
-    },
-    "Fiction": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fiction"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kurgu"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Belletristik"
-          }
-        }
-      }
-    },
-    "Science Fiction": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Science Fiction"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bilim Kurgu"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Science-Fiction"
-          }
-        }
-      }
-    },
-    "History": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "History"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tarih"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geschichte"
-          }
-        }
-      }
-    },
-    "Philosophy": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Philosophy"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Felsefe"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Philosophie"
-          }
-        }
-      }
-    },
-    "Technology": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Technology"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teknoloji"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Technik"
-          }
-        }
-      }
-    },
-    "Biography": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Biography"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Biyografi"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Biografie"
           }
         }
       }

@@ -41,9 +41,21 @@ struct ApplicationRootView: View {
         .environment(viewModelFactory)
         .environment(libraryChangeNotifier)
         .environment(settings)
-        // Tema ve dil kökten uygulanır; ayar değiştiği anda tüm ekranlar yeniden çizilir.
-        .preferredColorScheme(settings.theme.colorScheme)
+        // Dil kökten uygulanır.
         .environment(\.locale, settings.resolvedLocale)
+        // Dil değiştiğinde ağacın kimliği de değişir ve bütün ekranlar yeniden
+        // kurulur.
+        //
+        // `navigationTitle` aynı `LocalizedStringKey`'i aldığında başlığı
+        // yeniden çözmüyor; bu yüzden başlıklar için ikinci bir yol
+        // (`settings.localized`, seçilen dilin `.lproj` paketinden `String`
+        // çözen) açılmıştı. İki çözümleme yolu olması sessiz bir hata kaynağıydı:
+        // yeni bir başlık eklerken yanlış yolu seçmek arayüzün bir kısmını eski
+        // dilde bırakıyordu ve bunu yakalayacak bir test yoktu. Kimliği
+        // değiştirmek başlıkları da yeniden çözdürüyor; geriye tek yol kalıyor.
+        .id(settings.language)
+        // Tema kökten uygulanır; ağacın kimliğinden bağımsız.
+        .preferredColorScheme(settings.theme.colorScheme)
         .task {
             await routeManager.bootstrap()
         }

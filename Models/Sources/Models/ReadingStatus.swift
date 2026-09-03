@@ -14,16 +14,6 @@ public enum ReadingStatus: String, CaseIterable, Codable, Sendable {
     case finished
     case abandoned
 
-    public var displayName: String {
-        switch self {
-        case .wishlist:  "Wishlist"
-        case .toRead:    "To Read"
-        case .reading:   "Reading"
-        case .finished:  "Finished"
-        case .abandoned: "Abandoned"
-        }
-    }
-
     public var systemImage: String {
         switch self {
         case .wishlist:  "sparkles"

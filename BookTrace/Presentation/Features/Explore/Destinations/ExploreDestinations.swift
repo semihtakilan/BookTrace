@@ -9,9 +9,11 @@ import SwiftUI
 import NavigatorUI
 import Models
 
-enum ExploreDestinations: NavigationDestination {
+enum ExploreDestinations: Hashable {
     case bookDetail(BookReference)
+}
 
+extension ExploreDestinations: @MainActor NavigationDestination {
     var body: some View {
         switch self {
         case .bookDetail(let book):

@@ -13,6 +13,9 @@ import SwiftData
 /// Factory kayıtları yalnızca burada çözülür; Presentation katmanı somut veri
 /// servislerini veya DI container'ını bilmeden, ihtiyaç duyduğu bağımlılıkları
 /// initializer veya environment üzerinden alır.
+///
+/// Kalıcı mağaza burada kurulur ve kurulamazsa hata yukarı fırlatılır —
+/// `fatalError` ile çökmek kullanıcıya hiçbir kurtarma yolu bırakmıyordu.
 @MainActor
 struct AppDependencies {
     let viewModelFactory: ViewModelFactory
@@ -20,30 +23,24 @@ struct AppDependencies {
     let settings: AppSettings
     let modelContainer: ModelContainer
 
-    init(container: Container) {
-        let persistentContainer: ModelContainer
-        do {
-            persistentContainer = try ModelContainer(
-                for: LocalLibraryEntryModel.self,
-                LocalReadingSessionModel.self,
-                LocalCategoryModel.self
-            )
-        } catch {
-            fatalError("Unable to create the local book library: \(error)")
-        }
-
-        modelContainer = persistentContainer
+    init(container: Container) throws {
+        modelContainer = try LocalStore.makeContainer()
         libraryChangeNotifier = container.libraryChangeNotifier()
+        settings = container.appSettings()
 
+        // Repository, mağazaya bağlı olduğu için Factory'de kayıtlı değil:
+        // varsayılan gövdesi `fatalError` olan bir kayıt, container sıfırlandığı
+        // anda uygulamayı çökertirdi. Burada kurulup elden geçiriliyor.
         let repository = LocalLibraryRepositoryImpl(
-            modelContext: persistentContainer.mainContext,
+            modelContext: modelContainer.mainContext,
             changeNotifier: libraryChangeNotifier
         )
-        container.libraryRepository.register {
-            repository
-        }
 
-        settings = container.appSettings()
-        viewModelFactory = container.viewModelFactory()
+        viewModelFactory = ViewModelFactory(
+            libraryRepository: repository,
+            bookSearching: container.bookSearching(),
+            bookSearchCache: container.bookSearchCache(),
+            settings: settings
+        )
     }
 }

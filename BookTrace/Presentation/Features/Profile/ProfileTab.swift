@@ -29,7 +29,7 @@ private struct ProfileContentView: View {
     @Environment(\.navigator) private var navigator
     @Environment(AppRouteTypeManager.self) private var routeManager
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
-    @Environment(AppSettings.self) private var settings
+    @Environment(\.locale) private var locale
 
     var body: some View {
         Group {
@@ -39,7 +39,7 @@ private struct ProfileContentView: View {
                 content
             }
         }
-        .navigationTitle(settings.localized("Profile"))
+        .navigationTitle("Profile")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
@@ -96,9 +96,9 @@ private struct ProfileContentView: View {
 
     private var summaryTiles: some View {
         HStack(spacing: 12) {
-            SummaryTile(value: "\(viewModel.bookCount)", caption: "In Library", systemImage: "books.vertical")
-            SummaryTile(value: "\(viewModel.readingCount)", caption: "Reading", systemImage: "book")
-            SummaryTile(value: "\(viewModel.finishedCount)", caption: "Finished", systemImage: "checkmark.seal")
+            SummaryTile(value: viewModel.bookCount, caption: "In Library", systemImage: "books.vertical")
+            SummaryTile(value: viewModel.readingCount, caption: "Reading", systemImage: "book")
+            SummaryTile(value: viewModel.finishedCount, caption: "Finished", systemImage: "checkmark.seal")
         }
     }
 
@@ -109,15 +109,15 @@ private struct ProfileContentView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             } else {
-                LabeledContent("Time read", value: DurationFormatter.compact(seconds: viewModel.totalReadSeconds))
+                LabeledContent("Time read", value: DurationFormatter.compact(seconds: viewModel.totalReadSeconds, locale: locale))
                 Divider()
-                LabeledContent("Pages read", value: "\(viewModel.totalPagesRead)")
+                LabeledContent("Pages read") { Text(viewModel.totalPagesRead, format: .number) }
                 Divider()
-                LabeledContent("Sessions", value: "\(viewModel.sessionCount)")
+                LabeledContent("Sessions") { Text(viewModel.sessionCount, format: .number) }
 
                 if let remaining = viewModel.estimatedRemainingSeconds {
                     Divider()
-                    LabeledContent("Left to finish", value: "~\(DurationFormatter.compact(seconds: remaining))")
+                    LabeledContent("Left to finish", value: "~\(DurationFormatter.compact(seconds: remaining, locale: locale))")
                 }
             }
         }
@@ -129,11 +129,11 @@ private struct ProfileContentView: View {
             if let secondsPerPage = viewModel.secondsPerPage {
                 LabeledContent(
                     "Per page",
-                    value: DurationFormatter.compact(seconds: Int(secondsPerPage.rounded()))
+                    value: DurationFormatter.compact(seconds: Int(secondsPerPage.rounded()), locale: locale)
                 )
                 if let pagesPerHour = viewModel.pagesPerHour {
                     Divider()
-                    LabeledContent("Per hour", value: "\(pagesPerHour) pages")
+                    LabeledContent("Per hour") { Text("\(pagesPerHour) pages") }
                 }
                 Text("Measured from your own sessions. Time estimates get more accurate the more you read.")
                     .font(.caption)
@@ -142,7 +142,7 @@ private struct ProfileContentView: View {
             } else {
                 LabeledContent(
                     "Per page",
-                    value: DurationFormatter.compact(seconds: Int(ReadingSpeedEstimator.defaultSecondsPerPage))
+                    value: DurationFormatter.compact(seconds: Int(ReadingSpeedEstimator.defaultSecondsPerPage), locale: locale)
                 )
                 Text("This is the starting assumption. After your first reading session it is replaced by your own measured pace.")
                     .font(.caption)
@@ -185,13 +185,14 @@ private struct ProfileContentView: View {
                         }
                         Spacer(minLength: 8)
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text(DurationFormatter.compact(seconds: session.durationSeconds))
+                            Text(DurationFormatter.compact(seconds: session.durationSeconds, locale: locale))
                                 .font(.subheadline.monospacedDigit())
                             Text("\(session.pagesRead) pages")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    .accessibilityElement(children: .combine)
                 }
             }
         }
@@ -199,7 +200,7 @@ private struct ProfileContentView: View {
 }
 
 private struct SummaryTile: View {
-    let value: String
+    let value: Int
     let caption: LocalizedStringKey
     let systemImage: String
 
@@ -208,7 +209,7 @@ private struct SummaryTile: View {
             Image(systemName: systemImage)
                 .font(.title3)
                 .foregroundStyle(.tint)
-            Text(value)
+            Text(value, format: .number)
                 .font(.title2.bold().monospacedDigit())
             Text(caption)
                 .font(.caption)
@@ -217,6 +218,7 @@ private struct SummaryTile: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .background(.regularMaterial, in: .rect(cornerRadius: 16))
+        .accessibilityElement(children: .combine)
     }
 }
 

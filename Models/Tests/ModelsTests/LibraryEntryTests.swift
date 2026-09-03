@@ -84,6 +84,71 @@ struct LibraryEntryTests {
         #expect(entry.totalReadSeconds == 1_800)
     }
 
+    @Test func aSessionCannotRecordMorePagesThanTheBookHasLeft() {
+        var entry = LibraryEntry(
+            book: makeReference(id: "book-1", pageCount: 716),
+            readingStatus: .reading,
+            currentPage: 700
+        )
+
+        entry.apply(ReadingSession(startDate: Date(), durationSeconds: 600, pagesRead: 99_999))
+
+        // Kaydedilen oturum da kırpılmalı: `pagesRead` okuma hızının paydası.
+        #expect(entry.readingSessions.first?.pagesRead == 16)
+        #expect(entry.currentPage == 716)
+        #expect(entry.totalPagesRead == 16)
+        #expect(entry.secondsPerPage == 600.0 / 16.0)
+    }
+
+    @Test func loweringThePageCountPullsProgressDownWithIt() {
+        var entry = LibraryEntry(
+            book: makeReference(id: "book-1", pageCount: 716),
+            readingStatus: .reading,
+            currentPage: 716
+        )
+
+        entry.setPageCount(100)
+
+        #expect(entry.currentPage == 100)
+        #expect(entry.progressFraction == 1.0)
+    }
+
+    @Test func rollingProgressBackMeansTheBookIsNoLongerFinished() {
+        var entry = LibraryEntry(
+            book: makeReference(id: "book-1", pageCount: 200),
+            readingStatus: .finished,
+            currentPage: 200
+        )
+
+        entry.setProgress(currentPage: 100)
+
+        #expect(entry.readingStatus == .reading)
+    }
+
+    @Test func movingProgressToTheLastPageFinishesTheBook() {
+        var entry = LibraryEntry(
+            book: makeReference(id: "book-1", pageCount: 200),
+            readingStatus: .reading,
+            currentPage: 10
+        )
+
+        entry.setProgress(currentPage: 200)
+
+        #expect(entry.readingStatus == .finished)
+    }
+
+    @Test func anAbandonedBookStaysAbandonedWhileProgressIsPartial() {
+        var entry = LibraryEntry(
+            book: makeReference(id: "book-1", pageCount: 200),
+            readingStatus: .abandoned,
+            currentPage: 40
+        )
+
+        entry.setProgress(currentPage: 60)
+
+        #expect(entry.readingStatus == .abandoned)
+    }
+
     @Test func negativeValuesAreClampedAway() {
         let session = ReadingSession(startDate: Date(), durationSeconds: -10, pagesRead: -5)
         var entry = LibraryEntry(book: makeReference(id: "book-1", pageCount: 100), currentPage: -3)

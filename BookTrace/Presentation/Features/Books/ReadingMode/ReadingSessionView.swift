@@ -14,6 +14,7 @@ struct ReadingSessionView: View {
     private let entry: LibraryEntry
 
     @Environment(ViewModelFactory.self) private var viewModelFactory
+    @State private var holder = ViewModelHolder<ReadingSessionViewModel>()
 
     init(entry: LibraryEntry) {
         self.entry = entry
@@ -21,7 +22,7 @@ struct ReadingSessionView: View {
 
     var body: some View {
         ReadingSessionContent(
-            viewModel: viewModelFactory.makeReadingSessionViewModel(entry: entry)
+            viewModel: holder { viewModelFactory.makeReadingSessionViewModel(entry: entry) }
         )
     }
 }
@@ -31,7 +32,9 @@ private struct ReadingSessionContent: View {
 
     @Environment(\.navigator) private var navigator
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(AppSettings.self) private var settings
+    /// Sayaç her saniye animasyonla değişiyor; hareket azaltma açıkken
+    /// saniyede bir dönen rakamlar tam da kaçınılması istenen şey.
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isConfirmingDiscard = false
 
     var body: some View {
@@ -50,7 +53,9 @@ private struct ReadingSessionContent: View {
             Text(DurationFormatter.timer(seconds: viewModel.elapsedSeconds))
                 .font(.system(size: 64, weight: .semibold, design: .rounded))
                 .monospacedDigit()
-                .contentTransition(.numericText())
+                .contentTransition(reduceMotion ? .identity : .numericText())
+                .accessibilityLabel("Elapsed time")
+                .accessibilityValue(viewModel.elapsedDisplay)
 
             Button {
                 viewModel.togglePause()
@@ -68,7 +73,7 @@ private struct ReadingSessionContent: View {
             Spacer()
         }
         .padding()
-        .navigationTitle(settings.localized("Reading Mode"))
+        .navigationTitle("Reading Mode")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {

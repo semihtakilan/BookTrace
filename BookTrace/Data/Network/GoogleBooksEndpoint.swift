@@ -8,8 +8,6 @@
 import Foundation
 import NetworkKit
 
-private let googleBooksBaseURL = URL(string: "https://www.googleapis.com/books/v1")!
-
 /// İsteğe eklenen ülke kodu.
 ///
 /// Google Books, `country` parametresi olmadan gelen çağrılara `503
@@ -22,6 +20,13 @@ nonisolated enum GoogleBooksRegion {
     }
 }
 
+/// `Endpoint.baseURL` aktör dışı bir bağlamdan okunuyor; sabit de aktör dışı
+/// olmak zorunda. Dosya kapsamındaki bir `let`, varsayılan aktör yalıtımı
+/// `MainActor` olduğu için oraya bağlanırdı.
+nonisolated enum GoogleBooksHost {
+    static let baseURL = URL(string: "https://www.googleapis.com/books/v1")!
+}
+
 /// Google Books `volumes` uç noktası.
 ///
 /// Explore'un üç girişi de aynı uç noktaya farklı `q` ifadeleriyle çıkar; bu
@@ -31,7 +36,7 @@ struct GoogleBooksSearchEndpoint: Endpoint {
 
     var path: String = "volumes"
     var queryParameters: [String: String]?
-    var baseURL: URL { googleBooksBaseURL }
+    var baseURL: URL { GoogleBooksHost.baseURL }
 
     private init(query: String, maxResults: Int, apiKey: String?) {
         var parameters = [

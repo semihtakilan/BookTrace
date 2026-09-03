@@ -8,9 +8,11 @@
 import SwiftUI
 import NavigatorUI
 
-enum ProfileDestinations: NavigationDestination {
+enum ProfileDestinations: Hashable {
     case settings
+}
 
+extension ProfileDestinations: @MainActor NavigationDestination {
     var body: some View {
         switch self {
         case .settings:

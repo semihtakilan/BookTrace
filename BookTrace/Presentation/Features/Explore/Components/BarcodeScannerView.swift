@@ -181,6 +181,11 @@ final class ScannerViewController: UIViewController {
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var hasDeliveredBarcode = false
 
+    /// `startRunning()` ve `stopRunning()` bloklayıcıdır; ana kuyrukta
+    /// çağrılmamalı. AVFoundation'ın kendi kalıbı olan tek bir seri kuyruk hem
+    /// bunu çözer hem de oturumun başlatılıp durdurulmasını sıraya sokar.
+    private let sessionQueue = DispatchQueue(label: "BookTrace.camera-session")
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
@@ -194,9 +199,7 @@ final class ScannerViewController: UIViewController {
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if captureSession.isRunning {
-            captureSession.stopRunning()
-        }
+        stopSession()
     }
 
     override func viewDidLayoutSubviews() {
@@ -247,9 +250,18 @@ final class ScannerViewController: UIViewController {
 
     private func startSessionIfNeeded() {
         guard !captureSession.isRunning, !captureSession.inputs.isEmpty else { return }
-        // `startRunning` bloklayıcıdır; ana kuyrukta çağrılmamalı.
-        Task.detached(priority: .userInitiated) { [captureSession] in
-            captureSession.startRunning()
+        // AVFoundation henüz Sendable denetimine açılmadı; oturuma erişimin
+        // tamamı `sessionQueue` üzerinde sıraya girdiği için yalıtımı elle
+        // üstleniyoruz.
+        nonisolated(unsafe) let session = captureSession
+        sessionQueue.async { session.startRunning() }
+    }
+
+    fileprivate func stopSession() {
+        nonisolated(unsafe) let session = captureSession
+        sessionQueue.async {
+            guard session.isRunning else { return }
+            session.stopRunning()
         }
     }
 
@@ -277,7 +289,7 @@ extension ScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
 
         hasDeliveredBarcode = true
         AudioServicesPlaySystemSound(SystemSoundID(kSystemSoundID_Vibrate))
-        captureSession.stopRunning()
+        stopSession()
         delegate?.didFindBarcode(stringValue)
     }
 }

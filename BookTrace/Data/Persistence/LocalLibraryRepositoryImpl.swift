@@ -37,6 +37,12 @@ final class LocalLibraryRepositoryImpl: LibraryRepository {
         return try modelContext.fetch(descriptor).map { $0.toDomain() }
     }
 
+    func fetchCategories() throws -> [Models.Category] {
+        var descriptor = FetchDescriptor<LocalCategoryModel>()
+        descriptor.sortBy = [SortDescriptor(\.name)]
+        return try modelContext.fetch(descriptor).map { $0.toDomain() }
+    }
+
     func entry(for bookID: String) throws -> LibraryEntry? {
         try record(for: bookID)?.toDomain()
     }

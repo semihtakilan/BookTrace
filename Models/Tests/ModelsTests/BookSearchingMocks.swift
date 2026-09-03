@@ -14,15 +14,18 @@ func makeReference(id: String, title: String = "Swift", pageCount: Int? = nil) -
 
 /// Sayaçları aktörle koruyor: `CachedBookSearching` tazelemeyi `Task.detached`
 /// içinde yapıyor, yani çağrılar iki farklı görevden gelebiliyor.
-actor BookSearchingMock: BookSearching {
+actor BookSearchingMock: BookSearching, BookDetailFetching {
     private let result: [BookReference]
+    private let detailDescription: String?
     private(set) var receivedQuery: String?
     private(set) var searchCallCount = 0
     private(set) var subjectCallCount = 0
     private(set) var isbnCallCount = 0
+    private(set) var detailCallCount = 0
 
-    init(result: [BookReference] = [makeReference(id: "remote-1")]) {
+    init(result: [BookReference] = [makeReference(id: "remote-1")], detailDescription: String? = nil) {
         self.result = result
+        self.detailDescription = detailDescription
     }
 
     func searchBooks(query: String, maxResults: Int) async throws -> [BookReference] {
@@ -40,6 +43,11 @@ actor BookSearchingMock: BookSearching {
         isbnCallCount += 1
         guard let first = result.first else { throw CachedBookSearchingError.bookNotFound }
         return first
+    }
+
+    func detail(for book: BookReference) async throws -> BookReference {
+        detailCallCount += 1
+        return book.merging(BookReference(id: book.id, title: book.title, description: detailDescription))
     }
 }
 

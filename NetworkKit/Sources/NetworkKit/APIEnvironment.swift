@@ -8,23 +8,25 @@
 import Foundation
 
 // MARK: - API Environment
+
+/// Ağ katmanının çalışma kipi: zaman aşımı, tekrar sayısı ve log seviyesi.
+///
+/// Ortam bir taban adres taşımıyor — her `Endpoint` kendi `baseURL`'ini
+/// bildirir. Önceden buradaki `baseURL` dört ortam için de aynı adresi
+/// döndürüyordu ve zaten her endpoint tarafından geçersiz kılınıyordu.
 public enum APIEnvironment: String, CaseIterable, Sendable {
     case development = "dev"
     case staging = "staging"
     case production = "prod"
     case testing = "test"
 
-    public var displayName: String {
-        switch self {
-        case .development: return "Development"
-        case .staging:     return "Staging"
-        case .production:  return "Production"
-        case .testing:     return "Testing"
-        }
-    }
-
-    public var baseURL: URL {
-        URL(string: "https://www.googleapis.com/books/v1")!
+    /// Derleme kipine göre seçilen ortam.
+    public static var current: APIEnvironment {
+        #if DEBUG
+        .development
+        #else
+        .production
+        #endif
     }
 
     public var timeout: TimeInterval {

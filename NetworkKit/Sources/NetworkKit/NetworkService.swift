@@ -4,8 +4,6 @@ import Foundation
 
 public protocol NetworkServiceProtocol: Sendable {
     func execute<T: Endpoint>(_ endpoint: T) async throws -> T.Response
-    func download(_ request: URLRequest, progressHandler: (@Sendable (TransferProgress) -> Void)?) async throws -> URL
-    func upload(_ request: URLRequest, data: Data, progressHandler: (@Sendable (TransferProgress) -> Void)?) async throws -> NetworkResponse
 }
 
 // MARK: - Network Service
@@ -72,48 +70,6 @@ public actor NetworkService: NetworkServiceProtocol {
         }
     }
 
-    // MARK: - Download
-
-    public func download(
-        _ request: URLRequest,
-        progressHandler: (@Sendable (TransferProgress) -> Void)? = nil
-    ) async throws -> URL {
-        var intercepted = request
-        for i in requestInterceptors { intercepted = try await i.intercept(intercepted) }
-        if let logger { await logger.logRequest(intercepted) }
-
-        return try await withCheckedThrowingContinuation { continuation in
-            urlSession.downloadTask(with: intercepted) { url, _, error in
-                if let error {
-                    continuation.resume(throwing: self.mapURLError(error as? URLError ?? URLError(.unknown)))
-                } else if let url {
-                    continuation.resume(returning: url)
-                } else {
-                    continuation.resume(throwing: NetworkError.noData)
-                }
-            }.resume()
-        }
-    }
-
-    // MARK: - Upload
-
-    public func upload(
-        _ request: URLRequest,
-        data: Data,
-        progressHandler: (@Sendable (TransferProgress) -> Void)? = nil
-    ) async throws -> NetworkResponse {
-        var intercepted = request
-        for i in requestInterceptors { intercepted = try await i.intercept(intercepted) }
-        if let logger { await logger.logRequest(intercepted) }
-
-        let (responseData, response) = try await urlSession.upload(for: intercepted, from: data)
-        var networkResponse = NetworkResponse(data: responseData, urlResponse: response)
-        for i in responseInterceptors { networkResponse = try await i.intercept(networkResponse) }
-        if let logger { await logger.logResponse(networkResponse, data: responseData) }
-        try validateResponse(networkResponse)
-        return networkResponse
-    }
-
     // MARK: - Private
 
     private func performRequest(_ urlRequest: URLRequest) async throws -> NetworkResponse {
@@ -124,9 +80,16 @@ public actor NetworkService: NetworkServiceProtocol {
         do {
             let (data, response) = try await urlSession.data(for: intercepted)
             var networkResponse = NetworkResponse(data: data, urlResponse: response)
-            for i in responseInterceptors { networkResponse = try await i.intercept(networkResponse) }
             if let logger { await logger.logResponse(networkResponse, data: data) }
+
+            // Durum kodu eşlemesi yanıt interceptor'larından ÖNCE yapılır.
+            // Önceden sıra tersti ve kayıtlı doğrulama interceptor'ı 200..<300
+            // dışını genel bir `httpError` olarak fırlattığı için buradaki 429
+            // dalına hiç ulaşılmıyordu: sunucunun `Retry-After` başlığı hiç
+            // okunmadan atılıyor, yerine sabit üstel geri çekilme kullanılıyordu.
             try validateResponse(networkResponse)
+
+            for i in responseInterceptors { networkResponse = try await i.intercept(networkResponse) }
             return networkResponse
         } catch let error as URLError {
             let ne = mapURLError(error)
@@ -150,11 +113,9 @@ public actor NetworkService: NetworkServiceProtocol {
         case 404: throw NetworkError.notFound()
         case 413: throw NetworkError.requestTooLarge
         case 429:
-            if let http = response.urlResponse as? HTTPURLResponse,
-               let retryAfter = http.value(forHTTPHeaderField: "Retry-After").flatMap(TimeInterval.init) {
-                throw NetworkError.rateLimited(retryAfter: retryAfter)
-            }
-            throw NetworkError.rateLimited()
+            throw NetworkError.rateLimited(
+                retryAfter: response.header(forKey: "Retry-After").flatMap(TimeInterval.init)
+            )
         case 500...599: throw NetworkError.serverError(statusCode: response.statusCode)
         default:
             throw NetworkError.httpError(
@@ -189,7 +150,10 @@ public actor NetworkService: NetworkServiceProtocol {
                 lastError = error
                 if !error.isRetryable { throw error }
                 if attempt < maxAttempts {
-                    let delay = min(retryDelay * pow(2.0, Double(attempt - 1)) * (1 + Double.random(in: 0...0.1)), 30.0)
+                    // Sunucu ne kadar bekleneceğini söylediyse ona uyulur;
+                    // söylemediyse üstel geri çekilme.
+                    let backoff = min(retryDelay * pow(2.0, Double(attempt - 1)) * (1 + Double.random(in: 0...0.1)), 30.0)
+                    let delay = error.retryAfter ?? backoff
                     try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
                 }
             } catch {
@@ -197,27 +161,5 @@ public actor NetworkService: NetworkServiceProtocol {
             }
         }
         throw lastError ?? NetworkError.networkError(NSError(domain: "NetworkService", code: -1))
-    }
-}
-
-// MARK: - Convenience
-
-public extension NetworkService {
-    static func standard(
-        configuration: NetworkConfiguration,
-        tokenProvider: (@Sendable () async -> String?)? = nil
-    ) -> NetworkService {
-        // Order matters: auth + ID headers are added before the request is logged.
-        // NetworkService's own `logger` handles request/response logging after all interceptors run.
-        var requestInterceptors: [RequestInterceptor] = []
-        if let tokenProvider {
-            requestInterceptors.append(AuthenticationInterceptor(tokenProvider: tokenProvider))
-        }
-        requestInterceptors.append(RequestIDInterceptor())
-        return NetworkService(
-            configuration: configuration,
-            requestInterceptors: requestInterceptors,
-            responseInterceptors: []
-        )
     }
 }

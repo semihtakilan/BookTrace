@@ -25,18 +25,4 @@ public struct NetworkResponse: Sendable {
 
     public func header(forKey key: String) -> String? { headers[key] }
     public var isSuccessful: Bool { (200...299).contains(statusCode) }
-
-    public func decode<T: Decodable>(_ type: T.Type, using decoder: JSONDecoder? = nil) throws -> T {
-        let d = decoder ?? {
-            let dec = JSONDecoder()
-            dec.keyDecodingStrategy = .convertFromSnakeCase
-            dec.dateDecodingStrategy = .iso8601
-            return dec
-        }()
-        return try d.decode(type, from: data)
-    }
-
-    public func stringValue(encoding: String.Encoding = .utf8) -> String? {
-        String(data: data, encoding: encoding)
-    }
 }

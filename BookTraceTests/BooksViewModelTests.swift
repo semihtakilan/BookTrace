@@ -42,10 +42,10 @@ struct BooksViewModelTests {
         let (viewModel, _) = makeViewModel(library)
         viewModel.grouping = .status
 
-        let ids = viewModel.sections.flatMap { $0.entries.map(\.id) }
+        let ids = viewModel.nowReading.map(\.id) + viewModel.sections.flatMap { $0.entries.map(\.id) }
         #expect(ids.sorted() == ["a", "b", "c"])
         #expect(viewModel.sections.map(\.kind) == [
-            .status(.toRead), .status(.reading), .status(.finished)
+            .status(.toRead), .status(.finished)
         ])
     }
 
@@ -55,7 +55,7 @@ struct BooksViewModelTests {
 
         #expect(viewModel.sections.count == 1)
         #expect(viewModel.sections[0].kind == .all)
-        #expect(viewModel.sections[0].entries.count == 3)
+        #expect(viewModel.sections[0].entries.count == 2)
     }
 
     @Test func booksWithoutTagsGetTheirOwnSectionInsteadOfDisappearing() {
@@ -63,16 +63,28 @@ struct BooksViewModelTests {
         viewModel.grouping = .category
 
         #expect(viewModel.sections.map(\.kind) == [
-            .category(Models.Category(name: "Favorites")), .untagged
+            .untagged
         ])
         #expect(viewModel.sections.last?.entries.map(\.id).sorted() == ["b", "c"])
+    }
+
+    @Test func groupingOnlyReorganizesTheLowerShelf() {
+        var entries = library
+        entries[1].categories = [Models.Category(name: "Favorites")]
+        let (viewModel, _) = makeViewModel(entries)
+        for grouping in LibraryGrouping.allCases {
+            viewModel.grouping = grouping
+            #expect(viewModel.nowReading.map(\.id) == ["a"])
+            #expect(viewModel.sections.flatMap(\.entries).map(\.id).sorted() == ["b", "c"])
+        }
     }
 
     @Test func emptyGroupsAreLeftOut() {
         let (viewModel, _) = makeViewModel([library[0]])
         viewModel.grouping = .ownership
 
-        #expect(viewModel.sections.map(\.kind) == [.ownership(.owned)])
+        #expect(viewModel.sections.isEmpty)
+        #expect(viewModel.nowReading.map(\.id) == ["a"])
     }
 
     // MARK: - Arama
@@ -88,7 +100,8 @@ struct BooksViewModelTests {
         #expect(viewModel.sections.flatMap { $0.entries.map(\.id) } == ["b"])
 
         viewModel.searchText = "favorites"
-        #expect(viewModel.sections.flatMap { $0.entries.map(\.id) } == ["a"])
+        #expect(viewModel.sections.isEmpty)
+        #expect(viewModel.nowReading.map(\.id) == ["a"])
     }
 
     @Test func aSearchThatMatchesNothingIsNotAnEmptyLibrary() {
@@ -101,13 +114,13 @@ struct BooksViewModelTests {
         #expect(!viewModel.isEmpty)
     }
 
-    @Test func nowReadingStepsAsideWhileSearching() {
+    @Test func nowReadingStaysAboveTheShelfWhileSearching() {
         let (viewModel, _) = makeViewModel(library)
         #expect(viewModel.isShowingNowReading)
         #expect(viewModel.nowReading.map(\.id) == ["a"])
 
         viewModel.searchText = "dune"
-        #expect(!viewModel.isShowingNowReading)
+        #expect(viewModel.isShowingNowReading)
     }
 
     // MARK: - Sıralama
@@ -116,21 +129,22 @@ struct BooksViewModelTests {
         let (viewModel, _) = makeViewModel(library)
         viewModel.statusFilter = .toRead
         #expect(viewModel.sections.flatMap(\.entries).map(\.id) == ["b"])
-        #expect(!viewModel.isShowingNowReading)
+        #expect(viewModel.isShowingNowReading)
 
         viewModel.searchText = "Dune"
         #expect(viewModel.hasNoMatches)
         #expect(!viewModel.isEmpty)
         viewModel.statusFilter = nil
-        #expect(viewModel.sections.flatMap(\.entries).map(\.id) == ["a"])
+        #expect(viewModel.sections.isEmpty)
+        #expect(viewModel.nowReading.map(\.id) == ["a"])
 
         viewModel.searchText = ""
         #expect(viewModel.isShowingNowReading)
-        #expect(viewModel.sections.flatMap(\.entries).count == 3)
+        #expect(viewModel.sections.flatMap(\.entries).count == 2)
 
         viewModel.grouping = .category
-        #expect(!viewModel.isShowingNowReading)
-        #expect(viewModel.sections.flatMap(\.entries).contains { $0.id == "a" })
+        #expect(viewModel.isShowingNowReading)
+        #expect(viewModel.sections.flatMap(\.entries).allSatisfy { $0.readingStatus != .reading })
     }
 
     @Test func sortingIsAppliedWithinEverySection() {
@@ -138,13 +152,13 @@ struct BooksViewModelTests {
         viewModel.grouping = .all
 
         viewModel.sort = .title
-        #expect(viewModel.sections[0].entries.map(\.book.title) == ["Anathem", "Dune", "Neuromancer"])
+        #expect(viewModel.sections[0].entries.map(\.book.title) == ["Anathem", "Neuromancer"])
 
         viewModel.sort = .recentlyAdded
-        #expect(viewModel.sections[0].entries.map(\.id) == ["a", "b", "c"])
+        #expect(viewModel.sections[0].entries.map(\.id) == ["b", "c"])
 
         viewModel.sort = .progress
-        #expect(viewModel.sections[0].entries.map(\.id) == ["c", "a", "b"])
+        #expect(viewModel.sections[0].entries.map(\.id) == ["c", "b"])
     }
 
     // MARK: - Silme

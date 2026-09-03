@@ -39,12 +39,7 @@ final class LibraryEntryDetailViewModel {
 
     func update(readingStatus: ReadingStatus) {
         var updated = entry
-        updated.readingStatus = readingStatus
-        // Kitabı "bitti" işaretlemek ilerlemeyi de sona taşır; ikisi ayrı kalırsa
-        // ilerleme çubuğu yalan söyler.
-        if readingStatus == .finished, let total = updated.effectivePageCount {
-            updated.setProgress(currentPage: total)
-        }
+        updated.setReadingStatus(readingStatus)
         persist(updated)
     }
 

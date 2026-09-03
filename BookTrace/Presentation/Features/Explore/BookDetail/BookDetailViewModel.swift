@@ -158,11 +158,15 @@ final class BookDetailViewModel {
         // kullanıcının bu formdaki seçimleri güncellenir.
         var entry = existingEntry ?? LibraryEntry(book: book)
         entry.book = book
-        entry.readingStatus = readingStatus
         entry.ownershipStatus = ownershipStatus
         entry.progressType = progressType
         // Sayfa sayısı düşürüldüyse ilerleme de yeni tavana çekilir.
         entry.setPageCount(pageCount)
+        // Sayfa hesabı tamamlandıktan sonra açık durum seçimini uygula.
+        // Değişmeyen bir durum, sayfa düzeltmesinin tamamladığı kitabı geri almaz.
+        if existingEntry == nil || readingStatus != existingEntry?.readingStatus || readingStatus == .finished {
+            entry.setReadingStatus(readingStatus)
+        }
         entry.categories = selectedCategories
 
         do {

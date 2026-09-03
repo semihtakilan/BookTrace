@@ -77,32 +77,34 @@ private struct BooksContentView: View {
         VStack(alignment: .leading, spacing: 24) {
             if viewModel.isShowingNowReading {
                 VStack(alignment: .leading, spacing: 14) {
-                    ReadingSectionHeading(title: "Between the pages")
+                    ReadingSectionHeading(title: "Now Reading", detail: String(viewModel.nowReading.count))
                     ForEach(viewModel.nowReading) { entry in
                         NowReadingCard(entry: entry)
                     }
                 }
             }
 
-            VStack(spacing: 14) {
-                HStack {
-                    ReadingSectionHeading(title: "On your shelf", detail: String(viewModel.entries.count))
-                    organizationMenu
-                }
-                ReadingSearchField(text: $viewModel.searchText, prompt: "Title, author or tag")
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ReadingFilterChip(title: "All", isSelected: viewModel.statusFilter == nil,
-                                          count: viewModel.entries.count) { viewModel.statusFilter = nil }
-                        ForEach(ReadingStatus.allCases, id: \.self) { status in
-                            ReadingFilterChip(title: status.titleKey, isSelected: viewModel.statusFilter == status,
-                                              count: viewModel.entries.filter { $0.readingStatus == status }.count) {
-                                viewModel.statusFilter = status
+            if viewModel.shelfCount > 0 {
+                VStack(spacing: 14) {
+                    HStack {
+                        ReadingSectionHeading(title: "On your shelf", detail: String(viewModel.shelfCount))
+                        organizationMenu
+                    }
+                    ReadingSearchField(text: $viewModel.searchText, prompt: "Title, author or tag")
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ReadingFilterChip(title: "All", isSelected: viewModel.statusFilter == nil,
+                                              count: viewModel.shelfCount) { viewModel.statusFilter = nil }
+                            ForEach(BooksViewModel.shelfStatuses, id: \.self) { status in
+                                ReadingFilterChip(title: status.titleKey, isSelected: viewModel.statusFilter == status,
+                                                  count: viewModel.entries.filter { $0.readingStatus == status }.count) {
+                                    viewModel.statusFilter = status
+                                }
                             }
                         }
                     }
+                    .contentMargins(.trailing, 1)
                 }
-                .contentMargins(.trailing, 1)
             }
 
             if viewModel.hasNoMatches {
@@ -120,7 +122,7 @@ private struct BooksContentView: View {
                 .readingCard()
             } else {
                 ForEach(viewModel.sections) { section in
-                    let entries = visibleEntries(in: section)
+                    let entries = section.entries
                     if !entries.isEmpty {
                         VStack(alignment: .leading, spacing: 12) {
                             if viewModel.grouping != .all {
@@ -139,13 +141,6 @@ private struct BooksContentView: View {
                 }
             }
         }
-    }
-
-    /// The current books already have an actionable card above; don't repeat them.
-    private func visibleEntries(in section: LibrarySection) -> [LibraryEntry] {
-        viewModel.isShowingNowReading
-            ? section.entries.filter { $0.readingStatus != .reading }
-            : section.entries
     }
 
     private var discoverCard: some View {
@@ -206,7 +201,7 @@ private struct LibraryEntryRow: View {
     let entry: LibraryEntry
     let onRemove: () -> Void
     @Environment(\.navigator) private var navigator
-    @ScaledMetric(relativeTo: .subheadline) private var coverWidth: CGFloat = 56
+    private let coverWidth: CGFloat = 56
 
     var body: some View {
         Button { navigator.navigate(to: BooksDestinations.entryDetail(entry)) } label: {
@@ -218,7 +213,10 @@ private struct LibraryEntryRow: View {
                     Text(entry.book.author).font(.caption).foregroundStyle(ReadingStyle.secondary).lineLimit(2)
                     Label(entry.readingStatus.titleKey, systemImage: entry.readingStatus.systemImage)
                         .font(.caption2.weight(.medium)).foregroundStyle(ReadingStyle.accent)
-                    if entry.readingStatus == .reading { ReadingProgressView(entry: entry) }
+                    if entry.readingStatus == .finished, let total = entry.effectivePageCount {
+                        Text("\(total) of \(total) pages")
+                            .font(.caption).foregroundStyle(ReadingStyle.secondary)
+                    }
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(ReadingStyle.secondary)
@@ -240,11 +238,11 @@ private struct NowReadingCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
+        VStack(alignment: .leading, spacing: 16) {
             Button { navigator.navigate(to: BooksDestinations.entryDetail(entry)) } label: {
                 let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 20)) : AnyLayout(HStackLayout(alignment: .center, spacing: 22))
                 layout {
-                    RemoteBookCover(url: entry.book.coverURL, width: 98, height: 147, contentMode: .fit,
+                    RemoteBookCover(url: entry.book.coverURL, width: 80, height: 120, contentMode: .fit,
                                     fallbackTitle: entry.book.title, fallbackAuthor: entry.book.author)
                         .shadow(color: .black.opacity(0.15), radius: 9, x: 0, y: 6)
                     VStack(alignment: .leading, spacing: 10) {
@@ -269,7 +267,7 @@ private struct NowReadingCard: View {
             }
             .buttonStyle(ReadingButtonStyle())
         }
-        .padding(24)
+        .padding(20)
         .background(ReadingStyle.sage, in: .rect(cornerRadius: 26))
     }
 }

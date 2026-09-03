@@ -7,6 +7,7 @@ struct ExploreTab: View {
 
     var body: some View {
         ManagedNavigationStack { ExploreContentView(viewModel: viewModel) }
+            .environment(viewModel)
     }
 }
 
@@ -15,48 +16,39 @@ private struct ExploreContentView: View {
     @Environment(\.navigator) private var navigator
     @State private var isPresentingScanner = false
     @State private var pendingISBN: String?
-    @State private var selectedSubject: String?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 26) {
-                ReadingPageHeader(eyebrow: "THE READING ROOM", title: "Find your next chapter.",
-                                  subtitle: "Follow your curiosity. A story is waiting.")
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    ReadingPageHeader(eyebrow: "THE READING ROOM", title: "Discover",
+                                      subtitle: "Find a story that stays with you.")
+                        .padding(.horizontal, 24)
+                    HStack(spacing: 10) {
+                        ReadingSearchField(text: $viewModel.searchText, prompt: "Title, author or ISBN")
+                        Button { isPresentingScanner = true } label: {
+                            Image(systemName: "barcode.viewfinder").font(.title3)
+                                .frame(width: 52, height: 52)
+                                .background(ReadingStyle.sage, in: .rect(cornerRadius: 16))
+                        }
+                        .accessibilityLabel("Scan barcode")
+                    }
                     .padding(.horizontal, 24)
-                HStack(spacing: 10) {
-                    ReadingSearchField(text: $viewModel.searchText, prompt: "Title, author or ISBN")
-                    Button { isPresentingScanner = true } label: {
-                        Image(systemName: "barcode.viewfinder").font(.title3)
-                            .frame(width: 52, height: 52)
-                            .background(ReadingStyle.sage, in: .rect(cornerRadius: 16))
+                    if viewModel.isShowingSearchResults {
+                        searchResults.padding(.horizontal, 24)
+                    } else {
+                        discoveryContent(width: min(geometry.size.width, 840))
                     }
-                    .accessibilityLabel("Scan barcode")
                 }
-                .padding(.horizontal, 24)
-                if viewModel.isShowingSearchResults {
-                    searchResults.padding(.horizontal, 24)
-                } else {
-                    subjectFilters
-                    if selectedSubject == nil, let book = featuredBook {
-                        FeaturedBookCard(book: book)
-                            .padding(.horizontal, 24)
-                    }
-                    ForEach(viewModel.shelves.filter { selectedSubject == nil || $0.id == selectedSubject }) { shelf in
-                        SubjectShelfRow(shelf: shelf) { await viewModel.retry(shelf: shelf) }
-                    }
-                    Label("A world of books, a shelf of your own.", systemImage: "book.closed")
-                        .font(.caption).foregroundStyle(ReadingStyle.secondary)
-                        .frame(maxWidth: .infinity).padding(.vertical, 12)
-                }
+                .padding(.top, 14)
+                .padding(.bottom, 32)
+                .frame(maxWidth: 840)
+                .frame(maxWidth: .infinity)
             }
-            .padding(.top, 18)
-            .padding(.bottom, 32)
-            .frame(maxWidth: 840)
-            .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
         .readingBackground()
-        .navigationTitle("Explore")
+        .navigationTitle("Discover")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -98,23 +90,64 @@ private struct ExploreContentView: View {
         Task { await viewModel.handleBarcodeScan(isbn: isbn) }
     }
 
-    private var featuredBook: BookReference? {
-        guard let shelf = viewModel.shelves.first, case .loaded(let books) = shelf.state else { return nil }
-        return books.dropFirst().first ?? books.first
-    }
+    private func discoveryContent(width: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: 30) {
+            if !viewModel.spotlights.isEmpty {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(alignment: .firstTextBaseline) {
+                        ReadingSectionHeading(title: "Open something new")
+                        Button {
+                            guard let book = viewModel.discoverableBooks.randomElement() else { return }
+                            navigator.navigate(to: ExploreDestinations.bookDetail(book))
+                        } label: {
+                            Image(systemName: "shuffle").frame(width: 44, height: 44)
+                                .background(ReadingStyle.surface, in: .circle)
+                        }
+                        .accessibilityLabel("Surprise me")
+                    }
+                    .padding(.horizontal, 24)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(alignment: .top, spacing: 12) {
+                            ForEach(viewModel.spotlights) { spotlight in
+                                DiscoverSpotlightCard(spotlight: spotlight, width: min(width - 64, 360))
+                            }
+                        }
+                        .scrollTargetLayout()
+                        .padding(.horizontal, 24)
+                    }
+                    .scrollTargetBehavior(.viewAligned)
+                }
+            }
 
-    private var subjectFilters: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ReadingFilterChip(title: "Discover", isSelected: selectedSubject == nil) { selectedSubject = nil }
-                ForEach(viewModel.shelves) { shelf in
-                    ReadingFilterChip(title: LocalizedStringKey(shelf.subject.displayName), isSelected: selectedSubject == shelf.id) {
-                        selectedSubject = shelf.id
+            VStack(alignment: .leading, spacing: 16) {
+                ReadingSectionHeading(title: "Follow your curiosity")
+                LazyVGrid(columns: topicColumns, spacing: 12) {
+                    ForEach(viewModel.shelves) { shelf in
+                        DiscoverSubjectTile(subject: shelf.subject) {
+                            navigator.navigate(to: ExploreDestinations.collection(.subject(shelf.subject)))
+                        }
                     }
                 }
             }
             .padding(.horizontal, 24)
+
+            if !viewModel.shortReads.isEmpty {
+                DiscoverBookShelf(title: "Small books, big worlds", subtitle: "250 pages or fewer",
+                                  books: Array(viewModel.shortReads.prefix(8)), width: width,
+                                  onSeeAll: { navigator.navigate(to: ExploreDestinations.collection(.shortReads)) })
+            }
+
+            ForEach(viewModel.shelves.prefix(2)) { shelf in
+                DiscoverSubjectShelf(shelf: shelf, width: width,
+                                     onSeeAll: { navigator.navigate(to: ExploreDestinations.collection(.subject(shelf.subject))) },
+                                     onRetry: { await viewModel.retry(shelf: shelf) })
+            }
         }
+    }
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    private var topicColumns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), alignment: .top), count: dynamicTypeSize.isAccessibilitySize ? 1 : 2)
     }
 
     @ViewBuilder
@@ -152,80 +185,6 @@ private struct ExploreContentView: View {
                         .readingCard(padding: 16)
                     }
                     .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-}
-
-private struct FeaturedBookCard: View {
-    let book: BookReference
-    @Environment(\.navigator) private var navigator
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    var body: some View {
-        Button { navigator.navigate(to: ExploreDestinations.bookDetail(book)) } label: {
-            let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 20)) : AnyLayout(HStackLayout(alignment: .center, spacing: 20))
-            layout {
-                VStack(alignment: .leading, spacing: 12) {
-                    ReadingEyebrow(title: "FROM THE SHELVES")
-                    Text(book.title).font(ReadingStyle.title(.title2)).lineLimit(4)
-                    Text(book.author).font(.caption).foregroundStyle(ReadingStyle.secondary).lineLimit(2)
-                    Label("Take a closer look", systemImage: "arrow.up.right")
-                        .font(.caption.weight(.semibold)).foregroundStyle(ReadingStyle.accent)
-                        .padding(.top, 6)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                RemoteBookCover(url: book.coverURL, width: 100, height: 150, contentMode: .fit,
-                                fallbackTitle: book.title, fallbackAuthor: book.author)
-                    .rotationEffect(.degrees(5))
-                    .shadow(color: .black.opacity(0.18), radius: 8, x: 3, y: 8)
-                    .padding(4)
-            }
-            .padding(24)
-            .background(ReadingStyle.sage, in: .rect(cornerRadius: 24))
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-private struct SubjectShelfRow: View {
-    let shelf: SubjectShelf
-    let onRetry: () async -> Void
-    @Environment(\.navigator) private var navigator
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            ReadingSectionHeading(title: LocalizedStringKey(shelf.subject.displayName))
-                .padding(.horizontal, 24)
-            switch shelf.state {
-            case .idle, .loading:
-                ProgressView().frame(maxWidth: .infinity, minHeight: 180)
-            case .failed(let error):
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(error.message).font(.footnote).foregroundStyle(ReadingStyle.secondary)
-                    if error.isRetryable {
-                        Button("Try again") { Task { await onRetry() } }.font(.subheadline.weight(.medium))
-                    }
-                }
-                .readingCard().padding(.horizontal, 24)
-            case .loaded(let books) where books.isEmpty:
-                Text("Nothing here right now.").font(.footnote).foregroundStyle(ReadingStyle.secondary)
-                    .padding(.horizontal, 24)
-            case .loaded(let books):
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(alignment: .top, spacing: 20) {
-                        ForEach(books) { book in
-                            Button { navigator.navigate(to: ExploreDestinations.bookDetail(book)) } label: {
-                                BookCoverCell(title: book.title, author: book.author, coverURL: book.coverURL)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 10)
                 }
             }
         }

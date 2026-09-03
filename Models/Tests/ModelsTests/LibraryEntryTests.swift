@@ -11,6 +11,35 @@ import Testing
 
 struct LibraryEntryTests {
 
+    @Test func aFinishedEntryStartsAtItsKnownLastPageWithoutInventingSessions() {
+        let entry = LibraryEntry(book: makeReference(id: "finished", pageCount: 300), readingStatus: .finished)
+        #expect(entry.currentPage == 300)
+        #expect(entry.progressPercentage == 100)
+        #expect(entry.readingSessions.isEmpty)
+        #expect(entry.totalReadSeconds == 0)
+    }
+
+    @Test func finishingUsesTheReadersEditionLength() {
+        var entry = LibraryEntry(book: makeReference(id: "finished", pageCount: 300), pageCount: 280)
+        entry.setReadingStatus(.finished)
+        #expect(entry.currentPage == 280)
+        entry.setPageCount(320)
+        #expect(entry.currentPage == 320)
+        #expect(entry.readingStatus == .finished)
+    }
+
+    @Test func anUnknownLengthCanBeFinishedAndCompletedWhenItsLengthIsAdded() {
+        var entry = LibraryEntry(book: makeReference(id: "unknown"))
+        entry.setReadingStatus(.finished)
+        #expect(entry.currentPage == 0)
+        #expect(entry.progressFraction == nil)
+        #expect(entry.readingStatus == .finished)
+        entry.setPageCount(180)
+        #expect(entry.currentPage == 180)
+        #expect(entry.progressPercentage == 100)
+        #expect(entry.readingStatus == .finished)
+    }
+
     @Test func aNewEntryStartsWithSafeDefaults() {
         let entry = LibraryEntry(book: makeReference(id: "book-1", title: "Domain Driven Design"))
 

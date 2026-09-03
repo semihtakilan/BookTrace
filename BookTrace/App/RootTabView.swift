@@ -22,7 +22,7 @@ struct RootTabView: View {
                 .tag(AppTab.books)
             ExploreTab(viewModel: exploreViewModel)
                 .navigationRoot(routeManager.exploreNavigator)
-                .tabItem { Label("Explore", systemImage: "magnifyingglass") }
+                .tabItem { Label("Discover", systemImage: "magnifyingglass") }
                 .tag(AppTab.explore)
             ProfileTab(viewModel: profileViewModel)
                 .navigationRoot(routeManager.profileNavigator)

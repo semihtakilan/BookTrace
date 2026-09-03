@@ -11,6 +11,7 @@ import Models
 
 enum ExploreDestinations: Hashable {
     case bookDetail(BookReference)
+    case collection(DiscoverCollection)
 }
 
 extension ExploreDestinations: @MainActor NavigationDestination {
@@ -18,6 +19,8 @@ extension ExploreDestinations: @MainActor NavigationDestination {
         switch self {
         case .bookDetail(let book):
             BookDetailView(book: book)
+        case .collection(let collection):
+            DiscoverCollectionScreen(collection: collection)
         }
     }
 }

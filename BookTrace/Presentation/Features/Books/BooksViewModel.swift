@@ -75,16 +75,14 @@ final class BooksViewModel {
     }
 
     var isEmpty: Bool { entries.isEmpty }
+    var shelfCount: Int { entries.count - nowReading.count }
+    static let shelfStatuses: [ReadingStatus] = [.toRead, .finished, .wishlist, .abandoned]
 
     /// Kütüphane dolu ama arama hiçbir şey bulmadı.
-    var hasNoMatches: Bool { !entries.isEmpty && sections.isEmpty }
+    var hasNoMatches: Bool { shelfCount > 0 && sections.isEmpty }
 
-    /// Arama sürerken "Now Reading" gizlenir; aksi hâlde arama sonucuyla
-    /// ilgisi olmayan kitaplar listenin başında durmaya devam eder.
-    var isShowingNowReading: Bool {
-        (grouping == .all || grouping == .status) && statusFilter == nil
-            && searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !nowReading.isEmpty
-    }
+    /// Okunan kitaplar kalıcı olarak üstte; arama ve düzenleme aşağıdaki rafa ait.
+    var isShowingNowReading: Bool { !nowReading.isEmpty }
 
     func load() {
         do {
@@ -125,9 +123,8 @@ final class BooksViewModel {
     // her karede — sözlük kurulup sıralama tekrarlanırdı.
 
     private func rebuild() {
-        let matches = sorted(filtered(entries))
-        nowReading = matches.filter { $0.readingStatus == .reading }
-        sections = makeSections(from: matches)
+        nowReading = sorted(entries.filter { $0.readingStatus == .reading })
+        sections = makeSections(from: sorted(filtered(entries.filter { $0.readingStatus != .reading })))
     }
 
     private func filtered(_ entries: [LibraryEntry]) -> [LibraryEntry] {
@@ -174,7 +171,7 @@ final class BooksViewModel {
 
         case .status:
             let grouped = Dictionary(grouping: matches, by: \.readingStatus)
-            return ReadingStatus.allCases.compactMap { status in
+            return Self.shelfStatuses.compactMap { status in
                 guard let entries = grouped[status], !entries.isEmpty else { return nil }
                 return LibrarySection(kind: .status(status), entries: entries)
             }

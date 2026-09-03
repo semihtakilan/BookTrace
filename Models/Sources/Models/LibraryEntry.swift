@@ -47,6 +47,10 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
         self.categories = categories
         self.addedDate = addedDate
         self.readingSessions = readingSessions
+        // Eski kayıtlarda da "bitmiş" durumunu bilinen son sayfayla eşleştir.
+        if readingStatus == .finished, let total = effectivePageCount {
+            self.currentPage = total
+        }
     }
 
     // MARK: - Türetilmiş ilerleme
@@ -99,6 +103,15 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
 
     // MARK: - Mutasyonlar
 
+    /// Bitmiş olarak işaretlemek ilerlemeyi tamamlar; ölçülmemiş bir okuma
+    /// oturumu üretmez. Sayfa sayısı bilinmiyorsa kullanıcının durumu korunur.
+    public mutating func setReadingStatus(_ status: ReadingStatus) {
+        readingStatus = status
+        if status == .finished, let total = effectivePageCount {
+            currentPage = total
+        }
+    }
+
     /// İlerlemenin tek giriş noktası.
     ///
     /// İlerleme ve okuma durumu birbirine bağlı: sayfa sayfaya taşınırsa kitap
@@ -116,7 +129,11 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
     /// gibi imkânsız değerler çıkıyordu.
     public mutating func setPageCount(_ newValue: Int?) {
         pageCount = newValue
-        setProgress(currentPage: currentPage)
+        if readingStatus == .finished {
+            setReadingStatus(.finished)
+        } else {
+            setProgress(currentPage: currentPage)
+        }
     }
 
     /// Yeni bir oturumu ekler ve `currentPage`'i ilerletir.

@@ -13,6 +13,47 @@ import Testing
 @MainActor
 struct BookDetailViewModelTests {
 
+    @Test(arguments: ["", "380"])
+    func addingAFinishedBookPersistsItsLastPage(pageCountText: String) throws {
+        let (viewModel, repository) = makeViewModel()
+        viewModel.load()
+        viewModel.presentForm()
+        viewModel.readingStatus = .finished
+        viewModel.pageCountText = pageCountText
+        viewModel.save()
+
+        let entry = try #require(repository.storedEntries.first)
+        #expect(entry.readingStatus == .finished)
+        #expect(entry.currentPage == (Int(pageCountText) ?? 412))
+        #expect(entry.progressPercentage == 100)
+        #expect(entry.readingSessions.isEmpty)
+        #expect(viewModel.didSave)
+    }
+
+    @Test func markingAnExistingBookFinishedKeepsItsActualSessions() throws {
+        let entry = makeEntry(readingStatus: .reading, pageCount: 412, currentPage: 120,
+                              sessions: [ReadingSession(startDate: Date(), durationSeconds: 600, pagesRead: 20)])
+        let (viewModel, repository) = makeViewModel(stored: [entry])
+        viewModel.load()
+        viewModel.presentForm()
+        viewModel.readingStatus = .finished
+        viewModel.save()
+        let stored = try #require(repository.storedEntries.first)
+        #expect(stored.readingStatus == .finished)
+        #expect(stored.currentPage == 412)
+        #expect(stored.readingSessions == entry.readingSessions)
+    }
+
+    @Test func finishingWithoutKnownPagesDoesNotMakeUpALength() {
+        let (viewModel, _) = makeViewModel(book: makeBook(pageCount: nil))
+        viewModel.load()
+        viewModel.presentForm()
+        viewModel.readingStatus = .finished
+        viewModel.save()
+        #expect(viewModel.existingEntry?.readingStatus == .finished)
+        #expect(viewModel.existingEntry?.effectivePageCount == nil)
+    }
+
     private func makeViewModel(
         book: BookReference = makeBook(pageCount: 412, subjects: ["Fiction", "Adventure"]),
         stored: [LibraryEntry] = [],

@@ -16,6 +16,17 @@ import Testing
 @Suite(.serialized)
 struct LocalLibraryRepositoryTests {
 
+    @Test func aLegacyFinishedRecordWithZeroPagesLoadsAsComplete() {
+        let record = LocalLibraryEntryModel(entry: makeEntry(pageCount: 240), categories: [])
+        record.readingStatusRawValue = ReadingStatus.finished.rawValue
+        record.currentPage = 0
+        let entry = record.toDomain()
+        #expect(entry.readingStatus == .finished)
+        #expect(entry.currentPage == 240)
+        #expect(entry.progressPercentage == 100)
+        #expect(entry.readingSessions.isEmpty)
+    }
+
     @Test func addingTheSameBookTwiceUpdatesTheExistingRecord() throws {
         let (repository, _) = try makeInMemoryRepository()
 

@@ -11,6 +11,8 @@ import Foundation
 enum DurationFormatter {
 
     /// Sayaç görünümü: `01:23` veya bir saati geçince `1:04:07`.
+    ///
+    /// Bilinçli olarak yerelleştirilmiyor — sayaç her dilde aynı biçimde okunur.
     static func timer(seconds: Int) -> String {
         let safeSeconds = max(0, seconds)
         let hours = safeSeconds / 3600
@@ -23,22 +25,22 @@ enum DurationFormatter {
         return String(format: "%02d:%02d", minutes, remainder)
     }
 
-    /// Özet görünümü: `2h 15m`, `45m`, `30s`.
-    static func compact(seconds: Int) -> String {
-        let safeSeconds = max(0, seconds)
-        let hours = safeSeconds / 3600
-        let minutes = (safeSeconds % 3600) / 60
-
-        if hours > 0 {
-            return minutes > 0 ? "\(hours)h \(minutes)m" : "\(hours)h"
-        }
-        if minutes > 0 {
-            return "\(minutes)m"
-        }
-        return "\(safeSeconds)s"
+    /// Özet görünümü: `2h 15m`, `45m`, `30s` — ve seçilen dilde karşılıkları.
+    ///
+    /// Birimler elle yazılıyordu, bu yüzden Türkçe ve Almanca arayüzde de
+    /// İngilizce kalıyordu. `Duration.formatted` birimleri yerelden alır.
+    static func compact(seconds: Int, locale: Locale) -> String {
+        Duration.seconds(max(0, seconds)).formatted(
+            .units(
+                allowed: [.hours, .minutes, .seconds],
+                width: .narrow,
+                maximumUnitCount: 2
+            )
+            .locale(locale)
+        )
     }
 
-    static func compact(seconds: TimeInterval) -> String {
-        compact(seconds: Int(seconds.rounded()))
+    static func compact(seconds: TimeInterval, locale: Locale) -> String {
+        compact(seconds: Int(seconds.rounded()), locale: locale)
     }
 }

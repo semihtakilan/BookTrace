@@ -35,6 +35,7 @@ private struct BookLibraryDetailContent: View {
 
     @Environment(\.navigator) private var navigator
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
+    @Environment(\.locale) private var locale
     @State private var isPresentingProgressEditor = false
     @State private var isConfirmingRemoval = false
     @State private var progressInput = ""
@@ -203,7 +204,7 @@ private struct BookLibraryDetailContent: View {
                 Text("Reading Sessions").font(.headline)
                 Spacer()
                 if !entry.readingSessions.isEmpty {
-                    Text("\(DurationFormatter.compact(seconds: entry.totalReadSeconds)) · \(entry.totalPagesRead) pages")
+                    Text("\(DurationFormatter.compact(seconds: entry.totalReadSeconds, locale: locale)) · \(entry.totalPagesRead) pages")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -224,7 +225,7 @@ private struct BookLibraryDetailContent: View {
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
-                        Text(DurationFormatter.compact(seconds: session.durationSeconds))
+                        Text(DurationFormatter.compact(seconds: session.durationSeconds, locale: locale))
                             .font(.subheadline.monospacedDigit())
                             .foregroundStyle(.secondary)
                     }

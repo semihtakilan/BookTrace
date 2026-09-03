@@ -106,8 +106,17 @@ private struct BookDetailContent: View {
             if let pageCount = book.pageCount {
                 LabeledContent("Pages", value: String(pageCount))
             }
-            if let publishedDate = book.publishedDate {
-                LabeledContent("Published", value: publishedDate)
+            // Google'ın ham "2019-01-24" dizesi yerine yerelleştirilmiş tarih.
+            if let publicationDay = book.publicationDay {
+                LabeledContent("Published") {
+                    Text(publicationDay, format: .dateTime.year().month(.abbreviated).day())
+                }
+            } else if let publicationMonth = book.publicationMonth {
+                LabeledContent("Published") {
+                    Text(publicationMonth, format: .dateTime.year().month(.wide))
+                }
+            } else if let publicationYear = book.publicationYear {
+                LabeledContent("Published", value: publicationYear)
             }
             if let isbn13 = book.isbn13 {
                 LabeledContent("ISBN-13", value: isbn13)

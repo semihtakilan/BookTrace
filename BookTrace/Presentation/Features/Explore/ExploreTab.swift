@@ -42,6 +42,9 @@ private struct ExploreContentView: View {
         }
         .navigationTitle("Explore")
         .searchable(text: $viewModel.searchText, prompt: "Title, author or ISBN")
+        // Kitap adları ve ISBN'ler sözlükte yok; düzeltme sorguyu bozuyor.
+        .autocorrectionDisabled()
+        .textInputAutocapitalization(.never)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

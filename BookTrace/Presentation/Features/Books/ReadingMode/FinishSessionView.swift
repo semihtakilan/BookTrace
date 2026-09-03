@@ -30,6 +30,9 @@ struct FinishSessionView: View {
         .padding()
         .navigationTitle("Finish Session")
         .navigationBarTitleDisplayMode(.inline)
+        // Ekranın tek girişi bu; Discard ve Save klavyenin üstünde kaldığı için
+        // klavyeyi açık başlatmak bir dokunuş kazandırıyor.
+        .task { isPagesFieldFocused = true }
     }
 
     // MARK: - Bölümler

@@ -30,7 +30,8 @@ struct BarcodeScannerSheet: View {
                 .navigationTitle("Scan Barcode")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
+                    // "Kütüphaneye Ekle" formundaki gibi solda.
+                    ToolbarItem(placement: .topBarLeading) {
                         Button("Cancel") { dismiss() }
                     }
                 }

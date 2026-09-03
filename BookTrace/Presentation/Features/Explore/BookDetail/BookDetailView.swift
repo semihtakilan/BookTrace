@@ -191,6 +191,10 @@ private struct AddToLibraryForm: View {
                     HStack {
                         TextField("New category", text: $viewModel.newCategoryName)
                             .onSubmit { viewModel.addTypedCategory() }
+                            // Etiket adı serbest kullanıcı verisi; otomatik
+                            // düzeltme "Sci Fi"yi "sci fı" yapıp öyle kaydediyordu.
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.words)
                         Button("Add") { viewModel.addTypedCategory() }
                             .disabled(viewModel.newCategoryName.trimmingCharacters(in: .whitespaces).isEmpty)
                     }

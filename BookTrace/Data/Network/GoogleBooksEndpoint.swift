@@ -41,7 +41,9 @@ struct GoogleBooksSearchEndpoint: Endpoint {
     /// Google, anahtara konan "iOS uygulamaları" kısıtlamasını bu başlıkla
     /// doğruluyor. Başlık gönderilmezse kısıtlanmış bir anahtar 403 döner —
     /// yani kısıtlamayı açmadan önce bunun yerinde olması gerekiyor.
-    var headers: [String: String] {
+    var headers: [String: String] { Self.restrictionHeaders }
+
+    static var restrictionHeaders: [String: String] {
         var headers = ["Content-Type": "application/json"]
         if let bundleIdentifier = Bundle.main.bundleIdentifier {
             headers["X-Ios-Bundle-Identifier"] = bundleIdentifier
@@ -76,5 +78,28 @@ struct GoogleBooksSearchEndpoint: Endpoint {
     /// Barkoddan gelen ISBN ile tek kitap sorgusu.
     static func isbn(_ isbn: String, apiKey: String?) -> Self {
         Self(query: "isbn:\(isbn)", maxResults: 1, apiKey: apiKey)
+    }
+}
+
+/// Tek cildin kaydı.
+///
+/// Arama ucu bir listeyi, bu tek kitabı döndürüyor. Detay zenginleştirmesi
+/// buradan geçiyor: kullanıcının gerçekten açtığı kitap için bir istek, arama
+/// sonucundaki yirmi kitap için sıfır.
+struct GoogleBooksVolumeEndpoint: Endpoint {
+    typealias Response = GoogleBooksVolume
+
+    var path: String
+    var queryParameters: [String: String]?
+    var baseURL: URL { GoogleBooksHost.baseURL }
+    var headers: [String: String] { GoogleBooksSearchEndpoint.restrictionHeaders }
+
+    init(volumeID: String, apiKey: String?) {
+        path = "volumes/\(volumeID)"
+        var parameters = ["country": GoogleBooksRegion.current]
+        if let apiKey {
+            parameters["key"] = apiKey
+        }
+        queryParameters = parameters
     }
 }

@@ -36,7 +36,8 @@ struct GoogleBooksResponseTests {
 
         let books = response.toBookReferences()
 
-        #expect(books.map(\.id) == ["ok-1", "ok-2"])
+        // Kimlikler kaynak önekiyle çıkıyor: iki katalog aynı dizede buluşamasın.
+        #expect(books.map(\.id) == ["gb:ok-1", "gb:ok-2"])
         #expect(books[0].author == "Frank Herbert")
         #expect(books[1].author.isEmpty)
     }
@@ -52,7 +53,7 @@ struct GoogleBooksResponseTests {
 
         let books = response.toBookReferences()
 
-        #expect(books.map(\.id) == ["same", "other"])
+        #expect(books.map(\.id) == ["gb:same", "gb:other"])
         #expect(books[0].title == "First")
     }
 

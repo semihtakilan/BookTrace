@@ -21,11 +21,11 @@ import Foundation
 ///
 /// Bayat veriyi göstermek bilinçli bir tercih: yanlış olma ihtimali olan bilgi,
 /// kullanıcıyı bekletmekten ve kota harcamaktan daha ucuz.
-public struct CachedBookSearching: BookSearching, Sendable {
-    private let remote: any BookSearching
+public struct CachedBookSearching: BookSearching, BookDetailFetching, Sendable {
+    private let remote: any BookSearching & BookDetailFetching
     private let store: any BookCacheStore
 
-    public init(remote: any BookSearching, store: any BookCacheStore) {
+    public init(remote: any BookSearching & BookDetailFetching, store: any BookCacheStore) {
         self.remote = remote
         self.store = store
     }
@@ -53,6 +53,22 @@ public struct CachedBookSearching: BookSearching, Sendable {
             throw CachedBookSearchingError.bookNotFound
         }
         return book
+    }
+
+    /// Detay da cache'ten geçiyor.
+    ///
+    /// Kullanıcı bir kitabı açıp geri dönüp tekrar açtığında ikinci kez istek
+    /// gitmemeli; üstelik aynı kitap rafta da duruyor, zenginleşen kayıt oraya
+    /// da yansıyor. Ölçüt açıklamanın varlığı: detay isteğinin asıl sebebi o.
+    public func detail(for book: BookReference) async throws -> BookReference {
+        let known = await store.book(id: book.id).map { book.merging($0) } ?? book
+        if let description = known.description, !description.isEmpty {
+            return known
+        }
+
+        let detail = try await remote.detail(for: known)
+        await store.merge(detail)
+        return detail
     }
 
     private func books(

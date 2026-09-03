@@ -52,6 +52,7 @@ private struct BookDetailContent: View {
         }
         .errorAlert($viewModel.error)
         .onAppear { viewModel.load() }
+        .task { await viewModel.enrich() }
     }
 
     private var header: some View {

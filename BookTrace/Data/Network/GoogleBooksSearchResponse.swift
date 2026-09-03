@@ -35,19 +35,21 @@ struct GoogleBooksSearchResponse: Decodable, Sendable {
     }
 }
 
-struct GoogleBooksVolume: Decodable, Sendable {
+nonisolated struct GoogleBooksVolume: Decodable, Sendable {
     let id: String?
     let volumeInfo: GoogleBooksVolumeInfo?
 
     /// Kullanılabilir bir kitap üretemiyorsa `nil` döner.
-    nonisolated func toDomain() -> BookReference? {
+    func toDomain() -> BookReference? {
         guard let id, !id.isEmpty, let volumeInfo else { return nil }
 
         let title = volumeInfo.title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !title.isEmpty else { return nil }
 
         return BookReference(
-            id: id,
+            // Kimlik kaynağıyla birlikte taşınıyor; iki katalogtan gelen
+            // kayıtlar aynı dizede buluşamasın.
+            id: BookIdentifier(source: .googleBooks, value: id).rawValue,
             title: title,
             authors: volumeInfo.authors ?? [],
             coverURL: volumeInfo.coverURL,

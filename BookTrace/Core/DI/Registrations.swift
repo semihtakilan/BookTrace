@@ -18,11 +18,30 @@ extension Container: @retroactive AutoRegistering {
 }
 
 extension Container {
-    /// Uzak kaynak. Cache sarmalaması burada değil composition root'ta yapılıyor:
-    /// mağaza `ModelContainer`'a bağlı ve o açılamayabilir, Factory kayıtları ise
-    /// hata fırlatamıyor.
-    var remoteBookSearching: Factory<any BookSearching> {
+    /// İki kaynağı birleştiren uzak katman.
+    ///
+    /// Cache sarmalaması burada değil composition root'ta yapılıyor: mağaza
+    /// `ModelContainer`'a bağlı ve o açılamayabilir, Factory kayıtları ise hata
+    /// fırlatamıyor.
+    var remoteBookSearching: Factory<any BookSearching & BookDetailFetching> {
+        self {
+            let openLibrary = OpenLibraryService(networkService: self.networkService())
+            return HybridBookSearching(
+                primary: openLibrary,
+                primaryDetail: openLibrary,
+                fallback: self.googleBooks(),
+                budget: self.googleBooksBudget()
+            )
+        }
+        .singleton
+    }
+
+    var googleBooks: Factory<GoogleBooksService> {
         self { GoogleBooksService(networkService: self.networkService()) }.singleton
+    }
+
+    var googleBooksBudget: Factory<DailyRequestBudget> {
+        self { DailyRequestBudget() }.singleton
     }
 
     @MainActor

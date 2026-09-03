@@ -32,6 +32,9 @@ struct AppDependencies {
         // Repository, mağazaya bağlı olduğu için Factory'de kayıtlı değil:
         // varsayılan gövdesi `fatalError` olan bir kayıt, container sıfırlandığı
         // anda uygulamayı çökertirdi. Burada kurulup elden geçiriliyor.
+        // Kimlik biçimi değişti; kayıtlı kitaplar yeni biçime taşınıyor.
+        BookIdentifierMigration.run(in: modelContainer.mainContext)
+
         let repository = LocalLibraryRepositoryImpl(
             modelContext: modelContainer.mainContext,
             changeNotifier: libraryChangeNotifier
@@ -48,12 +51,15 @@ struct AppDependencies {
             cacheStore = DisabledBookCacheStore()
         }
 
+        let bookSearching = CachedBookSearching(
+            remote: container.remoteBookSearching(),
+            store: cacheStore
+        )
+
         viewModelFactory = ViewModelFactory(
             libraryRepository: repository,
-            bookSearching: CachedBookSearching(
-                remote: container.remoteBookSearching(),
-                store: cacheStore
-            ),
+            bookSearching: bookSearching,
+            bookDetailFetching: bookSearching,
             bookCacheStore: cacheStore,
             settings: settings
         )

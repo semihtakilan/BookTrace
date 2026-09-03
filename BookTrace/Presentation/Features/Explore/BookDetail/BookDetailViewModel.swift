@@ -13,7 +13,9 @@ import SwiftUI
 @MainActor
 @Observable
 final class BookDetailViewModel {
-    let book: BookReference
+    /// Kitap zenginleşebiliyor: liste kaydında açıklama yok, detay isteği
+    /// geldiğinde ekran kendini tamamlıyor.
+    private(set) var book: BookReference
 
     private(set) var existingEntry: LibraryEntry?
     private(set) var didSave = false
@@ -31,13 +33,21 @@ final class BookDetailViewModel {
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
     @ObservationIgnored
+    private let bookDetailFetching: any BookDetailFetching
+    @ObservationIgnored
     private let settings: AppSettings
     @ObservationIgnored
     private var knownCategories: [Models.Category] = []
 
-    init(book: BookReference, libraryRepository: any LibraryRepository, settings: AppSettings) {
+    init(
+        book: BookReference,
+        libraryRepository: any LibraryRepository,
+        bookDetailFetching: any BookDetailFetching,
+        settings: AppSettings
+    ) {
         self.book = book
         self.libraryRepository = libraryRepository
+        self.bookDetailFetching = bookDetailFetching
         self.settings = settings
     }
 
@@ -76,6 +86,19 @@ final class BookDetailViewModel {
         } catch {
             self.error = UserFacingError(error)
         }
+    }
+
+    /// Eksik alanları — asıl olarak açıklamayı — tamamlar.
+    ///
+    /// Kütüphanedeki kitap için hiç çağrılmıyor: kayıt eklenirken metadata'sı
+    /// da saklandı, ağa çıkmanın karşılığı yok. Başarısızlık sessiz: ekran
+    /// elindeki veriyle zaten dolu, kullanıcının göreceği bir eksik yok.
+    func enrich() async {
+        guard existingEntry == nil else { return }
+        guard book.description?.isEmpty ?? true else { return }
+
+        guard let enriched = try? await bookDetailFetching.detail(for: book) else { return }
+        book = enriched
     }
 
     /// Formu açar; kitap zaten kütüphanedeyse mevcut seçimlerle doldurur.

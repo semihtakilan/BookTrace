@@ -17,6 +17,7 @@ func makeBook(
     title: String = "Dune",
     authors: [String] = ["Frank Herbert"],
     pageCount: Int? = nil,
+    description: String? = nil,
     subjects: [String] = []
 ) -> BookReference {
     BookReference(
@@ -24,8 +25,24 @@ func makeBook(
         title: title,
         authors: authors,
         pageCount: pageCount,
+        description: description,
         subjects: subjects
     )
+}
+
+/// Detay zenginleştirmesini sayan sahte kaynak.
+actor BookDetailFetchingMock: BookDetailFetching {
+    private let description: String?
+    private(set) var callCount = 0
+
+    init(description: String? = nil) {
+        self.description = description
+    }
+
+    func detail(for book: BookReference) async throws -> BookReference {
+        callCount += 1
+        return book.merging(BookReference(id: book.id, title: book.title, description: description))
+    }
 }
 
 func makeEntry(

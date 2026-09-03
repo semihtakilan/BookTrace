@@ -42,6 +42,15 @@ nonisolated enum UserFacingError: Equatable, Sendable {
             case .unreadableResponse:         self = .unexpectedResponse
             }
 
+        case let openLibraryError as OpenLibraryServiceError:
+            switch openLibraryError {
+            case .bookNotFound:      self = .bookNotFound
+            // Open Library'nin sınırı hızda, kotada değil: birkaç saniye sonra
+            // aynı istek çalışır. Kullanıcıya "kota doldu" demek yanlış olurdu.
+            case .rateLimited:       self = .serviceUnavailable
+            case .unsupportedSource: self = .unexpectedResponse
+            }
+
         case is CachedBookSearchingError:
             self = .bookNotFound
 

@@ -16,13 +16,55 @@ struct BookDetailViewModelTests {
     private func makeViewModel(
         book: BookReference = makeBook(pageCount: 412, subjects: ["Fiction", "Adventure"]),
         stored: [LibraryEntry] = [],
-        categories: [Models.Category] = []
+        categories: [Models.Category] = [],
+        detail: BookDetailFetchingMock = BookDetailFetchingMock()
     ) -> (BookDetailViewModel, LibraryRepositoryMock) {
         let repository = LibraryRepositoryMock()
         repository.storedEntries = stored
         repository.storedCategories = categories
         let settings = AppSettings(defaults: UserDefaults(suiteName: UUID().uuidString)!)
-        return (BookDetailViewModel(book: book, libraryRepository: repository, settings: settings), repository)
+        let viewModel = BookDetailViewModel(
+            book: book,
+            libraryRepository: repository,
+            bookDetailFetching: detail,
+            settings: settings
+        )
+        return (viewModel, repository)
+    }
+
+    /// Liste kaydında açıklama yok; ekran açıldığında tamamlanmalı.
+    @Test func theBookIsEnrichedWhenItArrivesWithoutADescription() async {
+        let detail = BookDetailFetchingMock(description: "A desert planet.")
+        let (viewModel, _) = makeViewModel(book: makeBook(), detail: detail)
+
+        viewModel.load()
+        await viewModel.enrich()
+
+        #expect(viewModel.book.description == "A desert planet.")
+        #expect(await detail.callCount == 1)
+    }
+
+    /// Kütüphanedeki kitabın metadata'sı zaten saklandı: ağa çıkmanın karşılığı yok.
+    @Test func aBookAlreadyInTheLibraryIsNotEnriched() async {
+        let detail = BookDetailFetchingMock(description: "A desert planet.")
+        let book = makeBook()
+        let (viewModel, _) = makeViewModel(book: book, stored: [LibraryEntry(book: book)], detail: detail)
+
+        viewModel.load()
+        await viewModel.enrich()
+
+        #expect(await detail.callCount == 0)
+    }
+
+    @Test func aBookThatAlreadyHasADescriptionIsLeftAlone() async {
+        let detail = BookDetailFetchingMock(description: "Replaced.")
+        let (viewModel, _) = makeViewModel(book: makeBook(description: "Already here."), detail: detail)
+
+        viewModel.load()
+        await viewModel.enrich()
+
+        #expect(viewModel.book.description == "Already here.")
+        #expect(await detail.callCount == 0)
     }
 
     /// B6: kaynağın verdiği sayfa sayısı forma yazılmamalı. Yazılsaydı kullanıcı

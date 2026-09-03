@@ -109,9 +109,12 @@ nonisolated enum UserFacingError: Equatable, Sendable {
         case .timedOut:
             "The request took too long. Try again."
         case .quotaExceeded(let hasAPIKey):
-            hasAPIKey
-                ? "Google Books has hit its quota. Try again in a little while."
-                : "Google Books has hit its quota. Add your own API key to keep browsing."
+            // Anahtarsız kalmak yalnızca geliştirme sırasında olabilir; dağıtılan
+            // uygulamada anahtar Info.plist'ten geldiği için kullanıcı bu
+            // yönlendirmeyi asla görmemeli.
+            UserFacingError.isDebugBuild && !hasAPIKey
+                ? "Google Books has hit its quota. Add your own API key to keep browsing."
+                : "Google Books has hit its quota. Try again in a little while."
         case .serviceUnavailable:
             "Google Books is temporarily unavailable. Try again in a moment."
         case .unexpectedResponse:
@@ -125,6 +128,14 @@ nonisolated enum UserFacingError: Equatable, Sendable {
         case .unknown:
             "Something went wrong. Please try again."
         }
+    }
+
+    private static var isDebugBuild: Bool {
+        #if DEBUG
+        true
+        #else
+        false
+        #endif
     }
 
     /// Kullanıcının tekrar denemesi mantıklı mı — "Try again" butonu buna bakar.

@@ -29,6 +29,9 @@
 		D846A9CB301A8EEC00477B1E /* NetworkKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = NetworkKit; sourceTree = "<group>"; };
 		D846AA27301B35E800477B1E /* NetworkRegistration */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = NetworkRegistration; sourceTree = "<group>"; };
 		D846AA7C301B3B2100477B1E /* Models */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = Models; sourceTree = "<group>"; };
+		D9C1A0000000000000000010 /* Shared.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shared.xcconfig; sourceTree = "<group>"; };
+		D9C1A0000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D9C1A0000000000000000011 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
 		D9C1A0000000000000000002 /* BookTraceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookTraceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -76,9 +79,20 @@
 				D846A9CB301A8EEC00477B1E /* NetworkKit */,
 				D846A994301A8E4C00477B1E /* BookTrace */,
 				D9C1A0000000000000000006 /* BookTraceTests */,
+				D9C1A0000000000000000012 /* Config */,
 				D846AA24301B351000477B1E /* Frameworks */,
 				D846A993301A8E4C00477B1E /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		D9C1A0000000000000000012 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				D9C1A0000000000000000010 /* Shared.xcconfig */,
+				D9C1A0000000000000000011 /* Secrets.example.xcconfig */,
+				D9C1A0000000000000000013 /* Info.plist */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		D846A993301A8E4C00477B1E /* Products */ = {
@@ -367,6 +381,7 @@
 		};
 		D846A99E301A8E4D00477B1E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D9C1A0000000000000000010 /* Shared.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -375,6 +390,7 @@
 				DEVELOPMENT_TEAM = 7U7CA9M6T2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "BookTrace needs camera access to scan book barcodes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -404,6 +420,7 @@
 		};
 		D846A99F301A8E4D00477B1E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D9C1A0000000000000000010 /* Shared.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -412,6 +429,7 @@
 				DEVELOPMENT_TEAM = 7U7CA9M6T2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "BookTrace needs camera access to scan book barcodes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

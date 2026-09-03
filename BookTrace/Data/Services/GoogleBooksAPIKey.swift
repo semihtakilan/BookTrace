@@ -11,9 +11,16 @@ import Foundation
 ///
 /// `volumes` uç noktası teknik olarak anahtarsız da çağrılabilir, ancak bu
 /// çağrılar Google'ın paylaşımlı anonim projesinin günlük kotasını kullanır ve
-/// pratikte sürekli 429 döner. Anahtar Scheme environment değişkeninden veya
-/// Info.plist'ten okunur; ikisi de yoksa istek yine denenir, hata mesajı
-/// kullanıcıyı anahtar eklemeye yönlendirir.
+/// pratikte sürekli 429 döner.
+///
+/// Anahtar uygulamaya `Config/Shared.xcconfig` → `Config/Info.plist` yolundan
+/// girer; dağıtılan uygulamada geçerli olan yol budur. Scheme environment
+/// değişkeni yalnızca geliştirme sırasında, dosyaya dokunmadan başka bir
+/// anahtar denemek için bir kestirmedir — Archive edilen uygulamada okunmaz.
+///
+/// Anahtarın gizli kalması beklenmiyor: iOS uygulamasına konan her anahtar
+/// ikiliden çıkarılabilir. Onu koruyan şey Google Cloud tarafındaki kısıtlama
+/// (yalnızca bu bundle kimliği, yalnızca Books API); ayrıntısı README'de.
 /// `nonisolated`: yalnızca `ProcessInfo` ve `Bundle` okur, ikisi de thread-safe;
 /// böylece ağ çağrılarını yapan aktör dışı bağlamdan da erişilebilir.
 nonisolated enum GoogleBooksAPIKey {
@@ -40,7 +47,7 @@ enum GoogleBooksServiceError: LocalizedError {
         case .quotaExceeded(let hasAPIKey):
             hasAPIKey
                 ? "Google Books quota reached. Try again in a little while."
-                : "Google Books quota reached. Add your own API key: Xcode → Scheme → Run → Arguments → Environment Variables → GOOGLE_BOOKS_API_KEY."
+                : "Google Books quota reached. No API key is configured; see the README for how to add one."
         case .regionUnavailable(let region):
             "Google Books did not respond for region \(region). Your device region may not match the country you are connecting from."
         case .unreadableResponse:

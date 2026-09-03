@@ -1,0 +1,14 @@
+//
+//  Shared.xcconfig
+//  Config
+//
+//  Uygulama hedefinin taban konfigürasyonu.
+//
+
+// Anahtarın varsayılanı boş: depoyu yeni klonlayan biri hiçbir şey yapmadan
+// derleyebilsin. Boş anahtarla uygulama çalışır, yalnızca Google'ın kota
+// hatasını gösterir.
+GOOGLE_BOOKS_API_KEY =
+
+// Gerçek anahtar burada. Dosya `.gitignore`'da; yoksa derleme yine de sürer.
+#include? "Secrets.xcconfig"

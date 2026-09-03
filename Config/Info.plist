@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Derleme sırasında Config/Shared.xcconfig'ten doldurulur. Xcode geri
+	     kalan girdileri (GENERATE_INFOPLIST_FILE) bu dosyanın üzerine ekler. -->
+	<key>GOOGLE_BOOKS_API_KEY</key>
+	<string>$(GOOGLE_BOOKS_API_KEY)</string>
+</dict>
+</plist>

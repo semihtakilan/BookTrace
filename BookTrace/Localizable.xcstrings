@@ -1454,6 +1454,28 @@
         }
       }
     },
+    "Google requests today": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google-Anfragen heute"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Google requests today"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugünkü Google isteği"
+          }
+        }
+      }
+    },
     "Group by": {
       "extractionState": "manual",
       "localizations": {
@@ -2002,6 +2024,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "OK"
+          }
+        }
+      }
+    },
+    "Open Library · Google Books": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Library · Google Books"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Library · Google Books"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Library · Google Books"
           }
         }
       }
@@ -2995,61 +3039,24 @@
         }
       }
     },
-    "Search results are cached on this device for a day. Erasing the library removes all %lld books and their reading sessions.": {
-      "extractionState": "manual",
+    "Search results are cached on this device so browsing works offline and uses fewer requests. Erasing the library removes all %lld books and their reading sessions.": {
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suchergebnisse werden auf diesem Gerät gespeichert, damit das Stöbern offline funktioniert und weniger Anfragen benötigt. Beim Löschen der Bibliothek werden alle %lld Bücher und ihre Lesesitzungen entfernt."
+          }
+        },
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Search results are cached on this device for a day. Erasing the library removes your %lld book and its reading sessions."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Search results are cached on this device for a day. Erasing the library removes all %lld books and their reading sessions."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search results are cached on this device so browsing works offline and uses fewer requests. Erasing the library removes all %lld books and their reading sessions."
           }
         },
         "tr": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Arama sonuçları bu cihazda bir gün saklanır. Kütüphaneyi silmek %lld kitabın tamamını ve okuma oturumlarını kaldırır."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Arama sonuçları bu cihazda bir gün saklanır. Kütüphaneyi silmek %lld kitabın tamamını ve okuma oturumlarını kaldırır."
-                }
-              }
-            }
-          }
-        },
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Suchergebnisse werden einen Tag lang auf diesem Gerät gespeichert. Das Löschen der Bibliothek entfernt dein %lld Buch und seine Lesesitzungen."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Suchergebnisse werden einen Tag lang auf diesem Gerät gespeichert. Das Löschen der Bibliothek entfernt alle %lld Bücher und ihre Lesesitzungen."
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arama sonuçları bu cihazda saklanıyor; böylece çevrimdışı da gezinebiliyor ve daha az istek harcıyorsunuz. Kütüphaneyi silmek %lld kitabın tamamını ve okuma oturumlarını kaldırır."
           }
         }
       }

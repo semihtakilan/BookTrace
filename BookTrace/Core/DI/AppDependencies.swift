@@ -61,6 +61,7 @@ struct AppDependencies {
             bookSearching: bookSearching,
             bookDetailFetching: bookSearching,
             bookCacheStore: cacheStore,
+            googleBooksBudget: container.googleBooksBudget(),
             settings: settings
         )
     }

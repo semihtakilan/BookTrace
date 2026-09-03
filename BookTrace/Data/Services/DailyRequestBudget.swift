@@ -35,9 +35,14 @@ actor DailyRequestBudget: RequestBudget {
     /// tüketen başka bir kullanıcıysa bir saat sonra durum değişmiş olabilir.
     private static let blockDuration: TimeInterval = 60 * 60
 
-    init(limit: Int = 25, defaults: UserDefaults = .standard, calendar: Calendar = .current) {
+    /// Mağaza aktörün *içinde* kuruluyor.
+    ///
+    /// Hazır bir `UserDefaults` almak onu yalıtım sınırından geçirmek demek ve
+    /// tip `Sendable` değil; adını alıp burada açmak aynı işi veri yarışı
+    /// uyarısı olmadan görüyor.
+    init(limit: Int = 25, suiteName: String? = nil, calendar: Calendar = .current) {
         self.limit = limit
-        self.defaults = defaults
+        defaults = suiteName.flatMap(UserDefaults.init(suiteName:)) ?? .standard
         self.calendar = calendar
     }
 

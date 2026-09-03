@@ -89,16 +89,23 @@ private struct SettingsContentView: View {
             } header: {
                 Text("Data")
             } footer: {
-                Text("Search results are cached on this device for a day. Erasing the library removes all \(viewModel.libraryCount) books and their reading sessions.")
+                Text("Search results are cached on this device so browsing works offline and uses fewer requests. Erasing the library removes all \(viewModel.libraryCount) books and their reading sessions.")
             }
 
             Section {
                 LabeledContent("Version", value: viewModel.appVersion)
-                LabeledContent("Book data") { Text("Google Books") }
+                LabeledContent("Book data") { Text("Open Library · Google Books") }
+
+                #if DEBUG
+                // Hibrit yönlendirmenin ölçüsü: gün boyu kullanımda bu sayı
+                // tek haneli kalmalı.
+                LabeledContent("Google requests today", value: "\(viewModel.googleRequestsToday)")
+                #endif
             } header: {
                 Text("About")
             }
         }
+        .task { await viewModel.loadDiagnostics() }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(

@@ -19,10 +19,26 @@ final class SettingsViewModel {
 
     @ObservationIgnored private let libraryRepository: any LibraryRepository
     @ObservationIgnored private let bookCacheStore: any BookCacheStore
+    @ObservationIgnored private let googleBooksBudget: DailyRequestBudget
 
-    init(libraryRepository: any LibraryRepository, bookCacheStore: any BookCacheStore) {
+    /// Bugün Google Books'a giden istek sayısı; yalnızca hata ayıklama
+    /// derlemesinde gösteriliyor. Hibrit yönlendirmenin işe yarayıp yaramadığı
+    /// tek bir sayıya bakarak anlaşılıyor: gün boyu kullanımda bu sayı tek
+    /// haneli kalmalı.
+    private(set) var googleRequestsToday = 0
+
+    init(
+        libraryRepository: any LibraryRepository,
+        bookCacheStore: any BookCacheStore,
+        googleBooksBudget: DailyRequestBudget
+    ) {
         self.libraryRepository = libraryRepository
         self.bookCacheStore = bookCacheStore
+        self.googleBooksBudget = googleBooksBudget
+    }
+
+    func loadDiagnostics() async {
+        googleRequestsToday = await googleBooksBudget.spentToday()
     }
 
     var appVersion: String {

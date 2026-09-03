@@ -25,6 +25,10 @@ import SwiftUI
 final class ViewModelHolder<Value> {
     private var value: Value?
 
+    // Boş `deinit`: bu olmadan Release derlemesinde optimize edici
+    // (`EarlyPerfInliner`) jenerik sınıfın üretilmiş yıkıcısında çöküyor.
+    deinit {}
+
     func callAsFunction(_ make: () -> Value) -> Value {
         if let value { return value }
         let created = make()

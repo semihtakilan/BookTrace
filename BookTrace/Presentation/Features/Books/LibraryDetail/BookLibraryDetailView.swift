@@ -17,6 +17,7 @@ struct BookLibraryDetailView: View {
     private let entry: LibraryEntry
 
     @Environment(ViewModelFactory.self) private var viewModelFactory
+    @State private var holder = ViewModelHolder<LibraryEntryDetailViewModel>()
 
     init(entry: LibraryEntry) {
         self.entry = entry
@@ -24,7 +25,7 @@ struct BookLibraryDetailView: View {
 
     var body: some View {
         BookLibraryDetailContent(
-            viewModel: viewModelFactory.makeLibraryEntryDetailViewModel(entry: entry)
+            viewModel: holder { viewModelFactory.makeLibraryEntryDetailViewModel(entry: entry) }
         )
     }
 }
@@ -228,6 +229,7 @@ private struct BookLibraryDetailContent: View {
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 4)
+                    .accessibilityElement(children: .combine)
                     Divider()
                 }
             }

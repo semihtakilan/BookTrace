@@ -13,13 +13,16 @@ struct BookDetailView: View {
     private let book: BookReference
 
     @Environment(ViewModelFactory.self) private var viewModelFactory
+    @State private var holder = ViewModelHolder<BookDetailViewModel>()
 
     init(book: BookReference) {
         self.book = book
     }
 
     var body: some View {
-        BookDetailContent(viewModel: viewModelFactory.makeBookDetailViewModel(book: book))
+        BookDetailContent(
+            viewModel: holder { viewModelFactory.makeBookDetailViewModel(book: book) }
+        )
     }
 }
 
@@ -156,12 +159,15 @@ private struct AddToLibraryForm: View {
                     }
                     .pickerStyle(.segmented)
 
-                    TextField("Page count", text: $viewModel.pageCountText)
-                        .keyboardType(.numberPad)
+                    LabeledContent("Page count") {
+                        TextField(viewModel.pageCountPlaceholder, text: $viewModel.pageCountText)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                    }
                 } header: {
                     Text("Progress")
                 } footer: {
-                    Text("The page count drives your progress bar and the estimated time left.")
+                    Text("The page count drives your progress bar and the estimated time left. Leave it empty to use the count Google Books reports.")
                 }
 
                 Section("Ownership Status") {

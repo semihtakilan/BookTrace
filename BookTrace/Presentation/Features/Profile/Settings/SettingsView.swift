@@ -10,9 +10,10 @@ import Models
 
 struct SettingsView: View {
     @Environment(ViewModelFactory.self) private var viewModelFactory
+    @State private var holder = ViewModelHolder<SettingsViewModel>()
 
     var body: some View {
-        SettingsContentView(viewModel: viewModelFactory.makeSettingsViewModel())
+        SettingsContentView(viewModel: holder { viewModelFactory.makeSettingsViewModel() })
     }
 }
 

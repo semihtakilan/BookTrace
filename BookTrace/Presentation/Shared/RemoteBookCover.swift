@@ -47,6 +47,10 @@ struct RemoteBookCover: View {
         }
         .frame(width: width, height: height)
         .clipShape(RoundedRectangle(cornerRadius: 6))
+        // Kapak dekoratif: başlık ve yazar her kullanım yerinde zaten metin
+        // olarak yanında duruyor. Görsel yedeği de aynı metni çizdiği için
+        // gizlenmezse VoiceOver başlığı iki kez okur.
+        .accessibilityHidden(true)
     }
 
     private var fallbackView: some View {

@@ -39,9 +39,10 @@ struct BookRowView: View {
                 }
 
                 if let subtitle {
+                    // `.tertiary` açık temada WCAG AA sınırının altına düşüyordu.
                     Text(subtitle)
                         .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
             }
@@ -49,5 +50,6 @@ struct BookRowView: View {
             Spacer(minLength: 0)
         }
         .contentShape(.rect)
+        .accessibilityElement(children: .combine)
     }
 }

@@ -192,6 +192,7 @@ private struct ProfileContentView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    .accessibilityElement(children: .combine)
                 }
             }
         }
@@ -217,6 +218,7 @@ private struct SummaryTile: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
         .background(.regularMaterial, in: .rect(cornerRadius: 16))
+        .accessibilityElement(children: .combine)
     }
 }
 

@@ -20,6 +20,10 @@ struct ReadingProgressView: View {
             if let fraction = entry.progressFraction, let total = entry.effectivePageCount {
                 ProgressView(value: fraction)
                     .progressViewStyle(.linear)
+                    // Ekranın en önemli bilgisi bu çubukta; değeri açıkça
+                    // verilmezse VoiceOver kullanıcısına hiç ulaşmıyor.
+                    .accessibilityLabel("Reading progress")
+                    .accessibilityValue("\(Int((fraction * 100).rounded()))% complete")
 
                 HStack {
                     Text(progressLabel(fraction: fraction, total: total))

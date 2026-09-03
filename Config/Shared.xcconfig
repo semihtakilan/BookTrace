@@ -4,11 +4,18 @@
 //
 //  Uygulama hedefinin taban konfigürasyonu.
 //
+//  ┌──────────────────────────────────────────────────────────────────────┐
+//  │  DİKKAT: BU DOSYA REPOYA GİRER. ANAHTARINI BURAYA YAZMA.             │
+//  │  Gerçek anahtar Config/Secrets.xcconfig'e yazılır — o dosya          │
+//  │  .gitignore'da olduğu için Git'te ve Fork'ta hiç görünmez.           │
+//  │      cp Config/Secrets.example.xcconfig Config/Secrets.xcconfig      │
+//  └──────────────────────────────────────────────────────────────────────┘
+//
 
 // Anahtarın varsayılanı boş: depoyu yeni klonlayan biri hiçbir şey yapmadan
 // derleyebilsin. Boş anahtarla uygulama çalışır, yalnızca Google'ın kota
-// hatasını gösterir.
+// hatasını gösterir. Bu satırın sağı BOŞ KALMALI.
 GOOGLE_BOOKS_API_KEY =
 
-// Gerçek anahtar burada. Dosya `.gitignore`'da; yoksa derleme yine de sürer.
+// Gerçek anahtarı aşağıdaki dosya getirir. Yoksa derleme yine de sürer.
 #include? "Secrets.xcconfig"

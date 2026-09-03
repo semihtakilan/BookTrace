@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# Staged içerikte API anahtarı varsa commit'i durdurur.
+# Kurulum (her klonda bir kez):  git config core.hooksPath .githooks
+#
+# Hook'un kendisi taramanın dışında: içinde arama deseni olarak anahtar
+# biçimi geçiyor, yoksa kendi kendini engellerdi.
+
+added=$(git diff --cached -U0 -- . ':(exclude).githooks/*' | grep '^+')
+
+# 1) Google API anahtarı biçimi (AIza ile başlayan uzun dizi).
+keys=$(printf '%s\n' "$added" | grep 'AIza[0-9A-Za-z_-]\{20,\}')
+
+# 2) Takipli bir dosyada doldurulmuş GOOGLE_BOOKS_API_KEY satırı.
+#    Boş bırakılmış hâli (Shared.xcconfig'teki varsayılan) serbest.
+filled=$(printf '%s\n' "$added" | grep 'GOOGLE_BOOKS_API_KEY[ ]*=[ ]*[^ ]' \
+         | grep -v 'GOOGLE_BOOKS_API_KEY[ ]*=[ ]*\$(' \
+         | grep -v 'buraya_kendi_anahtarinizi_yazin' \
+         | grep -v 'YOUR_GOOGLE_BOOKS_API_KEY')
+
+if [ -n "$keys" ] || [ -n "$filled" ]; then
+    echo ""
+    echo "COMMIT DURDURULDU: staged değişikliklerde API anahtarı var."
+    echo ""
+    echo "Etkilenen dosyalar:"
+    git diff --cached --name-only -- . ':(exclude).githooks/*' | sed 's/^/  /'
+    echo ""
+    echo "Anahtar yalnızca Config/Secrets.xcconfig icinde durmali; o dosya"
+    echo ".gitignore'da oldugu icin commit'e zaten giremez. Anahtari baska"
+    echo "bir dosyaya yazdiysan oradan sil, ornegin:"
+    echo ""
+    echo "  git restore Config/Shared.xcconfig"
+    echo ""
+    echo "Bilerek commitliyorsan: git commit --no-verify"
+    echo ""
+    exit 1
+fi
+
+exit 0

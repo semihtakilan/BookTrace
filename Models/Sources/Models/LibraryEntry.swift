@@ -99,22 +99,73 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
 
     // MARK: - Mutasyonlar
 
+    /// İlerlemenin tek giriş noktası.
+    ///
+    /// İlerleme ve okuma durumu birbirine bağlı: sayfa sayfaya taşınırsa kitap
+    /// biter, geri alınırsa bitmiş sayılamaz. Bu kural daha önce üç ayrı yerde
+    /// (form, elle güncelleme, okuma oturumu) farklı biçimlerde uygulandığı için
+    /// kayıtlar tutarsız hâle gelebiliyordu; artık tek yer burası.
+    public mutating func setProgress(currentPage newValue: Int) {
+        currentPage = clampedPage(newValue)
+        reconcileStatus()
+    }
+
+    /// Sayfa sayısını değiştirir ve ilerlemeyi yeni tavana göre yeniden kırpar.
+    ///
+    /// Sayfa sayısı düşürüldüğünde ilerleme olduğu gibi kalırsa "716 / 100 sayfa"
+    /// gibi imkânsız değerler çıkıyordu.
+    public mutating func setPageCount(_ newValue: Int?) {
+        pageCount = newValue
+        setProgress(currentPage: currentPage)
+    }
+
     /// Yeni bir oturumu ekler ve `currentPage`'i ilerletir.
+    ///
+    /// Oturumun sayfa sayısı kalan sayfayla sınırlanır: `pagesRead` okuma hızı
+    /// hesabının paydası, kalanı aşan tek bir giriş kütüphanenin tamamındaki
+    /// tahminleri kalıcı olarak bozuyordu.
     public mutating func apply(_ session: ReadingSession) {
-        readingSessions.append(session)
-        advanceProgress(by: session.pagesRead)
+        let allowedPages = remainingPages.map { min(session.pagesRead, $0) } ?? session.pagesRead
+        readingSessions.append(
+            ReadingSession(
+                id: session.id,
+                startDate: session.startDate,
+                durationSeconds: session.durationSeconds,
+                pagesRead: allowedPages
+            )
+        )
+        setProgress(currentPage: currentPage + allowedPages)
     }
 
     /// İlerlemeyi sayfa sayısını aşmayacak biçimde artırır ve gerekirse durumu günceller.
     public mutating func advanceProgress(by pages: Int) {
-        let updated = currentPage + max(0, pages)
-        currentPage = effectivePageCount.map { min(updated, $0) } ?? updated
+        setProgress(currentPage: currentPage + max(0, pages))
+    }
 
-        if readingStatus == .toRead || readingStatus == .wishlist {
-            readingStatus = .reading
+    private func clampedPage(_ page: Int) -> Int {
+        let flooredPage = max(0, page)
+        return effectivePageCount.map { min(flooredPage, $0) } ?? flooredPage
+    }
+
+    /// Okuma durumunu ilerlemeyle uyumlu hâle getirir.
+    ///
+    /// `.abandoned` ve `.wishlist` gibi kullanıcının bilinçli seçimleri, ilerleme
+    /// başlamadıkça korunur.
+    private mutating func reconcileStatus() {
+        guard let total = effectivePageCount, total > 0 else {
+            if currentPage > 0, readingStatus == .toRead || readingStatus == .wishlist {
+                readingStatus = .reading
+            }
+            return
         }
-        if let total = effectivePageCount, currentPage >= total {
+
+        if currentPage >= total {
             readingStatus = .finished
+        } else if readingStatus == .finished {
+            // İlerleme geri alındıysa kitap artık bitmiş değil.
+            readingStatus = .reading
+        } else if currentPage > 0, readingStatus == .toRead || readingStatus == .wishlist {
+            readingStatus = .reading
         }
     }
 }

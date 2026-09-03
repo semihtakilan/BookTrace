@@ -43,7 +43,7 @@ final class LibraryEntryDetailViewModel {
         // Kitabı "bitti" işaretlemek ilerlemeyi de sona taşır; ikisi ayrı kalırsa
         // ilerleme çubuğu yalan söyler.
         if readingStatus == .finished, let total = updated.effectivePageCount {
-            updated.currentPage = total
+            updated.setProgress(currentPage: total)
         }
         persist(updated)
     }
@@ -62,11 +62,9 @@ final class LibraryEntryDetailViewModel {
 
     func update(currentPage: Int) {
         var updated = entry
-        let ceiling = updated.effectivePageCount ?? currentPage
-        updated.currentPage = min(max(0, currentPage), ceiling)
-        if updated.readingStatus == .toRead, updated.currentPage > 0 {
-            updated.readingStatus = .reading
-        }
+        // Kırpma ve durum geçişi `LibraryEntry`'de; buradaki ayrı kural, ilerleme
+        // geri alındığında kitabın "Bitirildi" kalmasına yol açıyordu.
+        updated.setProgress(currentPage: currentPage)
         persist(updated)
     }
 

@@ -76,7 +76,12 @@ struct FinishSessionView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            if let projectedPage = viewModel.projectedPage {
+            if let pagesLimitMessage = viewModel.pagesLimitMessage {
+                Text(pagesLimitMessage)
+                    .font(.footnote)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+            } else if let projectedPage = viewModel.projectedPage {
                 Text("Progress will move to page \(projectedPage).")
                     .font(.footnote)
                     .foregroundStyle(.secondary)

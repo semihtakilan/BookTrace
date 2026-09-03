@@ -136,7 +136,8 @@ final class BookDetailViewModel {
         entry.readingStatus = readingStatus
         entry.ownershipStatus = ownershipStatus
         entry.progressType = progressType
-        entry.pageCount = pageCount
+        // Sayfa sayısı düşürüldüyse ilerleme de yeni tavana çekilir.
+        entry.setPageCount(pageCount)
         entry.categories = selectedCategories
 
         do {

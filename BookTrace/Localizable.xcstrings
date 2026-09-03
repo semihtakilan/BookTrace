@@ -3583,6 +3583,29 @@
         }
       }
     },
+    "This book only has %lld pages left.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This book only has %lld pages left."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kitapta yalnızca %lld sayfa kaldı."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In diesem Buch sind nur noch %lld Seiten übrig."
+          }
+        }
+      }
+    },
     "This device has no camera to scan with. On the Simulator, search by title or ISBN instead.": {
       "extractionState": "manual",
       "localizations": {

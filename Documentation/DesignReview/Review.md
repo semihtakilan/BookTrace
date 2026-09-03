@@ -1,5 +1,7 @@
 # BookTrace — Reading experience review
 
+The follow-up [Library and Discover refinement](Iteration2/Review.md) contains the latest library grouping, completed-book fix, discovery design, screenshots, and validation. The notes below document the initial design pass.
+
 ## Direction
 
 BookTrace is a personal reading journal: find a book, give it a place on a shelf, make time for it, and see the reading accumulate. The interface uses warm paper, forest green, restrained serif headings, real book covers, and quiet language. It keeps the existing SwiftUI / Observation / NavigatorUI / SwiftData architecture and the AVFoundation scanner wrapped in `UIViewControllerRepresentable`.

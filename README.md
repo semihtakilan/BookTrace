@@ -65,7 +65,7 @@ Reading Mode tracks time spent reading a book outside the app; BookTrace does no
 
 ## Reading experience
 
-The interface uses a shared paper-and-ink design system with light and dark appearances, Dynamic Type, and English, Turkish, and German copy. Library cards start reading sessions directly; status filters combine with search, sorting, and grouping. Explore provides subject filters and wider book covers. Book editing and session completion keep their save actions above the keyboard. The Journal tab shows real reading time, seven days of activity, and personal pace.
+The interface uses a shared paper-and-ink design system with light and dark appearances, Dynamic Type, and English, Turkish, and German copy. Active reading stays at the top of Library; search, sorting, grouping, and status filters organize the other books below it. Adding a finished book completes its known page count. Discover offers subject spotlights, topic collections, a short-book shelf, and proportional cover grids. Book editing and session completion keep their save actions above the keyboard. The Journal tab shows real reading time, seven days of activity, and personal pace.
 
 See the [simulator design review](Documentation/DesignReview/Review.md) for the baseline critique, screenshot feedback, corrections, and validation evidence.
 

@@ -56,6 +56,14 @@ struct OpenLibrarySearchEndpoint: Endpoint {
         ]
     }
 
+    /// Rafın istediğinden fazlasını getirir.
+    ///
+    /// Open Library'de kapağı olmayan eser çok; raf da göze hitap eden bir yer,
+    /// kapaksız kartlar sırayı boşaltıyor. Fazladan gelen sonuçlar kapaklıları
+    /// öne almaya yetiyor ve bu ek bir istek değil — aynı isteğin daha uzun
+    /// listesi.
+    static let coverOversamplingFactor = 2
+
     static func search(query: String, maxResults: Int) -> Self {
         Self(query: query, limit: maxResults)
     }

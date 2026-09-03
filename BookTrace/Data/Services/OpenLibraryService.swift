@@ -34,12 +34,24 @@ final class OpenLibraryService: BookSearching, BookDetailFetching {
         }
     }
 
+    /// Konu rafı: kapaklı kitaplar öne alınır.
+    ///
+    /// Sıra korunuyor, yalnızca kapağı olmayanlar sona itiliyor — rafın
+    /// kürasyonu Open Library'nin alaka sıralamasından geliyor ve onu tamamen
+    /// bozmak istemiyoruz.
     func books(inSubject subject: String, maxResults: Int) async throws -> [BookReference] {
-        try await execute {
+        let books = try await execute {
             try await networkService
-                .execute(OpenLibrarySearchEndpoint.subject(subject, maxResults: maxResults))
+                .execute(OpenLibrarySearchEndpoint.subject(
+                    subject,
+                    maxResults: maxResults * OpenLibrarySearchEndpoint.coverOversamplingFactor
+                ))
                 .toBookReferences()
         }
+
+        let withCovers = books.filter { $0.coverURL != nil }
+        let withoutCovers = books.filter { $0.coverURL == nil }
+        return Array((withCovers + withoutCovers).prefix(maxResults))
     }
 
     /// Barkod yolu: önce baskı kaydı, olmazsa eser araması.

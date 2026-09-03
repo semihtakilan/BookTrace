@@ -102,7 +102,18 @@ enum BookCacheStorage {
             appropriateFor: nil,
             create: true
         )
+        removeLegacyCache(in: directory)
+
         let configuration = ModelConfiguration(schema: schema, url: directory.appending(path: "BookCache.store"))
         return try ModelContainer(for: schema, configurations: configuration)
+    }
+
+    /// Cache SwiftData'ya taşınmadan önce sonuçlar JSON dosyaları olarak
+    /// saklanıyordu. O dizin bir daha okunmuyor; güncelleyen kullanıcının
+    /// diskinde kalmasın.
+    private static func removeLegacyCache(in directory: URL) {
+        let legacyDirectory = directory.appending(path: "BookSearchCache", directoryHint: .isDirectory)
+        guard FileManager.default.fileExists(atPath: legacyDirectory.path) else { return }
+        try? FileManager.default.removeItem(at: legacyDirectory)
     }
 }

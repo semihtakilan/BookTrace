@@ -59,11 +59,6 @@ nonisolated struct OpenLibraryWork: Decodable, Sendable {
     let subjects: [String]?
     let covers: [Int]?
 
-    /// Detayı, listeden gelen kaydın üstüne işlenmek üzere döndürür.
-    ///
-    /// Konular kırpılıyor: Open Library bir esere yüzlerce konu bağlayabiliyor
-    /// ("Fiction", "Fiction, general", "Large type books"...) ve hepsini kategori
-    /// önerisi olarak sunmak listeyi kullanılamaz hâle getirir.
     func toDomain() -> BookReference? {
         guard let key, !key.isEmpty else { return nil }
 
@@ -72,22 +67,51 @@ nonisolated struct OpenLibraryWork: Decodable, Sendable {
             title: title?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
             coverURL: covers?.first(where: { $0 > 0 }).map(OpenLibraryHost.coverURL(id:)),
             description: description?.value.flatMap(OpenLibraryWork.plainText),
-            subjects: Array((subjects ?? []).prefix(8))
+            subjects: OpenLibraryWork.presentableSubjects(subjects ?? [])
         )
     }
 
-    /// Açıklamalarda Markdown vurgusu ve dipnot bağlantıları geçiyor
-    /// (`**Dorian Gray**`, `([source][1])`); ekranda düz metin gösteriyoruz.
+    /// Konular hem kırpılıyor hem eleniyor.
+    ///
+    /// Open Library bir esere yüzlerce konu bağlayabiliyor ve bunların bir kısmı
+    /// kütüphane sınıflandırma artığı: "British and irish fiction (fictional
+    /// works by one author)", "Large type books". Bu etiketler detayda yer
+    /// kaplıyor, kategori önerisi olarak sunulduklarında ise kullanıcı onları
+    /// kendi kütüphanesine ad olarak alıyor. Parantezli ve aşırı uzun olanlar
+    /// düşüyor; geriye üçten azı kalırsa eleme yapılmıyor, çünkü bazı eserlerde
+    /// zaten yalnızca bu tür etiketler var.
+    static func presentableSubjects(_ subjects: [String]) -> [String] {
+        let cleaned = subjects.filter { subject in
+            !subject.contains("(") && subject.count <= 30
+        }
+        return Array((cleaned.count >= 3 ? cleaned : subjects).prefix(8))
+    }
+
+    /// Açıklamalar Markdown ile yazılıyor; ekranda düz metin gösteriyoruz.
+    ///
+    /// Sıra önemli: bağlantılar önce metinlerine indirgeniyor, vurgu işaretleri
+    /// sonra siliniyor. Ters sırada `_` temizliği bağlantı adresinin içindeki
+    /// alt çizgileri de yiyor ve ekranda
+    /// "wikipedia.org/wiki/ThePictureofDorianGray" gibi bozuk bir adres kalıyor.
     static func plainText(_ value: String) -> String? {
         var text = value
+
+        // [Wikipedia](https://...) ve [Wikipedia][1] → Wikipedia
+        for pattern in ["\\[([^\\]]*)\\]\\([^)]*\\)", "\\[([^\\]]*)\\]\\[[^\\]]*\\]"] {
+            text = text.replacingOccurrences(of: pattern, with: "$1", options: .regularExpression)
+        }
+
+        // Yatay çizgi satırları ("--------") ve tanımsız kalan dipnotlar.
+        text = text.replacingOccurrences(of: "(?m)^\\s*[-*_]{3,}\\s*$", with: "", options: .regularExpression)
+        text = text.replacingOccurrences(of: "(?m)^\\s*\\[[^\\]]*\\]:.*$", with: "", options: .regularExpression)
+
         for marker in ["**", "__", "*", "_"] {
             text = text.replacingOccurrences(of: marker, with: "")
         }
-        text = text.replacingOccurrences(
-            of: "\\(\\[[^\\]]*\\]\\[[^\\]]*\\]\\)",
-            with: "",
-            options: .regularExpression
-        )
+
+        // Silinen satırların ardında kalan boşluklar tek boş satıra iniyor.
+        text = text.replacingOccurrences(of: "\n{3,}", with: "\n\n", options: .regularExpression)
+
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
     }

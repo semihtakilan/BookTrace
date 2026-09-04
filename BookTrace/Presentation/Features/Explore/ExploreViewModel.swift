@@ -17,6 +17,12 @@ struct SubjectShelf: Identifiable {
     var id: String { subject.id }
 }
 
+struct DiscoverSpotlight: Identifiable {
+    let subject: BookSubject
+    let book: BookReference
+    var id: String { subject.id }
+}
+
 @MainActor
 @Observable
 final class ExploreViewModel {
@@ -44,6 +50,33 @@ final class ExploreViewModel {
 
     var isShowingSearchResults: Bool {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// A different doorway into each loaded subject, using actual catalog books.
+    var spotlights: [DiscoverSpotlight] {
+        shelves.compactMap { shelf in
+            guard case .loaded(let books) = shelf.state,
+                  let book = books.first(where: { ($0.pageCount ?? Int.max) <= 500 }) ?? books.first else { return nil }
+            return DiscoverSpotlight(subject: shelf.subject, book: book)
+        }
+    }
+
+    var discoverableBooks: [BookReference] {
+        var seen = Set<String>()
+        return shelves.flatMap { shelf -> [BookReference] in
+            guard case .loaded(let books) = shelf.state else { return [] }
+            return books
+        }.filter { seen.insert($0.id).inserted }
+    }
+
+    var shortReads: [BookReference] {
+        discoverableBooks.filter { book in
+            guard let pages = book.pageCount else { return false }
+            return (1...250).contains(pages)
+        }.sorted {
+            if $0.pageCount == $1.pageCount { return $0.id < $1.id }
+            return ($0.pageCount ?? 0) < ($1.pageCount ?? 0)
+        }
     }
 
     // MARK: - Kategori rafları

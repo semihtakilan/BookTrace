@@ -57,7 +57,12 @@ final class BooksViewModel {
     /// Seçili gruplama ve sıralamaya göre hazırlanmış bölümler.
     private(set) var sections: [LibrarySection] = []
 
+    /// Üst üste okunan gün sayısı ve son bir haftanın günlük özeti.
+    private(set) var streakDays = 0
+    private(set) var weekActivity: [Bool] = []
+
     var searchText = "" { didSet { guard searchText != oldValue else { return }; rebuild() } }
+    var statusFilter: ReadingStatus? { didSet { guard statusFilter != oldValue else { return }; rebuild() } }
     var grouping: LibraryGrouping = .status { didSet { guard grouping != oldValue else { return }; rebuild() } }
     var sort: LibrarySort = .recentlyAdded { didSet { guard sort != oldValue else { return }; rebuild() } }
 
@@ -74,23 +79,29 @@ final class BooksViewModel {
     }
 
     var isEmpty: Bool { entries.isEmpty }
+    var shelfCount: Int { entries.count - nowReading.count }
+    static let shelfStatuses: [ReadingStatus] = [.toRead, .finished, .wishlist, .abandoned]
 
     /// Kütüphane dolu ama arama hiçbir şey bulmadı.
-    var hasNoMatches: Bool { !entries.isEmpty && sections.isEmpty }
+    var hasNoMatches: Bool { shelfCount > 0 && sections.isEmpty }
 
-    /// Arama sürerken "Now Reading" gizlenir; aksi hâlde arama sonucuyla
-    /// ilgisi olmayan kitaplar listenin başında durmaya devam eder.
-    var isShowingNowReading: Bool {
-        searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !nowReading.isEmpty
-    }
+    /// Okunan kitaplar kalıcı olarak üstte; arama ve düzenleme aşağıdaki rafa ait.
+    var isShowingNowReading: Bool { !nowReading.isEmpty }
 
-    func load() {
+    func load(now: Date = Date(), calendar: Calendar = .current) {
         do {
             entries = try libraryRepository.fetchEntries()
             self.error = nil
         } catch {
             self.error = UserFacingError(error)
         }
+
+        // Seri yalnızca kütüphane değiştiğinde hesaplanır; filtre ve sıralama
+        // onu etkilemiyor, `rebuild()` içine konsaydı her tuşta tekrarlanırdı.
+        let sessions = entries.flatMap(\.readingSessions)
+        streakDays = ReadingStreak.current(from: sessions, now: now, calendar: calendar)
+        weekActivity = ReadingStreak.recentActivity(from: sessions, now: now, calendar: calendar)
+
         rebuild()
     }
 
@@ -123,12 +134,12 @@ final class BooksViewModel {
     // her karede — sözlük kurulup sıralama tekrarlanırdı.
 
     private func rebuild() {
-        let matches = sorted(filtered(entries))
-        nowReading = matches.filter { $0.readingStatus == .reading }
-        sections = makeSections(from: matches)
+        nowReading = sorted(entries.filter { $0.readingStatus == .reading })
+        sections = makeSections(from: sorted(filtered(entries.filter { $0.readingStatus != .reading })))
     }
 
     private func filtered(_ entries: [LibraryEntry]) -> [LibraryEntry] {
+        let entries = entries.filter { statusFilter == nil || $0.readingStatus == statusFilter }
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return entries }
 
@@ -171,7 +182,7 @@ final class BooksViewModel {
 
         case .status:
             let grouped = Dictionary(grouping: matches, by: \.readingStatus)
-            return ReadingStatus.allCases.compactMap { status in
+            return Self.shelfStatuses.compactMap { status in
                 guard let entries = grouped[status], !entries.isEmpty else { return nil }
                 return LibrarySection(kind: .status(status), entries: entries)
             }

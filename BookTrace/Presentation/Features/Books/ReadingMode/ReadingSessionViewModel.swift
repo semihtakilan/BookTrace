@@ -22,6 +22,13 @@ final class ReadingSessionViewModel {
     var pagesReadText = ""
     var error: UserFacingError?
 
+    /// Oturum sırasında yeni geçilen süre dönüm noktası (dakika). Ekran bunu
+    /// görüp kısa bir bildirim gösterir ve `clearMilestone()` ile temizler.
+    private(set) var reachedMilestone: Int?
+
+    /// Kayıt sonrası kutlanacak bir şey varsa. `nil` ise ekran sessizce kapanır.
+    private(set) var outcome: SessionOutcome?
+
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
 
@@ -30,6 +37,12 @@ final class ReadingSessionViewModel {
     @ObservationIgnored private var sessionStartDate = Date()
     @ObservationIgnored private var accumulatedSeconds: TimeInterval = 0
     @ObservationIgnored private var runningSince: Date?
+
+    /// Kutlanmış en yüksek dakika. Uygulama arka planda uzun süre kaldığında
+    /// sayaç bir anda sıçrıyor; aradaki bütün dönüm noktaları için üst üste
+    /// bildirim göstermek yerine yalnızca sonuncusu gösterilir.
+    @ObservationIgnored private var highestMilestone = 0
+    @ObservationIgnored private static let milestoneMinutes = [5, 10, 15, 20, 30, 45, 60, 90, 120]
 
     init(entry: LibraryEntry, libraryRepository: any LibraryRepository) {
         self.entry = entry
@@ -79,6 +92,27 @@ final class ReadingSessionViewModel {
     /// Ekran her göründüğünde ve saniyede bir çağrılır; yalnızca görüntüyü tazeler.
     func tick() {
         elapsedSeconds = Int(currentElapsed.rounded(.down))
+        noteMilestone()
+    }
+
+    func clearMilestone() {
+        reachedMilestone = nil
+    }
+
+    private func noteMilestone() {
+        guard let crossed = Self.milestone(atElapsed: elapsedSeconds, after: highestMilestone) else { return }
+        highestMilestone = crossed
+        reachedMilestone = crossed
+    }
+
+    /// Geçilen en yüksek süre eşiği; daha önce duyurulmuş olandan büyük değilse `nil`.
+    ///
+    /// Saf ve durumsuz olduğu için sayaç işletmeden test edilebiliyor.
+    static func milestone(atElapsed seconds: Int, after announced: Int) -> Int? {
+        let minutes = seconds / 60
+        guard let crossed = milestoneMinutes.last(where: { $0 <= minutes }),
+              crossed > announced else { return nil }
+        return crossed
     }
 
     func togglePause() {
@@ -116,14 +150,28 @@ final class ReadingSessionViewModel {
             pagesRead: pages
         )
 
+        let fractionBefore = entry.progressFraction ?? 0
+
         do {
             entry = try libraryRepository.appendSession(session, toEntryWith: entry.id)
             isFinishing = false
+            outcome = SessionOutcome(fractionBefore: fractionBefore, entry: entry, pagesRead: pages)
             didSave = true
         } catch {
             self.error = UserFacingError(error)
         }
     }
+
+    /// Kutlama görüldü; okuma ekranı artık kapanabilir.
+    func acknowledgeOutcome() {
+        outcome = nil
+    }
+
+    /// Oturum kaydedildi ve kutlanacak bir şey kalmadı.
+    ///
+    /// `didSave` tek başına yetmiyor: kayıt anında kutlama da başlıyor ve ekran
+    /// hemen kapanırsa kullanıcı onu hiç görmüyor.
+    var isReadyToDismiss: Bool { didSave && outcome == nil }
 
     private var currentElapsed: TimeInterval {
         accumulatedSeconds + (runningSince.map { Date().timeIntervalSince($0) } ?? 0)

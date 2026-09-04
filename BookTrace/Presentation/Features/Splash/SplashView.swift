@@ -16,7 +16,7 @@ import SwiftUI
 struct SplashView: View {
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            ReadingStyle.background
                 .ignoresSafeArea()
 
             VStack(spacing: 14) {
@@ -27,11 +27,11 @@ struct SplashView: View {
 
                 // Uygulama adı marka; çevrilmez.
                 Text(verbatim: "BookTrace")
-                    .font(.largeTitle.weight(.semibold))
+                    .font(ReadingStyle.title())
 
                 Text("Track what you read")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(ReadingStyle.secondary)
             }
         }
         .accessibilityElement(children: .combine)

@@ -28,6 +28,17 @@ private struct SettingsContentView: View {
 
         Form {
             Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    Image(systemName: "book.closed").font(.title2).foregroundStyle(ReadingStyle.accent)
+                        .accessibilityHidden(true)
+                    Text("Your reading space").font(ReadingStyle.title(.title))
+                    Text("A few small things, just the way you like them.")
+                        .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
+                }
+                .padding(.vertical, 10)
+            }
+            .listRowBackground(ReadingStyle.sage)
+            Section {
                 Picker(selection: $settings.theme) {
                     ForEach(AppTheme.allCases) { theme in
                         Label(theme.titleKey, systemImage: theme.systemImage).tag(theme)
@@ -35,7 +46,7 @@ private struct SettingsContentView: View {
                 } label: {
                     Text("Theme")
                 }
-                .pickerStyle(.menu)
+                .pickerStyle(.segmented)
             } header: {
                 Text("Appearance")
             }
@@ -105,6 +116,8 @@ private struct SettingsContentView: View {
                 Text("About")
             }
         }
+        .scrollContentBackground(.hidden)
+        .readingBackground()
         .task { await viewModel.loadDiagnostics() }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
@@ -147,7 +160,7 @@ private extension SettingsConfirmation {
 
     var messageKey: LocalizedStringKey {
         switch self {
-        case .cacheCleared:  "Searches will be fetched fresh from Google Books."
+        case .cacheCleared:  "Searches will be fetched fresh from the book catalogs."
         case .libraryErased: "Your library is empty again."
         }
     }

@@ -10,12 +10,23 @@ import Models
 import Observation
 
 /// Profil ekranında listelenen bir okuma oturumu — hangi kitaba ait olduğuyla birlikte.
+///
+/// Kitabın kendisi taşınıyor, yalnızca başlığı değil: listede kapak da
+/// gösteriliyor ve bir kitabı kapağından tanımak başlığını okumaktan hızlı.
 struct RecentReadingSession: Identifiable {
     let id: String
-    let bookTitle: String
+    let book: BookReference
     let startDate: Date
     let durationSeconds: Int
     let pagesRead: Int
+
+    var bookTitle: String { book.title }
+}
+
+struct ReadingDay: Identifiable {
+    let date: Date
+    let seconds: Int
+    var id: Date { date }
 }
 
 /// Profil sekmesinin verisi.
@@ -55,6 +66,10 @@ final class ProfileViewModel {
     private(set) var statusBreakdown: [(status: ReadingStatus, count: Int)] = []
     private(set) var ownershipBreakdown: [(status: OwnershipStatus, count: Int)] = []
     private(set) var recentSessions: [RecentReadingSession] = []
+    private(set) var recentDays: [ReadingDay] = []
+
+    /// Üst üste okunan gün sayısı — kütüphane sekmesindeki şeridin aynısı.
+    private(set) var streakDays = 0
 
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
@@ -65,17 +80,17 @@ final class ProfileViewModel {
 
     var isEmpty: Bool { entries.isEmpty }
 
-    func load() {
+    func load(now: Date = Date(), calendar: Calendar = .current) {
         do {
             entries = try libraryRepository.fetchEntries()
             self.error = nil
         } catch {
             self.error = UserFacingError(error)
         }
-        recalculate()
+        recalculate(now: now, calendar: calendar)
     }
 
-    private func recalculate() {
+    private func recalculate(now: Date, calendar: Calendar) {
         bookCount = entries.count
         finishedCount = entries.filter { $0.readingStatus == .finished }.count
         readingCount = entries.filter { $0.readingStatus == .reading }.count
@@ -93,9 +108,18 @@ final class ProfileViewModel {
         }
         estimatedRemainingSeconds = makeEstimatedRemainingSeconds()
 
+        streakDays = ReadingStreak.current(from: allSessions, now: now, calendar: calendar)
         statusBreakdown = makeStatusBreakdown()
         ownershipBreakdown = makeOwnershipBreakdown()
         recentSessions = makeRecentSessions()
+        // Bucket by local calendar days; never invent activity for empty dates.
+        let today = calendar.startOfDay(for: now)
+        recentDays = (-6...0).compactMap { offset in
+            guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { return nil }
+            let seconds = allSessions.filter { calendar.isDate($0.startDate, inSameDayAs: date) }
+                .reduce(0) { $0 + $1.durationSeconds }
+            return ReadingDay(date: date, seconds: seconds)
+        }
     }
 
     /// Kalan süre, hemen altındaki "Your Pace" kartının gösterdiği hızın
@@ -137,7 +161,7 @@ final class ProfileViewModel {
                 entry.readingSessions.map {
                     RecentReadingSession(
                         id: $0.id,
-                        bookTitle: entry.book.title,
+                        book: entry.book,
                         startDate: $0.startDate,
                         durationSeconds: $0.durationSeconds,
                         pagesRead: $0.pagesRead

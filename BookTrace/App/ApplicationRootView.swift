@@ -14,6 +14,7 @@ struct ApplicationRootView: View {
     private let settings: AppSettings
 
     @State private var routeManager = AppRouteTypeManager()
+    @State private var paletteStore = BookPaletteStore()
     @State private var booksViewModel: BooksViewModel
     @State private var exploreViewModel: ExploreViewModel
     @State private var profileViewModel: ProfileViewModel
@@ -41,6 +42,7 @@ struct ApplicationRootView: View {
         .environment(viewModelFactory)
         .environment(libraryChangeNotifier)
         .environment(settings)
+        .environment(paletteStore)
         // Dil kökten uygulanır.
         .environment(\.locale, settings.resolvedLocale)
         // Dil değiştiğinde ağacın kimliği de değişir ve bütün ekranlar yeniden
@@ -56,6 +58,7 @@ struct ApplicationRootView: View {
         .id(settings.language)
         // Tema kökten uygulanır; ağacın kimliğinden bağımsız.
         .preferredColorScheme(settings.theme.colorScheme)
+        .tint(ReadingStyle.accent)
         .task {
             await routeManager.bootstrap()
         }

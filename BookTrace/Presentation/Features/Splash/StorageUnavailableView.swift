@@ -43,6 +43,7 @@ struct StorageUnavailableView: View {
                 }
             }
         }
+        .readingBackground()
         .confirmationDialog(
             "Reset library data?",
             isPresented: $isConfirmingReset,

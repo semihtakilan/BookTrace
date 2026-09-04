@@ -27,6 +27,7 @@ struct BarcodeScannerSheet: View {
     var body: some View {
         NavigationStack {
             content
+                .readingBackground()
                 .navigationTitle("Scan Barcode")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {

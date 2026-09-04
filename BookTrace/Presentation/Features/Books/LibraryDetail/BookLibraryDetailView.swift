@@ -39,6 +39,8 @@ private struct BookLibraryDetailContent: View {
     @State private var isPresentingProgressEditor = false
     @State private var isConfirmingRemoval = false
     @State private var progressInput = ""
+    @State private var isEditingDetails = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var entry: LibraryEntry { viewModel.entry }
 
@@ -46,19 +48,44 @@ private struct BookLibraryDetailContent: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 header
-                actionButtons
-                progressSection
-                if !entry.categories.isEmpty { categoriesSection }
-                sessionsSection
-                if let description = entry.book.description, !description.isEmpty {
-                    aboutSection(description)
+                // Başlık tam genişlikte; aşağıdaki bölümler kendi kenar
+                // boşluğunu taşıyor.
+                VStack(alignment: .leading, spacing: 24) {
+                    actionButtons
+                    progressSection
+                    if !entry.categories.isEmpty { categoriesSection }
+                    sessionsSection
+                    if let description = entry.book.description, !description.isEmpty {
+                        aboutSection(description)
+                    }
+                    removeButton
                 }
-                removeButton
+                .padding(.horizontal, 20)
             }
-            .padding()
+            .padding(.bottom, 24)
+            .frame(maxWidth: 760).frame(maxWidth: .infinity)
         }
+        .readingBackground()
         .navigationTitle(entry.book.title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { isEditingDetails = true } label: { Image(systemName: "pencil") }
+                    .accessibilityLabel("Edit library details")
+            }
+        }
+        .sheet(isPresented: $isEditingDetails) { LibraryDetailsEditor(book: entry.book) }
+        .safeAreaInset(edge: .bottom) {
+            Button { navigator.navigate(to: BooksDestinations.readingSession(entry)) } label: {
+                Label("Start reading", systemImage: "play.fill")
+            }
+            .buttonStyle(ReadingButtonStyle())
+            .padding(.horizontal, 20).padding(.vertical, 12)
+            .frame(maxWidth: 760).frame(maxWidth: .infinity)
+            .background(ReadingStyle.background)
+        }
         .alert("Update progress", isPresented: $isPresentingProgressEditor) {
             TextField(progressFieldPrompt, text: $progressInput)
                 .keyboardType(.numberPad)
@@ -90,49 +117,14 @@ private struct BookLibraryDetailContent: View {
     // MARK: - Bölümler
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 16) {
-            RemoteBookCover(
-                url: entry.book.coverURL,
-                width: 110,
-                height: 165,
-                contentMode: .fill,
-                fallbackTitle: entry.book.title,
-                fallbackAuthor: entry.book.author
-            )
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text(entry.book.title)
-                    .font(.title3.bold())
-
-                Text(entry.book.author)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-
-                if let year = entry.book.publicationYear {
-                    Text(year).font(.footnote).foregroundStyle(.secondary)
-                }
-
-                if let pageCount = entry.effectivePageCount {
-                    Text("\(pageCount) pages").font(.footnote).foregroundStyle(.secondary)
-                }
-            }
-
-            Spacer(minLength: 0)
-        }
+        BookHeroHeader(book: entry.book, progress: entry.progressFraction)
+            .bookAtmosphere(entry.book)
     }
 
     private var actionButtons: some View {
         VStack(spacing: 12) {
-            Button {
-                navigator.navigate(to: BooksDestinations.readingSession(entry))
-            } label: {
-                Label("Reading Mode", systemImage: "timer")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-
-            HStack(spacing: 12) {
+            let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(spacing: 12))
+            layout {
                 Menu {
                     Picker("Reading Status", selection: readingStatusBinding) {
                         ForEach(ReadingStatus.allCases, id: \.self) { status in
@@ -166,16 +158,15 @@ private struct BookLibraryDetailContent: View {
 
     private var progressSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Progress").font(.headline)
-                Spacer()
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Progress").font(ReadingStyle.title(.title2))
                 Picker("Progress Type", selection: progressTypeBinding) {
                     ForEach(ProgressType.allCases, id: \.self) { type in
                         Text(type.titleKey).tag(type)
                     }
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 190)
+                .frame(maxWidth: 300)
             }
 
             ReadingProgressView(entry: entry)
@@ -185,15 +176,19 @@ private struct BookLibraryDetailContent: View {
                 isPresentingProgressEditor = true
             }
             .font(.subheadline)
+            .frame(minHeight: 44)
             .disabled(entry.effectivePageCount == nil)
+            if entry.effectivePageCount == nil {
+                Button("Add a page count") { isEditingDetails = true }
+                    .font(.subheadline.weight(.medium)).frame(minHeight: 44)
+            }
         }
-        .padding()
-        .background(.regularMaterial, in: .rect(cornerRadius: 16))
+        .readingCard()
     }
 
     private var categoriesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Categories").font(.headline)
+            ReadingSectionHeading(title: "Categories")
             FlowingTags(names: entry.categories.map(\.name))
         }
     }
@@ -201,19 +196,19 @@ private struct BookLibraryDetailContent: View {
     private var sessionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Reading Sessions").font(.headline)
+                Text("Reading Sessions").font(ReadingStyle.title(.title2))
                 Spacer()
                 if !entry.readingSessions.isEmpty {
                     Text("\(DurationFormatter.compact(seconds: entry.totalReadSeconds, locale: locale)) · \(entry.totalPagesRead) pages")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(ReadingStyle.secondary)
                 }
             }
 
             if entry.readingSessions.isEmpty {
                 Text("No sessions yet. Start Reading Mode to record one — the time estimate gets personal after your first session.")
                     .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(ReadingStyle.secondary)
             } else {
                 ForEach(entry.readingSessions.reversed()) { session in
                     HStack {
@@ -222,12 +217,12 @@ private struct BookLibraryDetailContent: View {
                                 .font(.subheadline)
                             Text("\(session.pagesRead) pages")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(ReadingStyle.secondary)
                         }
                         Spacer()
                         Text(DurationFormatter.compact(seconds: session.durationSeconds, locale: locale))
                             .font(.subheadline.monospacedDigit())
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(ReadingStyle.secondary)
                     }
                     .padding(.vertical, 4)
                     .accessibilityElement(children: .combine)
@@ -239,8 +234,8 @@ private struct BookLibraryDetailContent: View {
 
     private func aboutSection(_ description: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("About").font(.headline)
-            Text(description).font(.body)
+            ReadingSectionHeading(title: "Inside the book")
+            Text(description).font(.body).lineSpacing(5).foregroundStyle(ReadingStyle.secondary)
         }
     }
 
@@ -307,15 +302,21 @@ private struct ActionTile: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
+            HStack {
             Label(caption, systemImage: systemImage)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(ReadingStyle.secondary)
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.down")
+                    .font(.caption2).foregroundStyle(ReadingStyle.secondary)
+                    .accessibilityHidden(true)
+            }
             Text(value)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(ReadingStyle.ink)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(.regularMaterial, in: .rect(cornerRadius: 12))
+        .background(ReadingStyle.surface, in: .rect(cornerRadius: 18))
     }
 }

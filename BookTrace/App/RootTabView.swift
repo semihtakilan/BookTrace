@@ -22,12 +22,14 @@ struct RootTabView: View {
                 .tag(AppTab.books)
             ExploreTab(viewModel: exploreViewModel)
                 .navigationRoot(routeManager.exploreNavigator)
-                .tabItem { Label("Explore", systemImage: "magnifyingglass") }
+                .tabItem { Label("Discover", systemImage: "magnifyingglass") }
                 .tag(AppTab.explore)
             ProfileTab(viewModel: profileViewModel)
                 .navigationRoot(routeManager.profileNavigator)
-                .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                .tabItem { Label("Journal", systemImage: "chart.bar.xaxis") }
                 .tag(AppTab.profile)
         }
+        .tint(ReadingStyle.accent)
+        .toolbarBackground(ReadingStyle.background, for: .tabBar)
     }
 }

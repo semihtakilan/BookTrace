@@ -10,6 +10,10 @@ struct ProfileTab: View {
     }
 }
 
+/// Günlük: okunan zamanın biriktiği yer.
+///
+/// Sayılar açılışta yerine oturuyor — istatistik ekranı, bir şey kazanılmış
+/// gibi hissettirmeden okunmuş bir tablo olarak kalıyor.
 private struct ProfileContentView: View {
     @Bindable var viewModel: ProfileViewModel
     @Environment(\.navigator) private var navigator
@@ -17,11 +21,13 @@ private struct ProfileContentView: View {
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
     @Environment(\.locale) private var locale
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    @State private var chartRevealed = false
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                ReadingPageHeader(eyebrow: "ONE PAGE AT A TIME", title: "Your reading story", subtitle: "Small moments. Lasting impressions.")
+            VStack(alignment: .leading, spacing: 24) {
                 if viewModel.isEmpty {
                     ReadingEmptyState(symbol: "leaf", title: "Let your story grow.",
                                       message: "Your time, your pages, your progress. Add a book and your reading story begins here.",
@@ -36,16 +42,15 @@ private struct ProfileContentView: View {
                     breakdown(title: "Ownership", rows: viewModel.ownershipBreakdown.map { ($0.status.titleKey, $0.status.systemImage, $0.count) })
                 }
             }
-            .padding(24).padding(.bottom, 16)
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
+            .padding(.bottom, 32)
             .frame(maxWidth: 760).frame(maxWidth: .infinity)
         }
         .readingBackground()
         .navigationTitle("Journal")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(verbatim: "BookTrace").font(.system(.headline, design: .serif))
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { navigator.navigate(to: ProfileDestinations.settings) } label: {
                     Image(systemName: "gearshape").frame(width: 32, height: 32)
@@ -57,7 +62,13 @@ private struct ProfileContentView: View {
         .onAppear { viewModel.load() }
         .onChange(of: libraryChangeNotifier.revision) { _, _ in viewModel.load() }
         .onChange(of: scenePhase) { _, phase in if phase == .active { viewModel.load() } }
+        .task {
+            guard !reduceMotion else { chartRevealed = true; return }
+            withAnimation(.spring(response: 0.75, dampingFraction: 0.82)) { chartRevealed = true }
+        }
     }
+
+    // MARK: - Toplam
 
     private var readingActivity: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -70,14 +81,16 @@ private struct ProfileContentView: View {
             Text(DurationFormatter.compact(seconds: viewModel.totalReadSeconds, locale: locale))
                 .font(.system(.largeTitle, design: .serif)).fontWeight(.medium)
                 .foregroundStyle(ReadingStyle.ink)
+                .contentTransition(reduceMotion ? .identity : .numericText())
                 .accessibilityLabel("Time read")
                 .accessibilityValue(DurationFormatter.compact(seconds: viewModel.totalReadSeconds, locale: locale))
             Text("Lost in a book. Found in your day.")
                 .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
             Rectangle().fill(ReadingStyle.accent.opacity(0.16)).frame(height: 1)
-            HStack(alignment: .top, spacing: 28) {
+            HStack(alignment: .top, spacing: 20) {
                 metric(value: viewModel.totalPagesRead, caption: "Pages read")
                 metric(value: viewModel.sessionCount, caption: "Sessions")
+                metric(value: viewModel.streakDays, caption: "Day streak")
             }
             if viewModel.sessionCount == 0 {
                 Button("Start your first session") { routeManager.selectedTab = .books }
@@ -90,7 +103,8 @@ private struct ProfileContentView: View {
 
     private func metric(value: Int, caption: LocalizedStringKey) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(value, format: .number).font(.title2.weight(.medium).monospacedDigit())
+            CountingNumber(value: value)
+                .font(.title2.weight(.medium).monospacedDigit())
             Text(caption).font(.caption).foregroundStyle(ReadingStyle.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -105,16 +119,26 @@ private struct ProfileContentView: View {
         }
     }
 
+    // MARK: - Hafta
+
     private var weeklyActivity: some View {
         VStack(alignment: .leading, spacing: 20) {
             ReadingSectionHeading(title: "The last seven days")
             HStack(alignment: .bottom, spacing: 12) {
-                ForEach(viewModel.recentDays) { day in
+                ForEach(Array(viewModel.recentDays.enumerated()), id: \.element.id) { index, day in
                     VStack(spacing: 10) {
                         RoundedRectangle(cornerRadius: 5)
-                            .fill(day.seconds > 0 ? ReadingStyle.accent : ReadingStyle.line)
+                            .fill(day.seconds > 0
+                                  ? AnyShapeStyle(LinearGradient(colors: [ReadingStyle.accent.opacity(0.7), ReadingStyle.accent],
+                                                                 startPoint: .top, endPoint: .bottom))
+                                  : AnyShapeStyle(ReadingStyle.line))
                             .frame(height: day.seconds == 0 ? 4 : max(8, 84 * Double(day.seconds) / Double(maximumDailySeconds)))
                             .frame(height: 84, alignment: .bottom)
+                            // Sütunlar soldan sağa sırayla yükseliyor; hafta
+                            // bir anda değil, geçtiği gibi beliriyor.
+                            .scaleEffect(y: chartRevealed ? 1 : 0.02, anchor: .bottom)
+                            .animation(reduceMotion ? nil : ReadingMotion.progress.delay(Double(index) * 0.04),
+                                       value: chartRevealed)
                         Text(day.date, format: .dateTime.weekday(.narrow))
                             .font(.caption).foregroundStyle(ReadingStyle.secondary)
                     }
@@ -131,6 +155,8 @@ private struct ProfileContentView: View {
     }
 
     private var maximumDailySeconds: Int { max(1, viewModel.recentDays.map(\.seconds).max() ?? 1) }
+
+    // MARK: - Hız
 
     private var pace: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -158,29 +184,17 @@ private struct ProfileContentView: View {
         .readingCard()
     }
 
+    // MARK: - Son oturumlar
+
     private var recentSessions: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 16) {
             ReadingSectionHeading(title: "Recent Sessions")
             if viewModel.recentSessions.isEmpty {
                 Text("Nothing recorded yet.").font(.subheadline).foregroundStyle(ReadingStyle.secondary)
             } else {
                 ForEach(Array(viewModel.recentSessions.enumerated()), id: \.element.id) { index, session in
                     if index > 0 { Divider().overlay(ReadingStyle.line) }
-                    HStack(alignment: .top, spacing: 14) {
-                        Image(systemName: "bookmark").font(.subheadline).foregroundStyle(ReadingStyle.accent)
-                            .frame(width: 36, height: 40).background(ReadingStyle.sage, in: .rect(cornerRadius: 10))
-                            .accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(session.bookTitle).font(.system(.subheadline, design: .serif, weight: .medium)).lineLimit(2)
-                            Text(session.startDate, format: .dateTime.day().month(.abbreviated))
-                                .font(.caption).foregroundStyle(ReadingStyle.secondary)
-                            Text("\(session.pagesRead) pages").font(.caption).foregroundStyle(ReadingStyle.secondary)
-                        }
-                        Spacer(minLength: 0)
-                        Text(DurationFormatter.compact(seconds: session.durationSeconds, locale: locale))
-                            .font(.caption.weight(.medium).monospacedDigit())
-                    }
-                    .accessibilityElement(children: .combine)
+                    SessionRow(session: session)
                 }
             }
         }
@@ -202,6 +216,37 @@ private struct ProfileContentView: View {
     }
 }
 
+/// Kapağıyla birlikte tek bir oturum satırı.
+private struct SessionRow: View {
+    let session: RecentReadingSession
+    @Environment(\.locale) private var locale
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 14) {
+            BookVolumeView(book: session.book, height: 54, progress: nil)
+                .bookAtmosphere(session.book)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(session.bookTitle)
+                    .font(.system(.subheadline, design: .serif, weight: .medium)).lineLimit(2)
+                HStack(spacing: 6) {
+                    Text(session.startDate, format: .dateTime.day().month(.abbreviated))
+                    Text(verbatim: "·")
+                    Text("\(session.pagesRead) pages")
+                }
+                .font(.caption).foregroundStyle(ReadingStyle.secondary)
+            }
+
+            Spacer(minLength: 8)
+
+            Text(DurationFormatter.compact(seconds: session.durationSeconds, locale: locale))
+                .font(.caption.weight(.medium).monospacedDigit())
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+    }
+}
+
 private struct SummaryTile: View {
     let value: Int
     let caption: LocalizedStringKey
@@ -210,11 +255,38 @@ private struct SummaryTile: View {
     var body: some View {
         VStack(spacing: 9) {
             Image(systemName: symbol).font(.body).foregroundStyle(ReadingStyle.accent).accessibilityHidden(true)
-            Text(value, format: .number).font(ReadingStyle.title(.title2)).monospacedDigit()
+            CountingNumber(value: value)
+                .font(ReadingStyle.title(.title2))
+                .monospacedDigit()
             Text(caption).font(.caption).foregroundStyle(ReadingStyle.secondary).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 18)
         .background(ReadingStyle.surface, in: .rect(cornerRadius: 20))
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Açılışta sıfırdan değerine dönen sayı.
+///
+/// `contentTransition(.numericText())` rakamları tek tek çevirdiği için sayaç
+/// etkisi tek bir değişiklikten çıkıyor; ara değerleri hesaplamaya gerek yok.
+private struct CountingNumber: View {
+    let value: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var displayed = 0
+
+    var body: some View {
+        Text(displayed, format: .number)
+            .contentTransition(reduceMotion ? .identity : .numericText())
+            .task(id: value) {
+                guard !reduceMotion else {
+                    displayed = value
+                    return
+                }
+                displayed = 0
+                withAnimation(.easeOut(duration: 0.9)) { displayed = value }
+            }
+            // Ekran okuyucu sayacın dönüşünü değil sonucu duymalı.
+            .accessibilityLabel(Text(value, format: .number))
     }
 }

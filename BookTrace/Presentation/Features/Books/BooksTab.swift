@@ -12,35 +12,46 @@ struct BooksTab: View {
     }
 }
 
+/// Kütüphane: önce okunan kitap, sonra raf.
+///
+/// Eski düzende ekranın ilk üçte biri başlık bloğuydu ve kitaplar tam genişlikte
+/// satırlar hâlinde dizildiği için bir ekranda ancak üç kitap görünüyordu.
+/// Şimdi başlık gezinme çubuğunda, kitaplar ise kapaklarıyla ızgarada.
 private struct BooksContentView: View {
     @Environment(AppRouteTypeManager.self) private var routeManager
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Bindable var viewModel: BooksViewModel
 
+    @State private var visibleReadingID: String?
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                ReadingPageHeader(eyebrow: "A SPACE FOR YOUR STORIES", title: "Your library", subtitle: "A little reading, every day.")
-                if viewModel.isEmpty {
-                    emptyState
-                } else {
-                    libraryContent
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 26) {
+                    if viewModel.isEmpty {
+                        emptyState.padding(.horizontal, 20)
+                    } else {
+                        ReadingStreakStrip(days: viewModel.streakDays, activity: viewModel.weekActivity)
+                            .padding(.horizontal, 20)
+                        nowReading(width: min(geometry.size.width, 760))
+                        shelf(width: min(geometry.size.width, 760))
+                        // Raf boşken de görünür: iki kitap okuyan ama rafı boş
+                        // olan kullanıcı için ekranın altı tamamen boş kalıyordu.
+                        discoverCard.padding(.horizontal, 20)
+                    }
                 }
+                .padding(.top, 8)
+                .padding(.bottom, 36)
+                .frame(maxWidth: 760)
+                .frame(maxWidth: .infinity)
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 18)
-            .padding(.bottom, 32)
-            .frame(maxWidth: 760)
-            .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
         .readingBackground()
         .navigationTitle("Library")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(verbatim: "BookTrace").font(.system(.headline, design: .serif))
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { routeManager.selectedTab = .explore } label: {
                     Image(systemName: "plus").frame(width: 32, height: 32)
@@ -60,6 +71,8 @@ private struct BooksContentView: View {
         .onChange(of: libraryChangeNotifier.revision) { _, _ in viewModel.load() }
     }
 
+    // MARK: - Boş kütüphane
+
     private var emptyState: some View {
         VStack(spacing: 24) {
             ReadingEmptyState(symbol: "books.vertical", title: "Every reader starts\nwith one book.",
@@ -73,74 +86,134 @@ private struct BooksContentView: View {
         }
     }
 
-    private var libraryContent: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            if viewModel.isShowingNowReading {
-                VStack(alignment: .leading, spacing: 14) {
-                    ReadingSectionHeading(title: "Now Reading", detail: String(viewModel.nowReading.count))
+    // MARK: - Okunanlar
+
+    @ViewBuilder
+    private func nowReading(width: CGFloat) -> some View {
+        if viewModel.nowReading.count == 1, let entry = viewModel.nowReading.first {
+            NowReadingCard(entry: entry)
+                .padding(.horizontal, 20)
+        } else if viewModel.nowReading.count > 1 {
+            VStack(spacing: 12) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 14) {
+                        ForEach(viewModel.nowReading) { entry in
+                            NowReadingCard(entry: entry)
+                                .frame(width: min(width - 56, 420))
+                                .id(entry.id)
+                        }
+                    }
+                    .scrollTargetLayout()
+                }
+                .scrollTargetBehavior(.viewAligned)
+                .scrollPosition(id: $visibleReadingID)
+                .contentMargins(.horizontal, 20, for: .scrollContent)
+
+                // Kaç kitap okunduğunu ve hangisine bakıldığını gösteren noktalar.
+                HStack(spacing: 7) {
                     ForEach(viewModel.nowReading) { entry in
-                        NowReadingCard(entry: entry)
+                        Circle()
+                            .fill(entry.id == currentReadingID ? ReadingStyle.accent : ReadingStyle.line)
+                            .frame(width: 6, height: 6)
                     }
                 }
+                .accessibilityHidden(true)
             }
+        }
+    }
 
-            if viewModel.shelfCount > 0 {
-                VStack(spacing: 14) {
-                    HStack {
-                        ReadingSectionHeading(title: "On your shelf", detail: String(viewModel.shelfCount))
-                        organizationMenu
-                    }
-                    ReadingSearchField(text: $viewModel.searchText, prompt: "Title, author or tag")
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ReadingFilterChip(title: "All", isSelected: viewModel.statusFilter == nil,
-                                              count: viewModel.shelfCount) { viewModel.statusFilter = nil }
-                            ForEach(BooksViewModel.shelfStatuses, id: \.self) { status in
-                                ReadingFilterChip(title: status.titleKey, isSelected: viewModel.statusFilter == status,
-                                                  count: viewModel.entries.filter { $0.readingStatus == status }.count) {
-                                    viewModel.statusFilter = status
-                                }
-                            }
-                        }
-                    }
-                    .contentMargins(.trailing, 1)
-                }
-            }
+    /// Kaydırma konumu henüz oturmadıysa ilk kitap seçili sayılır.
+    private var currentReadingID: String? {
+        visibleReadingID ?? viewModel.nowReading.first?.id
+    }
 
-            if viewModel.hasNoMatches {
-                VStack(spacing: 12) {
-                    Text("No books here yet").font(ReadingStyle.title(.title3))
-                    Text("Try a different search or choose another shelf.")
-                        .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
-                    Button("Show all books") {
-                        viewModel.searchText = ""
-                        viewModel.statusFilter = nil
-                    }
-                    .buttonStyle(ReadingButtonStyle(prominent: false))
+    // MARK: - Raf
+
+    @ViewBuilder
+    private func shelf(width: CGFloat) -> some View {
+        if viewModel.shelfCount > 0 || viewModel.hasNoMatches {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    ReadingSectionHeading(title: "On your shelf", detail: String(viewModel.shelfCount))
+                    organizationMenu
                 }
-                .multilineTextAlignment(.center)
-                .readingCard()
-            } else {
-                ForEach(viewModel.sections) { section in
-                    let entries = section.entries
-                    if !entries.isEmpty {
-                        VStack(alignment: .leading, spacing: 12) {
-                            if viewModel.grouping != .all {
-                                sectionTitle(section.kind)
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(ReadingStyle.secondary)
-                            }
-                            ForEach(entries) { entry in
-                                LibraryEntryRow(entry: entry) { viewModel.requestDeletion(of: entry) }
+
+                ReadingSearchField(text: $viewModel.searchText, prompt: "Title, author or tag")
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ReadingFilterChip(title: "All", isSelected: viewModel.statusFilter == nil,
+                                          count: viewModel.shelfCount) { viewModel.statusFilter = nil }
+                        ForEach(BooksViewModel.shelfStatuses, id: \.self) { status in
+                            ReadingFilterChip(title: status.titleKey, isSelected: viewModel.statusFilter == status,
+                                              count: viewModel.entries.filter { $0.readingStatus == status }.count) {
+                                viewModel.statusFilter = status
                             }
                         }
                     }
                 }
-                if viewModel.isShowingNowReading {
-                    discoverCard
+                .contentMargins(.trailing, 1)
+
+                if viewModel.hasNoMatches {
+                    noMatches
+                } else {
+                    shelfSections(width: width)
+                }
+            }
+            .padding(.horizontal, 20)
+        }
+    }
+
+    private func shelfSections(width: CGFloat) -> some View {
+        let columns = dynamicTypeSize.isAccessibilitySize ? 2 : 3
+        let spacing: CGFloat = 16
+        let tileWidth = (width - 40 - spacing * CGFloat(columns - 1)) / CGFloat(columns)
+
+        return VStack(alignment: .leading, spacing: 26) {
+            ForEach(viewModel.sections) { section in
+                if !section.entries.isEmpty {
+                    VStack(alignment: .leading, spacing: 14) {
+                        if viewModel.grouping != .all {
+                            sectionTitle(section.kind)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(ReadingStyle.secondary)
+                        }
+                        LazyVGrid(
+                            columns: Array(repeating: GridItem(.flexible(), spacing: spacing, alignment: .top),
+                                           count: columns),
+                            alignment: .leading, spacing: 22
+                        ) {
+                            ForEach(section.entries) { entry in
+                                shelfTile(entry: entry, width: tileWidth)
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+
+    private func shelfTile(entry: LibraryEntry, width: CGFloat) -> some View {
+        NavigationLinkButton(entry: entry, width: width)
+            .contextMenu {
+                Button("Remove from Library", role: .destructive) { viewModel.requestDeletion(of: entry) }
+            }
+            .accessibilityAction(named: "Remove from Library") { viewModel.requestDeletion(of: entry) }
+    }
+
+    private var noMatches: some View {
+        VStack(spacing: 12) {
+            Text("No books here yet").font(ReadingStyle.title(.title3))
+            Text("Try a different search or choose another shelf.")
+                .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
+            Button("Show all books") {
+                viewModel.searchText = ""
+                viewModel.statusFilter = nil
+            }
+            .buttonStyle(ReadingButtonStyle(prominent: false))
+        }
+        .multilineTextAlignment(.center)
+        .readingCard()
     }
 
     private var discoverCard: some View {
@@ -197,77 +270,21 @@ private struct BooksContentView: View {
     }
 }
 
-private struct LibraryEntryRow: View {
+/// Raf karesini gezinmeye bağlayan sarmalayıcı.
+///
+/// `Navigator` ortamı `contextMenu` içinden de okunabilsin diye ayrı bir
+/// görünüm: menü, kendisini taşıyan görünümün ortamını devralıyor.
+private struct NavigationLinkButton: View {
     let entry: LibraryEntry
-    let onRemove: () -> Void
+    let width: CGFloat
     @Environment(\.navigator) private var navigator
-    private let coverWidth: CGFloat = 56
 
     var body: some View {
-        Button { navigator.navigate(to: BooksDestinations.entryDetail(entry)) } label: {
-            HStack(spacing: 16) {
-                RemoteBookCover(url: entry.book.coverURL, width: coverWidth, height: coverWidth * 1.5,
-                                contentMode: .fit, fallbackTitle: entry.book.title, fallbackAuthor: entry.book.author)
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(entry.book.title).font(.system(.headline, design: .serif)).lineLimit(3)
-                    Text(entry.book.author).font(.caption).foregroundStyle(ReadingStyle.secondary).lineLimit(2)
-                    Label(entry.readingStatus.titleKey, systemImage: entry.readingStatus.systemImage)
-                        .font(.caption2.weight(.medium)).foregroundStyle(ReadingStyle.accent)
-                    if entry.readingStatus == .finished, let total = entry.effectivePageCount {
-                        Text("\(total) of \(total) pages")
-                            .font(.caption).foregroundStyle(ReadingStyle.secondary)
-                    }
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right").font(.caption).foregroundStyle(ReadingStyle.secondary)
-                    .accessibilityHidden(true)
-            }
-            .readingCard(padding: 16)
-            .contentShape(.rect)
+        Button {
+            navigator.navigate(to: BooksDestinations.entryDetail(entry))
+        } label: {
+            ShelfBookTile(entry: entry, width: width)
         }
         .buttonStyle(.plain)
-        .contextMenu { Button("Remove from Library", role: .destructive, action: onRemove) }
-        .accessibilityElement(children: .combine)
-        .accessibilityAction(named: "Remove from Library", onRemove)
-    }
-}
-
-private struct NowReadingCard: View {
-    let entry: LibraryEntry
-    @Environment(\.navigator) private var navigator
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Button { navigator.navigate(to: BooksDestinations.entryDetail(entry)) } label: {
-                let layout = dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 20)) : AnyLayout(HStackLayout(alignment: .center, spacing: 22))
-                layout {
-                    RemoteBookCover(url: entry.book.coverURL, width: 80, height: 120, contentMode: .fit,
-                                    fallbackTitle: entry.book.title, fallbackAuthor: entry.book.author)
-                        .shadow(color: .black.opacity(0.15), radius: 9, x: 0, y: 6)
-                    VStack(alignment: .leading, spacing: 10) {
-                        ReadingEyebrow(title: "NOW READING")
-                        Text(entry.book.title).font(ReadingStyle.title(.title2)).lineLimit(3)
-                        Text(entry.book.author).font(.subheadline).foregroundStyle(ReadingStyle.secondary).lineLimit(2)
-                        HStack(spacing: 4) {
-                            Text("Book details")
-                            Image(systemName: "arrow.up.right").accessibilityHidden(true)
-                        }
-                        .font(.caption.weight(.medium)).foregroundStyle(ReadingStyle.accent)
-                        .padding(.top, 2)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-            ReadingProgressView(entry: entry)
-            Button { navigator.navigate(to: BooksDestinations.readingSession(entry)) } label: {
-                Label("Continue reading", systemImage: "play.fill")
-            }
-            .buttonStyle(ReadingButtonStyle())
-        }
-        .padding(20)
-        .background(ReadingStyle.sage, in: .rect(cornerRadius: 26))
     }
 }

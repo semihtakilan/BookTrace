@@ -10,12 +10,17 @@ import Models
 import Observation
 
 /// Profil ekranında listelenen bir okuma oturumu — hangi kitaba ait olduğuyla birlikte.
+///
+/// Kitabın kendisi taşınıyor, yalnızca başlığı değil: listede kapak da
+/// gösteriliyor ve bir kitabı kapağından tanımak başlığını okumaktan hızlı.
 struct RecentReadingSession: Identifiable {
     let id: String
-    let bookTitle: String
+    let book: BookReference
     let startDate: Date
     let durationSeconds: Int
     let pagesRead: Int
+
+    var bookTitle: String { book.title }
 }
 
 struct ReadingDay: Identifiable {
@@ -63,6 +68,9 @@ final class ProfileViewModel {
     private(set) var recentSessions: [RecentReadingSession] = []
     private(set) var recentDays: [ReadingDay] = []
 
+    /// Üst üste okunan gün sayısı — kütüphane sekmesindeki şeridin aynısı.
+    private(set) var streakDays = 0
+
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
 
@@ -100,6 +108,7 @@ final class ProfileViewModel {
         }
         estimatedRemainingSeconds = makeEstimatedRemainingSeconds()
 
+        streakDays = ReadingStreak.current(from: allSessions, now: now, calendar: calendar)
         statusBreakdown = makeStatusBreakdown()
         ownershipBreakdown = makeOwnershipBreakdown()
         recentSessions = makeRecentSessions()
@@ -152,7 +161,7 @@ final class ProfileViewModel {
                 entry.readingSessions.map {
                     RecentReadingSession(
                         id: $0.id,
-                        bookTitle: entry.book.title,
+                        book: entry.book,
                         startDate: $0.startDate,
                         durationSeconds: $0.durationSeconds,
                         pagesRead: $0.pagesRead

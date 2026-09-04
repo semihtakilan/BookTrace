@@ -1,6 +1,6 @@
 # BookTrace — Reading experience review
 
-The follow-up [Library and Discover refinement](Iteration2/Review.md) contains the latest library grouping, completed-book fix, discovery design, screenshots, and validation. The notes below document the initial design pass.
+The latest pass, [Every book brings its own light](Iteration3/Review.md), covers cover-derived colour, genre ambience in Reading Mode, the cover-first library, the page dial and session celebrations. Before that, [Library and Discover refinement](Iteration2/Review.md) covers library grouping, the completed-book fix and the discovery design. The notes below document the initial design pass.
 
 ## Direction
 

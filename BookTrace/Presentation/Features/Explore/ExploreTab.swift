@@ -21,9 +21,6 @@ private struct ExploreContentView: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    ReadingPageHeader(eyebrow: "THE READING ROOM", title: "Discover",
-                                      subtitle: "Find a story that stays with you.")
-                        .padding(.horizontal, 24)
                     HStack(spacing: 10) {
                         ReadingSearchField(text: $viewModel.searchText, prompt: "Title, author or ISBN")
                         Button { isPresentingScanner = true } label: {
@@ -33,15 +30,15 @@ private struct ExploreContentView: View {
                         }
                         .accessibilityLabel("Scan barcode")
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 20)
                     if viewModel.isShowingSearchResults {
-                        searchResults.padding(.horizontal, 24)
+                        searchResults.padding(.horizontal, 20)
                     } else {
                         discoveryContent(width: min(geometry.size.width, 840))
                     }
                 }
-                .padding(.top, 14)
-                .padding(.bottom, 32)
+                .padding(.top, 8)
+                .padding(.bottom, 36)
                 .frame(maxWidth: 840)
                 .frame(maxWidth: .infinity)
             }
@@ -49,12 +46,7 @@ private struct ExploreContentView: View {
         .scrollDismissesKeyboard(.interactively)
         .readingBackground()
         .navigationTitle("Discover")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text(verbatim: "BookTrace").font(.system(.headline, design: .serif))
-            }
-        }
+        .navigationBarTitleDisplayMode(.large)
         .task(id: viewModel.searchText) {
             guard viewModel.isShowingSearchResults else {
                 viewModel.clearSearch()
@@ -105,17 +97,17 @@ private struct ExploreContentView: View {
                         }
                         .accessibilityLabel("Surprise me")
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 20)
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(alignment: .top, spacing: 12) {
+                        HStack(alignment: .top, spacing: 14) {
                             ForEach(viewModel.spotlights) { spotlight in
-                                DiscoverSpotlightCard(spotlight: spotlight, width: min(width - 64, 360))
+                                DiscoverSpotlightCard(spotlight: spotlight, width: min(width - 56, 380))
                             }
                         }
                         .scrollTargetLayout()
-                        .padding(.horizontal, 24)
                     }
                     .scrollTargetBehavior(.viewAligned)
+                    .contentMargins(.horizontal, 20, for: .scrollContent)
                 }
             }
 
@@ -129,7 +121,7 @@ private struct ExploreContentView: View {
                     }
                 }
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, 20)
 
             if !viewModel.shortReads.isEmpty {
                 DiscoverBookShelf(title: "Small books, big worlds", subtitle: "250 pages or fewer",

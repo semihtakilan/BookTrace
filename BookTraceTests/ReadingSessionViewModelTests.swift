@@ -130,6 +130,51 @@ struct ReadingSessionViewModelTests {
         #expect(viewModel.isRunning)
     }
 
+    @Test func aSavedSessionWaitsForItsCelebrationBeforeTheScreenCloses() {
+        let (viewModel, _) = makeViewModel()
+        viewModel.start()
+        viewModel.pagesReadText = "30"
+
+        viewModel.save()
+
+        // Kayıt tamam ama ekran hemen kapanmıyor: kutlanacak bir şey var.
+        #expect(viewModel.didSave)
+        #expect(viewModel.outcome == .firstSession)
+        #expect(!viewModel.isReadyToDismiss)
+
+        viewModel.acknowledgeOutcome()
+        #expect(viewModel.isReadyToDismiss)
+    }
+
+    @Test func aSessionWithNothingToCelebrateClosesStraightAway() {
+        // Kitabın yarısı zaten okunmuş ve bu ilk oturum değil: eşik geçilmiyor.
+        let entry = makeEntry(pageCount: 100, currentPage: 60, sessions: [
+            ReadingSession(id: "s0", startDate: Date(), durationSeconds: 600, pagesRead: 60)
+        ])
+        let (viewModel, _) = makeViewModel(entry: entry)
+        viewModel.start()
+        viewModel.pagesReadText = "5"
+
+        viewModel.save()
+
+        #expect(viewModel.outcome == nil)
+        #expect(viewModel.isReadyToDismiss)
+    }
+
+    @Test func eachElapsedThresholdIsAnnouncedOnce() {
+        #expect(ReadingSessionViewModel.milestone(atElapsed: 4 * 60, after: 0) == nil)
+        #expect(ReadingSessionViewModel.milestone(atElapsed: 5 * 60, after: 0) == 5)
+        // Beşinci dakika duyurulduktan sonra altıncı dakika bir olay değil.
+        #expect(ReadingSessionViewModel.milestone(atElapsed: 6 * 60, after: 5) == nil)
+        #expect(ReadingSessionViewModel.milestone(atElapsed: 10 * 60, after: 5) == 10)
+    }
+
+    @Test func aLongBackgroundGapAnnouncesOnlyTheHighestThreshold() {
+        // Uygulama arka planda kalıp geri döndüğünde sayaç sıçrıyor; aradaki
+        // bütün eşikler için üst üste bildirim göstermek anlamsız.
+        #expect(ReadingSessionViewModel.milestone(atElapsed: 47 * 60, after: 0) == 45)
+    }
+
     @Test func theTimerStaysStoppedOnceTheSessionIsSaved() {
         let (viewModel, _) = makeViewModel()
         viewModel.start()

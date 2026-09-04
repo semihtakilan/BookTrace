@@ -16,6 +16,9 @@ struct RemoteBookCover: View {
     let contentMode: SwiftUI.ContentMode
     let fallbackTitle: String?
     let fallbackAuthor: String?
+    /// Kapağın kırpıldığı biçim. `BookVolumeView` sırt tarafı keskin, dış kenarı
+    /// yuvarlak kendi biçimini veriyor.
+    let shape: AnyShape
 
     init(
         url: URL?,
@@ -23,7 +26,8 @@ struct RemoteBookCover: View {
         height: CGFloat,
         contentMode: SwiftUI.ContentMode,
         fallbackTitle: String? = nil,
-        fallbackAuthor: String? = nil
+        fallbackAuthor: String? = nil,
+        shape: AnyShape = AnyShape(RoundedRectangle(cornerRadius: 6))
     ) {
         self.url = url
         self.width = width
@@ -31,6 +35,7 @@ struct RemoteBookCover: View {
         self.contentMode = contentMode
         self.fallbackTitle = fallbackTitle
         self.fallbackAuthor = fallbackAuthor
+        self.shape = shape
     }
 
     var body: some View {
@@ -46,7 +51,8 @@ struct RemoteBookCover: View {
             }
         }
         .frame(width: width, height: height)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .clipped()
+        .clipShape(shape)
         // Kapak dekoratif: başlık ve yazar her kullanım yerinde zaten metin
         // olarak yanında duruyor. Görsel yedeği de aynı metni çizdiği için
         // gizlenmezse VoiceOver başlığı iki kez okur.

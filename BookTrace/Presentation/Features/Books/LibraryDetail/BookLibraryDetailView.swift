@@ -48,21 +48,27 @@ private struct BookLibraryDetailContent: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 header
-                actionButtons
-                progressSection
-                if !entry.categories.isEmpty { categoriesSection }
-                sessionsSection
-                if let description = entry.book.description, !description.isEmpty {
-                    aboutSection(description)
+                // Başlık tam genişlikte; aşağıdaki bölümler kendi kenar
+                // boşluğunu taşıyor.
+                VStack(alignment: .leading, spacing: 24) {
+                    actionButtons
+                    progressSection
+                    if !entry.categories.isEmpty { categoriesSection }
+                    sessionsSection
+                    if let description = entry.book.description, !description.isEmpty {
+                        aboutSection(description)
+                    }
+                    removeButton
                 }
-                removeButton
+                .padding(.horizontal, 20)
             }
-            .padding(24)
+            .padding(.bottom, 24)
             .frame(maxWidth: 760).frame(maxWidth: .infinity)
         }
         .readingBackground()
-        .navigationTitle("Your book")
+        .navigationTitle(entry.book.title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -76,7 +82,7 @@ private struct BookLibraryDetailContent: View {
                 Label("Start reading", systemImage: "play.fill")
             }
             .buttonStyle(ReadingButtonStyle())
-            .padding(.horizontal, 24).padding(.vertical, 12)
+            .padding(.horizontal, 20).padding(.vertical, 12)
             .frame(maxWidth: 760).frame(maxWidth: .infinity)
             .background(ReadingStyle.background)
         }
@@ -111,8 +117,8 @@ private struct BookLibraryDetailContent: View {
     // MARK: - Bölümler
 
     private var header: some View {
-        BookIdentityHeader(book: entry.book)
-            .background(ReadingStyle.sage.opacity(0.55), in: .rect(cornerRadius: 28))
+        BookHeroHeader(book: entry.book, progress: entry.progressFraction)
+            .bookAtmosphere(entry.book)
     }
 
     private var actionButtons: some View {

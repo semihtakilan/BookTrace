@@ -21,58 +21,64 @@ private struct BookDetailContent: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                BookIdentityHeader(book: book)
-                    .background(ReadingStyle.sage.opacity(0.55), in: .rect(cornerRadius: 28))
-                if viewModel.isInLibrary {
-                    HStack(spacing: 10) {
-                        Image(systemName: "checkmark.circle.fill")
-                        Text("Already in your library").font(.subheadline.weight(.medium))
-                        Spacer(minLength: 0)
-                        Button("Library") { routeManager.selectedTab = .books }
-                            .font(.subheadline.weight(.semibold)).frame(minHeight: 44)
+            VStack(alignment: .leading, spacing: 26) {
+                BookHeroHeader(book: book, progress: nil)
+                    .bookAtmosphere(book)
+                // Kapak başlığı ekranın iki kenarına da değiyor; aşağıdaki
+                // bölümler kendi kenar boşluğunu taşıyor.
+                VStack(alignment: .leading, spacing: 26) {
+                    if viewModel.isInLibrary {
+                        HStack(spacing: 10) {
+                            Image(systemName: "checkmark.circle.fill")
+                            Text("Already in your library").font(.subheadline.weight(.medium))
+                            Spacer(minLength: 0)
+                            Button("Library") { routeManager.selectedTab = .books }
+                                .font(.subheadline.weight(.semibold)).frame(minHeight: 44)
+                        }
+                        .foregroundStyle(ReadingStyle.accent)
                     }
-                    .foregroundStyle(ReadingStyle.accent)
-                }
-                if let description = book.description, !description.isEmpty {
-                    VStack(alignment: .leading, spacing: 14) {
-                        ReadingSectionHeading(title: "Inside the book")
-                        Text(description)
-                            .font(.body).lineSpacing(5)
-                            .foregroundStyle(ReadingStyle.secondary)
-                            .lineLimit(!isDescriptionExpanded && description.count > 250 ? 6 : nil)
-                        if description.count > 250 {
-                            Button(isDescriptionExpanded ? "Read less" : "Read more") {
-                                isDescriptionExpanded.toggle()
+                    if let description = book.description, !description.isEmpty {
+                        VStack(alignment: .leading, spacing: 14) {
+                            ReadingSectionHeading(title: "Inside the book")
+                            Text(description)
+                                .font(.body).lineSpacing(5)
+                                .foregroundStyle(ReadingStyle.secondary)
+                                .lineLimit(!isDescriptionExpanded && description.count > 250 ? 6 : nil)
+                            if description.count > 250 {
+                                Button(isDescriptionExpanded ? "Read less" : "Read more") {
+                                    isDescriptionExpanded.toggle()
+                                }
+                                .font(.subheadline.weight(.semibold))
+                                .frame(minHeight: 44)
                             }
-                            .font(.subheadline.weight(.semibold))
-                            .frame(minHeight: 44)
                         }
                     }
-                }
-                if !book.subjects.isEmpty {
-                    VStack(alignment: .leading, spacing: 14) {
-                        ReadingSectionHeading(title: "Subjects")
-                        FlowingTags(names: book.subjects)
+                    if !book.subjects.isEmpty {
+                        VStack(alignment: .leading, spacing: 14) {
+                            ReadingSectionHeading(title: "Subjects")
+                            FlowingTags(names: book.subjects)
+                        }
+                    }
+                    if book.pageCount != nil || book.publicationYear != nil || book.isbn13 != nil {
+                        metadata
                     }
                 }
-                if book.pageCount != nil || book.publicationYear != nil || book.isbn13 != nil {
-                    metadata
-                }
+                .padding(.horizontal, 20)
             }
-            .padding(24)
+            .padding(.bottom, 20)
             .frame(maxWidth: 760).frame(maxWidth: .infinity)
         }
         .readingBackground()
-        .navigationTitle("Book details")
+        .navigationTitle(book.title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .safeAreaInset(edge: .bottom) {
             Button { viewModel.presentForm() } label: {
                 Label(viewModel.primaryActionTitle, systemImage: viewModel.isInLibrary ? "pencil" : "plus")
             }
             .buttonStyle(ReadingButtonStyle())
-            .padding(.horizontal, 24).padding(.vertical, 12)
+            .padding(.horizontal, 20).padding(.vertical, 12)
             .frame(maxWidth: 760).frame(maxWidth: .infinity)
             .background(ReadingStyle.background)
         }

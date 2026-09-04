@@ -35,59 +35,127 @@ extension BookSubject {
         }
     }
 
-    var discoveryTint: Color {
-        switch query {
-        case "fiction", "biography": ReadingStyle.gold
-        default: ReadingStyle.accent
-        }
+    /// Konunun havası — kartların rengi ve dokusu buradan geliyor.
+    var ambience: BookAmbience {
+        BookAmbience.resolve(subjects: [query], title: displayName)
     }
 }
+
+// MARK: - Kitap karesi
+
+/// Keşif raflarındaki tek kitap.
+///
+/// Eskiden kapak, açık yeşil bir kutunun içinde duruyordu; altı rafta yan yana
+/// duran kutular kapakların kendisinden daha görünürdü. Artık kutu yok, kitap
+/// var.
+struct DiscoverBookCell: View {
+    let book: BookReference
+    let width: CGFloat
+
+    var body: some View {
+        DiscoverBookCellBody(book: book, width: width)
+            .bookAtmosphere(book)
+    }
+}
+
+private struct DiscoverBookCellBody: View {
+    let book: BookReference
+    let width: CGFloat
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            BookVolumeView(book: book, height: BookVolumeView.height(fittingWidth: width), progress: nil)
+
+            Text(book.title)
+                .font(.system(.subheadline, design: .serif, weight: .medium))
+                .foregroundStyle(ReadingStyle.ink)
+                .modifier(BookTextLines(count: 3))
+
+            if !book.author.isEmpty {
+                Text(book.author)
+                    .font(.caption2)
+                    .foregroundStyle(ReadingStyle.secondary)
+                    .modifier(BookTextLines(count: 2))
+            }
+        }
+        .frame(width: width, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+// MARK: - Öne çıkan kitap
 
 struct DiscoverSpotlightCard: View {
     let spotlight: DiscoverSpotlight
     let width: CGFloat
+
+    var body: some View {
+        DiscoverSpotlightCardBody(spotlight: spotlight, width: width)
+            .bookAtmosphere(spotlight.book)
+    }
+}
+
+private struct DiscoverSpotlightCardBody: View {
+    let spotlight: DiscoverSpotlight
+    let width: CGFloat
+
     @Environment(\.navigator) private var navigator
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.bookPalette) private var palette
+    @Environment(\.colorScheme) private var colorScheme
+
     private var book: BookReference { spotlight.book }
+    private var ambience: BookAmbience { spotlight.subject.ambience }
 
     var body: some View {
         Button { navigator.navigate(to: ExploreDestinations.bookDetail(book)) } label: {
-            VStack(alignment: .leading, spacing: 18) {
-                Label(LocalizedStringKey(spotlight.subject.displayName), systemImage: spotlight.subject.systemImage)
-                    .font(.caption.weight(.semibold)).foregroundStyle(ReadingStyle.accent)
+            VStack(alignment: .leading, spacing: 16) {
+                Label(LocalizedStringKey(spotlight.subject.displayName), systemImage: ambience.systemImage)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(palette.accent(colorScheme))
+
                 let layout = dynamicTypeSize.isAccessibilitySize
-                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 18))
-                    : AnyLayout(HStackLayout(alignment: .center, spacing: 18))
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 16))
+                    : AnyLayout(HStackLayout(alignment: .top, spacing: 18))
                 layout {
-                    RemoteBookCover(url: book.coverURL, width: 88, height: 132, contentMode: .fit,
-                                    fallbackTitle: book.title, fallbackAuthor: book.author)
-                        .shadow(color: .black.opacity(0.18), radius: 8, x: 0, y: 6)
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(book.title).font(ReadingStyle.title(.title3))
+                    BookVolumeView(book: book, height: 140, progress: nil)
+
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text(book.title)
+                            .font(.system(.title3, design: .serif, weight: .medium))
+                            .foregroundStyle(ReadingStyle.ink)
                             .modifier(BookTextLines(count: 3))
-                        Text(book.author).font(.caption).foregroundStyle(ReadingStyle.secondary)
+                        Text(book.author)
+                            .font(.caption)
+                            .foregroundStyle(ReadingStyle.secondary)
                             .lineLimit(2, reservesSpace: true)
                         if let count = book.pageCount, count > 0 {
-                            Text("\(count) pages").font(.caption2).foregroundStyle(ReadingStyle.secondary)
+                            Text("\(count) pages")
+                                .font(.caption2)
+                                .foregroundStyle(ReadingStyle.secondary)
                         }
+                        Spacer(minLength: 0)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+
                 HStack {
                     Text("Take a closer look").font(.caption.weight(.semibold))
                     Spacer()
                     Image(systemName: "arrow.up.right").font(.caption.weight(.semibold))
                 }
-                .foregroundStyle(ReadingStyle.accent)
-                .padding(.top, 4)
+                .foregroundStyle(palette.accent(colorScheme))
             }
             .padding(20)
             .frame(width: width, alignment: .leading)
-            .background(ReadingStyle.sage, in: .rect(cornerRadius: 24))
-            .overlay(alignment: .topTrailing) {
-                Image(systemName: "bookmark.fill").font(.title2)
-                    .foregroundStyle(spotlight.subject.discoveryTint.opacity(0.35))
-                    .padding(.trailing, 20).accessibilityHidden(true)
+            .background {
+                RoundedRectangle(cornerRadius: 26)
+                    .fill(LinearGradient(colors: [palette.wash(colorScheme), palette.washEdge(colorScheme)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 26)
+                    .strokeBorder(palette.accent(colorScheme).opacity(0.16), lineWidth: 1)
             }
             .contentShape(.rect)
         }
@@ -96,32 +164,48 @@ struct DiscoverSpotlightCard: View {
     }
 }
 
+// MARK: - Konu karesi
+
+/// Altı konu kartı. Her biri kendi rengiyle çizilir; eskiden altısı da aynı
+/// beyaz kutuydu ve göz aralarında bir fark bulamıyordu.
 struct DiscoverSubjectTile: View {
     let subject: BookSubject
     let action: () -> Void
 
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var palette: BookPalette { subject.ambience.signaturePalette }
+
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Image(systemName: subject.systemImage).font(.title3)
-                        .foregroundStyle(subject.discoveryTint)
-                    Spacer(minLength: 0)
-                    Image(systemName: "arrow.up.right").font(.caption)
-                        .foregroundStyle(ReadingStyle.secondary)
-                }
-                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 14) {
+                Image(systemName: subject.ambience.systemImage)
+                    .font(.title3)
+                    .foregroundStyle(palette.accent(colorScheme))
+                    .accessibilityHidden(true)
+
                 Text(LocalizedStringKey(subject.displayName))
-                    .font(.subheadline.weight(.semibold)).fixedSize(horizontal: false, vertical: true)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(ReadingStyle.ink)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
             .padding(16)
-            .background(ReadingStyle.surface, in: .rect(cornerRadius: 18))
-            .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(ReadingStyle.line, lineWidth: 0.7) }
+            .background {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(LinearGradient(colors: [palette.wash(colorScheme), palette.washEdge(colorScheme)],
+                                         startPoint: .topLeading, endPoint: .bottomTrailing))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 20)
+                    .strokeBorder(palette.accent(colorScheme).opacity(0.18), lineWidth: 1)
+            }
         }
         .buttonStyle(.plain)
     }
 }
+
+// MARK: - Raflar
 
 struct DiscoverBookShelf: View {
     let title: LocalizedStringKey
@@ -129,8 +213,10 @@ struct DiscoverBookShelf: View {
     let books: [BookReference]
     let width: CGFloat
     let onSeeAll: () -> Void
+
     @Environment(\.navigator) private var navigator
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -145,20 +231,29 @@ struct DiscoverBookShelf: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Button("See all", action: onSeeAll)
                     .font(.caption.weight(.semibold)).frame(minHeight: 44)
-                    .accessibilityLabel(Text("See all") + Text(" ") + Text(title))
+                    .accessibilityLabel(Text("See all") + Text(verbatim: " ") + Text(title))
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, 20)
+
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(alignment: .top, spacing: 16) {
+                LazyHStack(alignment: .top, spacing: 18) {
                     ForEach(books) { book in
                         Button { navigator.navigate(to: ExploreDestinations.bookDetail(book)) } label: {
-                            BookCoverCell(title: book.title, author: book.author, coverURL: book.coverURL,
-                                          width: dynamicTypeSize.isAccessibilitySize ? 200 : min(148, (width - 64) / 2))
+                            DiscoverBookCell(book: book,
+                                             width: dynamicTypeSize.isAccessibilitySize ? 190 : min(132, (width - 56) / 2.6))
                         }
                         .buttonStyle(.plain)
+                        // Kenara yaklaşan kitaplar hafifçe küçülür; rafın
+                        // devam ettiği kaydırmadan önce de anlaşılıyor.
+                        .scrollTransition(reduceMotion ? .identity : .interactive) { content, phase in
+                            content
+                                .scaleEffect(phase.isIdentity ? 1 : 0.93)
+                                .opacity(phase.isIdentity ? 1 : 0.7)
+                        }
                     }
                 }
-                .padding(.horizontal, 24)
+                .scrollTargetLayout()
+                .padding(.horizontal, 20)
                 .padding(.bottom, 8)
             }
         }
@@ -182,10 +277,12 @@ struct DiscoverSubjectShelf: View {
                 ReadingSectionHeading(title: LocalizedStringKey(shelf.subject.displayName))
                 DiscoverShelfState(state: shelf.state, onRetry: onRetry)
             }
-            .padding(.horizontal, 24)
+            .padding(.horizontal, 20)
         }
     }
 }
+
+// MARK: - Koleksiyon ekranı
 
 struct DiscoverCollectionScreen: View {
     let collection: DiscoverCollection
@@ -215,23 +312,24 @@ private struct DiscoverCollectionView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let columns = dynamicTypeSize.isAccessibilitySize ? 1 : (geometry.size.width > 650 ? 3 : 2)
-            let tileWidth = (min(geometry.size.width, 840) - 48 - CGFloat(columns - 1) * 20) / CGFloat(columns)
+            let columns = dynamicTypeSize.isAccessibilitySize ? 2 : (geometry.size.width > 650 ? 4 : 3)
+            let spacing: CGFloat = 16
+            let tileWidth = (min(geometry.size.width, 840) - 40 - CGFloat(columns - 1) * spacing) / CGFloat(columns)
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(collection.title).font(ReadingStyle.title(.largeTitle)).accessibilityAddTraits(.isHeader)
+                VStack(alignment: .leading, spacing: 22) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text(collection.subtitle).font(.subheadline).foregroundStyle(ReadingStyle.secondary)
                         if !books.isEmpty {
                             Text("\(books.count) books").font(.caption.monospacedDigit()).foregroundStyle(ReadingStyle.secondary)
                         }
                     }
                     if !books.isEmpty {
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), alignment: .top), count: columns),
-                                  alignment: .leading, spacing: 28) {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: spacing, alignment: .top),
+                                                 count: columns),
+                                  alignment: .leading, spacing: 26) {
                             ForEach(books) { book in
                                 Button { navigator.navigate(to: ExploreDestinations.bookDetail(book)) } label: {
-                                    BookCoverCell(title: book.title, author: book.author, coverURL: book.coverURL, width: tileWidth)
+                                    DiscoverBookCell(book: book, width: tileWidth)
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -242,13 +340,14 @@ private struct DiscoverCollectionView: View {
                         Text("Nothing here right now.").foregroundStyle(ReadingStyle.secondary)
                     }
                 }
-                .padding(24)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
                 .frame(maxWidth: 840).frame(maxWidth: .infinity)
             }
         }
         .readingBackground()
         .navigationTitle(collection.title)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
         .toolbar(.hidden, for: .tabBar)
     }
 }

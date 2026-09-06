@@ -13,6 +13,27 @@ import Testing
 
 @MainActor
 struct BookDetailTransportTests {
+    @Test(arguments: ["ol:/works/OL1W", "gb:dune"])
+    func googleDetailEnrichmentPreservesTheSelectedCover(bookID: String) async throws {
+        let selectedCover = URL(string: "https://covers.openlibrary.org/b/id/123-M.jpg")!
+        let book = BookReference(id: bookID, title: "Dune", authors: ["Frank Herbert"], coverURL: selectedCover)
+
+        let detail = try await GoogleBooksService(networkService: DetailSearchNetwork()).detail(for: book)
+
+        #expect(detail.coverURL == selectedCover)
+        #expect(detail.description == "A desert planet.")
+        #expect(detail.id == book.id)
+    }
+
+    @Test func googleDetailEnrichmentCanSupplyAMissingCover() async throws {
+        let book = BookReference(id: "ol:/works/OL1W", title: "Dune", authors: ["Frank Herbert"])
+
+        let detail = try await GoogleBooksService(networkService: DetailSearchNetwork()).detail(for: book)
+
+        #expect(detail.coverURL == URL(string: "https://books.google.com/alternate.jpg"))
+        #expect(detail.description == "A desert planet.")
+    }
+
     @Test func detailRequestsHaveAShortTimeoutAndNoTransportRetries() throws {
         let work = OpenLibraryWorkEndpoint(workKey: "/works/OL1W")
         let volume = GoogleBooksVolumeEndpoint(volumeID: "volume-1", apiKey: nil)
@@ -123,10 +144,13 @@ private actor DetailSearchNetwork: NetworkServiceProtocol {
         query = endpoint.queryParameters?["q"]
         maximumAttempts = endpoint.maximumAttempts
         timeout = endpoint.timeout
-        return try JSONDecoder().decode(T.Response.self, from: Data(#"""
-        {"items":[{"id":"dune","volumeInfo":{
-          "title":"Dune","authors":["Frank Herbert"],"description":"A desert planet."
-        }}]}
-        """#.utf8))
+        let volume = #"""
+        {"id":"dune","volumeInfo":{
+          "title":"Dune","authors":["Frank Herbert"],"description":"A desert planet.",
+          "imageLinks":{"thumbnail":"https://books.google.com/alternate.jpg"}
+        }}
+        """#
+        let json = endpoint is GoogleBooksVolumeEndpoint ? volume : "{\"items\":[\(volume)]}"
+        return try JSONDecoder().decode(T.Response.self, from: Data(json.utf8))
     }
 }

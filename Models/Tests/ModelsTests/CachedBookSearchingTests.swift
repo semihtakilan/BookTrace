@@ -11,6 +11,22 @@ import Testing
 
 @Suite struct CachedBookSearchingTests {
 
+    @Test func aPreviouslyCachedAlternateCoverDoesNotReplaceTheSelectedCover() async throws {
+        let selectedCover = URL(string: "https://covers.openlibrary.org/b/id/123-M.jpg")!
+        let alternateCover = URL(string: "https://books.google.com/alternate.jpg")!
+        let book = BookReference(id: "ol:/works/1", title: "Dune", coverURL: selectedCover)
+        let remote = BookSearchingMock()
+        let store = BookCacheStoreMock()
+        await store.merge(BookReference(id: book.id, title: book.title, coverURL: alternateCover,
+                                        description: "A cached description from Google."))
+
+        let detail = try await CachedBookSearching(remote: remote, store: store).detail(for: book)
+
+        #expect(detail.coverURL == selectedCover)
+        #expect(detail.description == "A cached description from Google.")
+        #expect(await remote.detailCallCount == 0)
+    }
+
     @Test func aCachedQueryIsAnsweredWithoutTouchingTheNetwork() async throws {
         let remote = BookSearchingMock()
         let store = BookCacheStoreMock()
@@ -329,6 +345,20 @@ private actor ControlledCachedDetailFetching: BookSearching, BookDetailFetching 
 }
 
 @Suite struct BookReferenceMergingTests {
+
+    @Test func anEnrichmentKeepsTheCoverAndFillsItOnlyWhenMissing() {
+        let selectedCover = URL(string: "https://covers.openlibrary.org/b/id/123-M.jpg")!
+        let alternateCover = URL(string: "https://books.google.com/alternate.jpg")!
+        let detail = BookReference(id: "gb:1", title: "Dune", coverURL: alternateCover,
+                                   description: "A desert planet.")
+        let selected = BookReference(id: "ol:/works/1", title: "Dune", coverURL: selectedCover)
+        let coverless = BookReference(id: "ol:/works/1", title: "Dune")
+
+        #expect(selected.merging(detail).coverURL == selectedCover)
+        #expect(selected.merging(detail).description == detail.description)
+        #expect(selected.merging(detail).id == selected.id)
+        #expect(coverless.merging(detail).coverURL == alternateCover)
+    }
 
     @Test func aRicherRecordFillsTheGapsOfAPoorerOne() {
         let list = BookReference(id: "1", title: "Dune", authors: ["Herbert"], pageCount: 412)

@@ -73,12 +73,14 @@ public struct BookReference: Identifiable, Hashable, Sendable, Codable {
     /// sırasıyla geldiğinde ikincisi birincinin üstüne yazılırsa kullanıcı
     /// gördüğü kapağı ya da sayfa sayısını kaybeder. Açıklamada uzun olan
     /// kazanır — kısa olan çoğu zaman kırpılmış bir özet.
+    /// Mevcut kapak korunur; diğer kaynağın kapağı yalnızca kapak eksikse
+    /// kullanılır. Böylece açıklama yüklenirken kitabın görseli değişmez.
     public func merging(_ other: BookReference) -> BookReference {
         BookReference(
             id: id,
             title: other.title.isEmpty ? title : other.title,
             authors: other.authors.isEmpty ? authors : other.authors,
-            coverURL: other.coverURL ?? coverURL,
+            coverURL: coverURL ?? other.coverURL,
             pageCount: other.pageCount ?? pageCount,
             publishedDate: other.publishedDate ?? publishedDate,
             description: BookReference.richer(description, other.description),

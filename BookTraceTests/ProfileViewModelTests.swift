@@ -136,4 +136,42 @@ struct ProfileViewModelTests {
         #expect(viewModel.recentSessions.map(\.id) == ["s3", "s2", "s1", "s0"])
         #expect(viewModel.recentSessions.first?.bookTitle == "Anathem")
     }
+    @Test func readingHistoryKeepsEverySessionAndGroupsByLocalDay() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(secondsFromGMT: 3 * 3600))
+        let today = try #require(calendar.date(from: DateComponents(year: 2026, month: 9, day: 6)))
+        let yesterday = try #require(calendar.date(byAdding: .day, value: -1, to: today))
+        let sessions = (0..<7).map { index in
+            ReadingSession(id: "s\(index)", startDate: today.addingTimeInterval(Double(index) * 60),
+                           durationSeconds: 60, pagesRead: 2)
+        }
+        let viewModel = makeViewModel([
+            makeEntry(id: "today", sessions: sessions),
+            makeEntry(id: "yesterday", sessions: [
+                ReadingSession(id: "previous", startDate: yesterday.addingTimeInterval(86_399),
+                               durationSeconds: 90, pagesRead: 3)
+            ])
+        ])
+        viewModel.load(now: today.addingTimeInterval(3_600), calendar: calendar)
+
+        #expect(viewModel.recentSessions.count == 5)
+        #expect(viewModel.sessionHistory.count == 8)
+        #expect(viewModel.sessions(on: today, calendar: calendar).map(\.id) == ["s6", "s5", "s4", "s3", "s2", "s1", "s0"])
+        #expect(viewModel.historyDays(calendar: calendar).map(\.date) == [today, yesterday])
+        #expect(viewModel.historyDays(on: yesterday, calendar: calendar).first?.sessions.map(\.id) == ["previous"])
+        #expect(viewModel.recentDays.last?.pagesRead == 14)
+        #expect(viewModel.recentDays.last?.sessionCount == 7)
+    }
+
+    @Test func anEmptyDayDoesNotShowSessionsFromAnotherDay() throws {
+        let today = Date(timeIntervalSince1970: 1_700_000_000)
+        let tomorrow = try #require(Calendar.current.date(byAdding: .day, value: 1, to: today))
+        let viewModel = makeViewModel([
+            makeEntry(sessions: [ReadingSession(startDate: today, durationSeconds: 300, pagesRead: 4)])
+        ])
+
+        #expect(viewModel.sessions(on: tomorrow).isEmpty)
+        #expect(viewModel.historyDays(on: tomorrow).isEmpty)
+    }
+
 }

@@ -208,8 +208,9 @@ extension AmbienceField {
             let radius = size.width * (0.35 + 0.18 * noise(index, 7))
 
             context.fill(
-                Path(ellipseIn: CGRect(x: x - radius, y: y - radius * 0.55,
-                                       width: radius * 2, height: radius * 1.1)),
+                // Dairesel ışığı dar bir elipsle kesmek sisin kenarlarını
+                // sert şeritlere dönüştürür. Saydamlığa tüm yarıçapta ulaşsın.
+                Path(CGRect(origin: .zero, size: size)),
                 with: .radialGradient(
                     Gradient(colors: [palette.halo.opacity(0.16), .clear]),
                     center: CGPoint(x: x, y: y), startRadius: 0, endRadius: radius
@@ -234,12 +235,14 @@ extension AmbienceField {
         let sweep = (time * 0.05).truncatingRemainder(dividingBy: 2) - 0.5
         let bandCenter = size.height * sweep
         context.fill(
-            Path(CGRect(x: 0, y: bandCenter - size.height * 0.3,
-                        width: size.width, height: size.height * 0.6)),
+            // Paint the full canvas with a vertical falloff. A diagonal
+            // gradient clipped to a band left nonzero alpha on its horizontal
+            // edges, producing a visible seam across the reading room.
+            Path(CGRect(origin: .zero, size: size)),
             with: .linearGradient(
                 Gradient(colors: [.clear, palette.glow.opacity(0.10), .clear]),
                 startPoint: CGPoint(x: 0, y: bandCenter - size.height * 0.3),
-                endPoint: CGPoint(x: size.width, y: bandCenter + size.height * 0.3)
+                endPoint: CGPoint(x: 0, y: bandCenter + size.height * 0.3)
             )
         )
     }

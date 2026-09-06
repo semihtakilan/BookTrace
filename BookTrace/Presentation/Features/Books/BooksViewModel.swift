@@ -56,6 +56,10 @@ final class BooksViewModel {
     private(set) var nowReading: [LibraryEntry] = []
     /// Seçili gruplama ve sıralamaya göre hazırlanmış bölümler.
     private(set) var sections: [LibrarySection] = []
+    /// Etiket gruplaması aynı kitabı birkaç kez gösterebilir; sonuç sayısı tekildir.
+    private(set) var matchingCount = 0
+    private(set) var searchMatchCount = 0
+    private(set) var statusCounts: [ReadingStatus: Int] = [:]
 
     /// Üst üste okunan gün sayısı ve son bir haftanın günlük özeti.
     private(set) var streakDays = 0
@@ -63,7 +67,7 @@ final class BooksViewModel {
 
     var searchText = "" { didSet { guard searchText != oldValue else { return }; rebuild() } }
     var statusFilter: ReadingStatus? { didSet { guard statusFilter != oldValue else { return }; rebuild() } }
-    var grouping: LibraryGrouping = .status { didSet { guard grouping != oldValue else { return }; rebuild() } }
+    var grouping: LibraryGrouping = .all { didSet { guard grouping != oldValue else { return }; rebuild() } }
     var sort: LibrarySort = .recentlyAdded { didSet { guard sort != oldValue else { return }; rebuild() } }
 
     /// Silme onayı bekleyen kayıt. Silme geri alınamadığı için hiçbir yol
@@ -79,18 +83,44 @@ final class BooksViewModel {
     }
 
     var isEmpty: Bool { entries.isEmpty }
-    var shelfCount: Int { entries.count - nowReading.count }
-    static let shelfStatuses: [ReadingStatus] = [.toRead, .finished, .wishlist, .abandoned]
+    var shelfCount: Int { entries.count }
+    static let shelfStatuses: [ReadingStatus] = [.reading, .toRead, .finished, .wishlist, .abandoned]
+    var hasActiveFilters: Bool {
+        statusFilter != nil || !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     /// Kütüphane dolu ama arama hiçbir şey bulmadı.
-    var hasNoMatches: Bool { shelfCount > 0 && sections.isEmpty }
+    var hasNoMatches: Bool { !isEmpty && matchingCount == 0 }
 
-    /// Okunan kitaplar kalıcı olarak üstte; arama ve düzenleme aşağıdaki rafa ait.
-    var isShowingNowReading: Bool { !nowReading.isEmpty }
+    /// Aramada ve filtrelemede yalnızca eşleşen kitaplara odaklanılır.
+    var isShowingNowReading: Bool { !nowReading.isEmpty && !hasActiveFilters }
+
+    func count(for status: ReadingStatus) -> Int { statusCounts[status, default: 0] }
+
+    func clearFilters() {
+        searchText = ""
+        statusFilter = nil
+    }
+
+    func update(readingStatus: ReadingStatus, for entry: LibraryEntry) {
+        do {
+            guard var latest = try libraryRepository.entry(for: entry.id) else {
+                throw LocalLibraryRepositoryError.entryNotFound(entry.id)
+            }
+            latest.setReadingStatus(readingStatus)
+            try libraryRepository.update(latest)
+            load()
+        } catch {
+            self.error = UserFacingError(error)
+        }
+    }
 
     func load(now: Date = Date(), calendar: Calendar = .current) {
         do {
             entries = try libraryRepository.fetchEntries()
+            // Son kitap silindiğinde filtre denetimleri boş ekranla birlikte
+            // kaybolur. Eski seçim yeni eklenecek ilk kitabı gizlememeli.
+            if entries.isEmpty { clearFilters() }
             self.error = nil
         } catch {
             self.error = UserFacingError(error)
@@ -134,12 +164,22 @@ final class BooksViewModel {
     // her karede — sözlük kurulup sıralama tekrarlanırdı.
 
     private func rebuild() {
-        nowReading = sorted(entries.filter { $0.readingStatus == .reading })
-        sections = makeSections(from: sorted(filtered(entries.filter { $0.readingStatus != .reading })))
+        // Devam et kartları en son okunan kitaptan başlar; raf sıralaması bu
+        // kısayolun sırasını değiştirmez.
+        nowReading = entries.filter { $0.readingStatus == .reading }.sorted {
+            let left = $0.readingSessions.map(\.startDate).max() ?? $0.addedDate
+            let right = $1.readingSessions.map(\.startDate).max() ?? $1.addedDate
+            return left == right ? isBefore($0, $1) : left > right
+        }
+        let searchMatches = matchingSearch(entries)
+        searchMatchCount = searchMatches.count
+        statusCounts = Dictionary(grouping: searchMatches, by: \.readingStatus).mapValues(\.count)
+        let matches = searchMatches.filter { statusFilter == nil || $0.readingStatus == statusFilter }
+        matchingCount = matches.count
+        sections = makeSections(from: sorted(matches))
     }
 
-    private func filtered(_ entries: [LibraryEntry]) -> [LibraryEntry] {
-        let entries = entries.filter { statusFilter == nil || $0.readingStatus == statusFilter }
+    private func matchingSearch(_ entries: [LibraryEntry]) -> [LibraryEntry] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return entries }
 

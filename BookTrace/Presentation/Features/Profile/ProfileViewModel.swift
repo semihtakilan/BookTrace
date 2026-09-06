@@ -26,6 +26,14 @@ struct RecentReadingSession: Identifiable {
 struct ReadingDay: Identifiable {
     let date: Date
     let seconds: Int
+    let pagesRead: Int
+    let sessionCount: Int
+    var id: Date { date }
+}
+
+struct ReadingHistoryDay: Identifiable {
+    let date: Date
+    let sessions: [RecentReadingSession]
     var id: Date { date }
 }
 
@@ -66,6 +74,7 @@ final class ProfileViewModel {
     private(set) var statusBreakdown: [(status: ReadingStatus, count: Int)] = []
     private(set) var ownershipBreakdown: [(status: OwnershipStatus, count: Int)] = []
     private(set) var recentSessions: [RecentReadingSession] = []
+    private(set) var sessionHistory: [RecentReadingSession] = []
     private(set) var recentDays: [ReadingDay] = []
 
     /// Üst üste okunan gün sayısı — kütüphane sekmesindeki şeridin aynısı.
@@ -111,14 +120,19 @@ final class ProfileViewModel {
         streakDays = ReadingStreak.current(from: allSessions, now: now, calendar: calendar)
         statusBreakdown = makeStatusBreakdown()
         ownershipBreakdown = makeOwnershipBreakdown()
-        recentSessions = makeRecentSessions()
+        sessionHistory = makeSessionHistory()
+        recentSessions = Array(sessionHistory.prefix(5))
         // Bucket by local calendar days; never invent activity for empty dates.
         let today = calendar.startOfDay(for: now)
         recentDays = (-6...0).compactMap { offset in
             guard let date = calendar.date(byAdding: .day, value: offset, to: today) else { return nil }
-            let seconds = allSessions.filter { calendar.isDate($0.startDate, inSameDayAs: date) }
-                .reduce(0) { $0 + $1.durationSeconds }
-            return ReadingDay(date: date, seconds: seconds)
+            let sessions = allSessions.filter { calendar.isDate($0.startDate, inSameDayAs: date) }
+            return ReadingDay(
+                date: date,
+                seconds: sessions.reduce(0) { $0 + $1.durationSeconds },
+                pagesRead: sessions.reduce(0) { $0 + $1.pagesRead },
+                sessionCount: sessions.count
+            )
         }
     }
 
@@ -155,7 +169,17 @@ final class ProfileViewModel {
         }
     }
 
-    private func makeRecentSessions() -> [RecentReadingSession] {
+    func sessions(on day: Date, calendar: Calendar = .current) -> [RecentReadingSession] {
+        sessionHistory.filter { calendar.isDate($0.startDate, inSameDayAs: day) }
+    }
+
+    func historyDays(on day: Date? = nil, calendar: Calendar = .current) -> [ReadingHistoryDay] {
+        let sessions = day.map { self.sessions(on: $0, calendar: calendar) } ?? sessionHistory
+        let grouped = Dictionary(grouping: sessions) { calendar.startOfDay(for: $0.startDate) }
+        return grouped.keys.sorted(by: >).map { ReadingHistoryDay(date: $0, sessions: grouped[$0] ?? []) }
+    }
+
+    private func makeSessionHistory() -> [RecentReadingSession] {
         entries
             .flatMap { entry in
                 entry.readingSessions.map {
@@ -168,8 +192,9 @@ final class ProfileViewModel {
                     )
                 }
             }
-            .sorted { $0.startDate > $1.startDate }
-            .prefix(5)
-            .map { $0 }
+            .sorted {
+                if $0.startDate == $1.startDate { return $0.id < $1.id }
+                return $0.startDate > $1.startDate
+            }
     }
 }

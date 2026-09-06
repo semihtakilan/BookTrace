@@ -79,7 +79,7 @@ private struct BookLibraryDetailContent: View {
         .sheet(isPresented: $isEditingDetails) { LibraryDetailsEditor(book: entry.book) }
         .safeAreaInset(edge: .bottom) {
             Button { navigator.navigate(to: BooksDestinations.readingSession(entry)) } label: {
-                Label("Start reading", systemImage: "play.fill")
+                Label(readingActionTitle, systemImage: "play.fill")
             }
             .buttonStyle(ReadingButtonStyle())
             .padding(.horizontal, 20).padding(.vertical, 12)
@@ -91,6 +91,7 @@ private struct BookLibraryDetailContent: View {
                 .keyboardType(.numberPad)
             Button("Cancel", role: .cancel) {}
             Button("Save") { commitProgress() }
+                .disabled(viewModel.page(forProgressInput: progressInput) == nil)
         } message: {
             Text(progressFieldPrompt)
         }
@@ -177,7 +178,7 @@ private struct BookLibraryDetailContent: View {
             }
             .font(.subheadline)
             .frame(minHeight: 44)
-            .disabled(entry.effectivePageCount == nil)
+            .disabled(entry.progressType == .percentage && entry.effectivePageCount == nil)
             if entry.effectivePageCount == nil {
                 Button("Add a page count") { isEditingDetails = true }
                     .font(.subheadline.weight(.medium)).frame(minHeight: 44)
@@ -210,7 +211,7 @@ private struct BookLibraryDetailContent: View {
                     .font(.footnote)
                     .foregroundStyle(ReadingStyle.secondary)
             } else {
-                ForEach(entry.readingSessions.reversed()) { session in
+                ForEach(entry.readingSessions.sorted { $0.startDate > $1.startDate }) { session in
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(session.startDate, format: .dateTime.day().month().year().hour().minute())
@@ -266,9 +267,19 @@ private struct BookLibraryDetailContent: View {
 
     // MARK: - İlerleme girişi
 
+    private var readingActionTitle: LocalizedStringKey {
+        if entry.readingStatus == .finished { return "Track reading time" }
+        return entry.currentPage > 0 || !entry.readingSessions.isEmpty ? "Continue reading" : "Start reading"
+    }
+
     private var progressFieldPrompt: LocalizedStringKey {
         switch entry.progressType {
-        case .pages:      "Current page (0 to \(entry.effectivePageCount ?? 0))"
+        case .pages:
+            if let total = entry.effectivePageCount {
+                "Current page (0 to \(total))"
+            } else {
+                "Current page"
+            }
         case .percentage: "Completed percentage (0 to 100)"
         }
     }
@@ -282,16 +293,8 @@ private struct BookLibraryDetailContent: View {
 
     /// Yüzde girişi kayda sayfaya çevrilerek yazılır; ilerleme tek birimde tutulur.
     private func commitProgress() {
-        guard let value = Int(progressInput.trimmingCharacters(in: .whitespaces)) else { return }
-
-        switch entry.progressType {
-        case .pages:
-            viewModel.update(currentPage: value)
-        case .percentage:
-            guard let total = entry.effectivePageCount else { return }
-            let clampedPercentage = min(max(0, value), 100)
-            viewModel.update(currentPage: Int((Double(total) * Double(clampedPercentage) / 100).rounded()))
-        }
+        guard let page = viewModel.page(forProgressInput: progressInput) else { return }
+        viewModel.update(currentPage: page)
     }
 }
 

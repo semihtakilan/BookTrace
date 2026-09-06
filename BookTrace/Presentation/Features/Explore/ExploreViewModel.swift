@@ -26,7 +26,15 @@ struct DiscoverSpotlight: Identifiable {
 @MainActor
 @Observable
 final class ExploreViewModel {
-    var searchText: String = ""
+    var searchText: String = "" {
+        didSet {
+            guard searchText != oldValue else { return }
+            // The debounce belongs to the view, but stale results must disappear
+            // as soon as the query changes, including while the next task waits.
+            searchRequestID = nil
+            searchState = .idle
+        }
+    }
     private(set) var searchState: ViewState<[BookReference]> = .idle
     private(set) var shelves: [SubjectShelf] = BookSubject.featured.map { SubjectShelf(subject: $0) }
 
@@ -43,6 +51,7 @@ final class ExploreViewModel {
     /// Aksi hâlde kullanıcı sekme değiştirince istek iptal oluyor ve raflar
     /// "iptal edildi" hatasıyla kalıyordu.
     @ObservationIgnored private var shelvesTask: Task<Void, Never>?
+    @ObservationIgnored private var searchRequestID: UUID?
 
     init(bookSearching: any BookSearching) {
         self.bookSearching = bookSearching
@@ -91,7 +100,8 @@ final class ExploreViewModel {
 
     /// Tek bir rafı yeniden dener — "Try again" bunu çağırır.
     func retry(shelf: SubjectShelf) async {
-        guard let index = shelves.firstIndex(where: { $0.id == shelf.id }) else { return }
+        guard let index = shelves.firstIndex(where: { $0.id == shelf.id }),
+              !shelves[index].state.isLoading else { return }
         shelves[index].state = .loading
         shelves[index].state = await state(forShelfAt: index)
     }
@@ -151,7 +161,8 @@ final class ExploreViewModel {
 
         for attempt in 1...attemptLimit {
             do {
-                return .loaded(try await bookSearching.books(inSubject: subject.query, maxResults: 15))
+                let books = try await bookSearching.books(inSubject: subject.query, maxResults: 15)
+                return .loaded(uniqueBooks(books))
             } catch {
                 // İptal bir hata değil: raf başa döner, sonraki girişte yeniden denenir.
                 guard let userError = UserFacingError(error) else { return .idle }
@@ -168,7 +179,7 @@ final class ExploreViewModel {
     private func state(forShelfAt index: Int) async -> ViewState<[BookReference]> {
         do {
             let books = try await bookSearching.books(inSubject: shelves[index].subject.query, maxResults: 15)
-            return .loaded(books)
+            return .loaded(Self.uniqueBooks(books))
         } catch {
             guard let userError = UserFacingError(error) else { return .idle }
             return .failed(userError)
@@ -180,16 +191,26 @@ final class ExploreViewModel {
     func performSearch() async {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else {
-            searchState = .idle
+            clearSearch()
             return
         }
 
+        let requestID = UUID()
+        searchRequestID = requestID
         searchState = .loading
         do {
-            searchState = .loaded(try await bookSearching.searchBooks(query: query, maxResults: 20))
+            let books = try await bookSearching.searchBooks(query: query, maxResults: 20)
+            guard searchRequestID == requestID else { return }
+            guard !Task.isCancelled else {
+                searchState = .idle
+                return
+            }
+            searchState = .loaded(Self.uniqueBooks(books))
         } catch {
-            // Kullanıcı yazmaya devam ettiyse arama iptal edilir; bu bir hata değil.
-            guard let userError = UserFacingError(error) else {
+            // Providers may return after cancellation. An obsolete task must
+            // never clear a newer result or replace it with an old failure.
+            guard searchRequestID == requestID else { return }
+            guard !Task.isCancelled, let userError = UserFacingError(error) else {
                 searchState = .idle
                 return
             }
@@ -198,8 +219,14 @@ final class ExploreViewModel {
     }
 
     func clearSearch() {
+        searchRequestID = nil
         searchText = ""
         searchState = .idle
+    }
+
+    private static func uniqueBooks(_ books: [BookReference]) -> [BookReference] {
+        var seen = Set<String>()
+        return books.filter { seen.insert($0.id).inserted }
     }
 
     // MARK: - Barkod
@@ -209,6 +236,9 @@ final class ExploreViewModel {
     /// Sheet kapandıktan sonra sorgu birkaç saniye sürebiliyor; bu sürede
     /// ekranda hiçbir şey olmayınca uygulama donmuş görünüyordu.
     func handleBarcodeScan(isbn: String) async {
+        guard !isResolvingBarcode else { return }
+        scannedBook = nil
+        error = nil
         isResolvingBarcode = true
         defer { isResolvingBarcode = false }
 

@@ -30,14 +30,10 @@ struct PageDial: View {
         VStack(spacing: 14) {
             ruler
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Pages read")
-        .accessibilityValue("\(pages)")
-        .accessibilityAdjustableAction { direction in
-            switch direction {
-            case .increment: pages = min(upperBound, pages + 1)
-            case .decrement: pages = max(0, pages - 1)
-            @unknown default: break
+        .accessibilityRepresentation {
+            Stepper(value: $pages, in: 0...upperBound) {
+                Text("Pages read")
+                Text(pages, format: .number)
             }
         }
     }
@@ -83,7 +79,7 @@ struct PageDial: View {
         }
         .onChange(of: pages) { _, current in
             // Rakam elle yazıldığında cetvel de oraya gider.
-            guard scrollTarget != current else { return }
+            guard (0...upperBound).contains(current), scrollTarget != current else { return }
             withAnimation(reduceMotion ? nil : ReadingMotion.snappy) { scrollTarget = current }
         }
     }

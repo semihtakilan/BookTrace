@@ -17,6 +17,7 @@ final class ReadingSessionViewModel {
     private(set) var elapsedSeconds = 0
     private(set) var isRunning = false
     private(set) var didSave = false
+    private(set) var didDiscard = false
 
     var isFinishing = false
     var pagesReadText = ""
@@ -31,12 +32,15 @@ final class ReadingSessionViewModel {
 
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
+    @ObservationIgnored private let now: () -> Date
 
     /// Süre `Timer` sayarak değil, gerçek tarihlerden hesaplanır. Uygulama arka
     /// plana atıldığında tikler dursa bile geri dönüldüğünde geçen süre doğru kalır.
     @ObservationIgnored private var sessionStartDate = Date()
     @ObservationIgnored private var accumulatedSeconds: TimeInterval = 0
     @ObservationIgnored private var runningSince: Date?
+    @ObservationIgnored private var hasStarted = false
+    @ObservationIgnored private var shouldResumeAfterFinishing = false
 
     /// Kutlanmış en yüksek dakika. Uygulama arka planda uzun süre kaldığında
     /// sayaç bir anda sıçrıyor; aradaki bütün dönüm noktaları için üst üste
@@ -44,9 +48,10 @@ final class ReadingSessionViewModel {
     @ObservationIgnored private var highestMilestone = 0
     @ObservationIgnored private static let milestoneMinutes = [5, 10, 15, 20, 30, 45, 60, 90, 120]
 
-    init(entry: LibraryEntry, libraryRepository: any LibraryRepository) {
+    init(entry: LibraryEntry, libraryRepository: any LibraryRepository, now: @escaping () -> Date = Date.init) {
         self.entry = entry
         self.libraryRepository = libraryRepository
+        self.now = now
     }
 
     var bookTitle: String { entry.book.title }
@@ -55,14 +60,18 @@ final class ReadingSessionViewModel {
     var elapsedDisplay: String { DurationFormatter.timer(seconds: elapsedSeconds) }
 
     var pagesReadValue: Int? {
-        Int(pagesReadText.trimmingCharacters(in: .whitespaces))
+        let normalized = pagesReadText.trimmingCharacters(in: .whitespacesAndNewlines)
+            .map { character in character.wholeNumberValue.map(String.init) ?? String(character) }
+            .joined()
+        return Int(normalized)
     }
 
     /// Bu oturumda kaydedilebilecek en fazla sayfa; kitabın kalanı.
     var maximumPages: Int? { entry.remainingPages }
 
     var canSave: Bool {
-        guard let pages = pagesReadValue, pages >= 0, elapsedSeconds > 0 else { return false }
+        guard !didSave, !didDiscard, let pages = pagesReadValue, pages >= 0,
+              pages <= Int.max - entry.currentPage, elapsedSeconds > 0 else { return false }
         guard let maximumPages else { return true }
         return pages <= maximumPages
     }
@@ -75,15 +84,16 @@ final class ReadingSessionViewModel {
 
     /// Kaydedilecek oturumun kitabı nereye taşıyacağının önizlemesi.
     var projectedPage: Int? {
-        guard let pages = pagesReadValue else { return nil }
+        guard let pages = pagesReadValue, pages >= 0, pages <= Int.max - entry.currentPage else { return nil }
         var preview = entry
         preview.advanceProgress(by: pages)
         return preview.currentPage
     }
 
     func start() {
-        guard runningSince == nil, accumulatedSeconds == 0 else { return }
-        sessionStartDate = Date()
+        guard !hasStarted, !didSave, !didDiscard else { return }
+        hasStarted = true
+        sessionStartDate = now()
         runningSince = sessionStartDate
         isRunning = true
         tick()
@@ -116,12 +126,13 @@ final class ReadingSessionViewModel {
     }
 
     func togglePause() {
+        guard hasStarted, !didSave, !didDiscard, !isFinishing else { return }
         if let runningSince {
-            accumulatedSeconds += Date().timeIntervalSince(runningSince)
+            accumulatedSeconds += max(0, now().timeIntervalSince(runningSince))
             self.runningSince = nil
             isRunning = false
         } else {
-            runningSince = Date()
+            runningSince = now()
             isRunning = true
         }
         tick()
@@ -129,20 +140,41 @@ final class ReadingSessionViewModel {
 
     /// Finish ekranına geçerken sayaç durur; kullanıcı geri dönerse kaldığı yerden devam eder.
     func beginFinishing() {
+        guard !isFinishing, !didSave, !didDiscard else { return }
+        shouldResumeAfterFinishing = isRunning
         if runningSince != nil { togglePause() }
-        pagesReadText = ""
         isFinishing = true
     }
 
     /// Finish ekranı kaydedilmeden kapandığında sayaç kaldığı yerden devam eder.
     func resumeAfterFinishing() {
-        guard !didSave, runningSince == nil else { return }
-        togglePause()
+        guard !didSave, !didDiscard, !isFinishing else { return }
+        if shouldResumeAfterFinishing, runningSince == nil { togglePause() }
+        shouldResumeAfterFinishing = false
+    }
+
+    func discard() {
+        if let runningSince {
+            accumulatedSeconds += max(0, now().timeIntervalSince(runningSince))
+            self.runningSince = nil
+        }
+        isRunning = false
+        didDiscard = true
+        isFinishing = false
     }
 
     /// Oturumu kaydeder: süre ve sayfa yazılır, `currentPage` ve okuma durumu güncellenir.
     func save() {
-        guard let pages = pagesReadValue else { return }
+        tick()
+        guard canSave, let pages = pagesReadValue else { return }
+
+        // A caller may save without first opening the finish screen. Freeze
+        // the measured duration here too, and never append a second session.
+        if let runningSince {
+            accumulatedSeconds += max(0, now().timeIntervalSince(runningSince))
+            self.runningSince = nil
+            isRunning = false
+        }
 
         let session = ReadingSession(
             startDate: sessionStartDate,
@@ -171,9 +203,9 @@ final class ReadingSessionViewModel {
     ///
     /// `didSave` tek başına yetmiyor: kayıt anında kutlama da başlıyor ve ekran
     /// hemen kapanırsa kullanıcı onu hiç görmüyor.
-    var isReadyToDismiss: Bool { didSave && outcome == nil }
+    var isReadyToDismiss: Bool { didDiscard || (didSave && outcome == nil) }
 
     private var currentElapsed: TimeInterval {
-        accumulatedSeconds + (runningSince.map { Date().timeIntervalSince($0) } ?? 0)
+        accumulatedSeconds + (runningSince.map { max(0, now().timeIntervalSince($0)) } ?? 0)
     }
 }

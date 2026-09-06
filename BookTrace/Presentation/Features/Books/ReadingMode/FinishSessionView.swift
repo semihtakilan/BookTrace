@@ -1,5 +1,4 @@
 import SwiftUI
-import NavigatorUI
 import Models
 
 /// Oturumu kapatma ekranı: ne kadar süre okundu, kaç sayfa ilerlendi.
@@ -22,9 +21,7 @@ struct FinishSessionView: View {
 private struct FinishSessionContent: View {
     @Bindable var viewModel: ReadingSessionViewModel
 
-    @Environment(\.navigator) private var navigator
     @Environment(\.bookPalette) private var palette
-    @Environment(\.bookAmbience) private var ambience
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -36,7 +33,7 @@ private struct FinishSessionContent: View {
 
     var body: some View {
         ZStack {
-            AmbienceBackdrop(ambience: ambience, palette: palette.biased(by: ambience), isActive: false)
+            ReadingRoomBackdrop(book: entry.book, isActive: false)
 
             VStack(spacing: 0) {
                 topBar
@@ -45,7 +42,7 @@ private struct FinishSessionContent: View {
                         VStack(spacing: 24) {
                             summary
                             counter
-                            if !dynamicTypeSize.isAccessibilitySize {
+                            if !dynamicTypeSize.isAccessibilitySize, viewModel.maximumPages != 0 {
                                 PageDial(pages: pagesBinding,
                                          maximum: viewModel.maximumPages ?? 999,
                                          tint: palette.glow)
@@ -78,9 +75,10 @@ private struct FinishSessionContent: View {
             Button("Set") { viewModel.pagesReadText = typedPages }
         }
         .confirmationDialog("Discard this session?", isPresented: $isConfirmingDiscard, titleVisibility: .visible) {
-            Button("Discard", role: .destructive) { navigator.dismiss() }
+            Button("Discard", role: .destructive) { viewModel.discard() }
             Button("Cancel", role: .cancel) {}
         } message: { Text("The elapsed time will not be recorded.") }
+        .errorAlert($viewModel.error)
     }
 
     // MARK: - Bölümler
@@ -137,11 +135,9 @@ private struct FinishSessionContent: View {
                     .foregroundStyle(.white)
                     .contentTransition(reduceMotion ? .identity : .numericText())
                     .readingAnimation(ReadingMotion.snappy, value: viewModel.pagesReadValue ?? 0)
-                Text("pages")
+                Label("Pages read", systemImage: "pencil")
                     .font(.caption.weight(.medium))
-                    .tracking(2)
-                    .textCase(.uppercase)
-                    .foregroundStyle(.white.opacity(0.45))
+                    .foregroundStyle(.white.opacity(0.7))
             }
         }
         .buttonStyle(.plain)
@@ -152,11 +148,20 @@ private struct FinishSessionContent: View {
     @ViewBuilder
     private var note: some View {
         Group {
-            if let message = viewModel.pagesLimitMessage {
+            if viewModel.elapsedSeconds == 0 {
+                Text("Return to the timer to record your reading time.")
+                    .foregroundStyle(.white.opacity(0.65))
+            } else if let message = viewModel.pagesLimitMessage {
                 Text(message).foregroundStyle(ReadingStyle.gold)
+            } else if viewModel.pagesReadValue == nil || (viewModel.pagesReadValue ?? 0) < 0 {
+                Text("Enter zero or more whole pages.")
+                    .foregroundStyle(ReadingStyle.gold)
+            } else if viewModel.maximumPages == 0 {
+                Text("Book complete. This session will save your reading time.")
+                    .foregroundStyle(.white.opacity(0.65))
             } else if viewModel.pagesReadValue == 0 {
                 Text("You can save your time even if you read zero pages.")
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(.white.opacity(0.65))
             } else if let projectedPage = viewModel.projectedPage {
                 Text("Progress will move to page \(projectedPage).")
                     .foregroundStyle(.white.opacity(0.55))
@@ -175,7 +180,7 @@ private struct FinishSessionContent: View {
     @ViewBuilder
     private var preview: some View {
         if let total = entry.effectivePageCount, total > 0 {
-            let current = Double(entry.currentPage) / Double(total)
+            let current = entry.progressFraction ?? 0
             let projected = Double(viewModel.projectedPage ?? entry.currentPage) / Double(total)
 
             VStack(alignment: .leading, spacing: 10) {
@@ -194,7 +199,7 @@ private struct FinishSessionContent: View {
                 .frame(height: 8)
 
                 HStack {
-                    Text("\(entry.currentPage) of \(total) pages")
+                    Text("\(viewModel.projectedPage ?? entry.currentPage) of \(total) pages")
                     Spacer(minLength: 8)
                     Text("\(Int((projected * 100).rounded()))%")
                         .monospacedDigit()

@@ -81,6 +81,22 @@ struct LocalLibraryRepositoryTests {
         #expect(try repository.entry(for: "book-1")?.totalReadSeconds == 1_800)
     }
 
+    @Test func persistedSessionsUseTheRemainingPagesSoStatisticsMatchProgress() throws {
+        let (repository, _) = try makeInMemoryRepository()
+        try repository.add(makeEntry(readingStatus: .reading, pageCount: 300, currentPage: 290))
+        let session = ReadingSession(startDate: Date(), durationSeconds: 600, pagesRead: 80)
+
+        let updated = try repository.appendSession(session, toEntryWith: "book-1")
+        let reloaded = try #require(try repository.entry(for: "book-1"))
+
+        #expect(updated.currentPage == 300)
+        #expect(reloaded.readingStatus == .finished)
+        #expect(reloaded.readingSessions.first?.id == session.id)
+        #expect(reloaded.totalPagesRead == 10)
+        #expect(reloaded.totalReadSeconds == 600)
+        #expect(reloaded.secondsPerPage == 60)
+    }
+
     @Test func deletingABookAlsoRemovesItsSessions() throws {
         let (repository, _) = try makeInMemoryRepository()
         try repository.add(makeEntry(pageCount: 300))

@@ -7,6 +7,7 @@ struct ProfileTab: View {
 
     var body: some View {
         ManagedNavigationStack { ProfileContentView(viewModel: viewModel) }
+            .environment(viewModel)
     }
 }
 
@@ -22,8 +23,10 @@ private struct ProfileContentView: View {
     @Environment(\.locale) private var locale
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @State private var chartRevealed = false
+    @State private var selectedActivityDay: Date?
 
     var body: some View {
         ScrollView {
@@ -87,7 +90,7 @@ private struct ProfileContentView: View {
             Text("Lost in a book. Found in your day.")
                 .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
             Rectangle().fill(ReadingStyle.accent.opacity(0.16)).frame(height: 1)
-            HStack(alignment: .top, spacing: 20) {
+            metricLayout {
                 metric(value: viewModel.totalPagesRead, caption: "Pages read")
                 metric(value: viewModel.sessionCount, caption: "Sessions")
                 metric(value: viewModel.streakDays, caption: "Day streak")
@@ -111,8 +114,17 @@ private struct ProfileContentView: View {
         .accessibilityElement(children: .combine)
     }
 
+    private var metricLayout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 16))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: 20))
+    }
+
     private var summaryTiles: some View {
-        HStack(alignment: .top, spacing: 12) {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: 12))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+        return layout {
             SummaryTile(value: viewModel.bookCount, caption: "In Library", symbol: "books.vertical")
             SummaryTile(value: viewModel.readingCount, caption: "Reading", symbol: "book")
             SummaryTile(value: viewModel.finishedCount, caption: "Finished", symbol: "checkmark.seal")
@@ -122,36 +134,107 @@ private struct ProfileContentView: View {
     // MARK: - Hafta
 
     private var weeklyActivity: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 18) {
             ReadingSectionHeading(title: "The last seven days")
-            HStack(alignment: .bottom, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(DurationFormatter.compact(seconds: activitySeconds, locale: locale))
+                    .font(ReadingStyle.title(.title2)).monospacedDigit()
+                HStack(spacing: 8) {
+                    Text("\(activityPages) pages")
+                    Text(verbatim: "·")
+                    Text("\(activitySessionCount) sessions")
+                }
+                .font(.caption).foregroundStyle(ReadingStyle.secondary)
+            }
+            .accessibilityElement(children: .combine)
+
+            HStack(alignment: .bottom, spacing: 6) {
                 ForEach(Array(viewModel.recentDays.enumerated()), id: \.element.id) { index, day in
-                    VStack(spacing: 10) {
-                        RoundedRectangle(cornerRadius: 5)
-                            .fill(day.seconds > 0
-                                  ? AnyShapeStyle(LinearGradient(colors: [ReadingStyle.accent.opacity(0.7), ReadingStyle.accent],
-                                                                 startPoint: .top, endPoint: .bottom))
-                                  : AnyShapeStyle(ReadingStyle.line))
-                            .frame(height: day.seconds == 0 ? 4 : max(8, 84 * Double(day.seconds) / Double(maximumDailySeconds)))
-                            .frame(height: 84, alignment: .bottom)
-                            // Sütunlar soldan sağa sırayla yükseliyor; hafta
-                            // bir anda değil, geçtiği gibi beliriyor.
-                            .scaleEffect(y: chartRevealed ? 1 : 0.02, anchor: .bottom)
-                            .animation(reduceMotion ? nil : ReadingMotion.progress.delay(Double(index) * 0.04),
-                                       value: chartRevealed)
-                        Text(day.date, format: .dateTime.weekday(.narrow))
-                            .font(.caption).foregroundStyle(ReadingStyle.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(Text(day.date, format: .dateTime.weekday(.wide).month().day()))
-                    .accessibilityValue(DurationFormatter.compact(seconds: day.seconds, locale: locale))
+                    activityDayButton(day, index: index)
                 }
             }
-            Text("Every little bit of reading counts.")
-                .font(.caption).foregroundStyle(ReadingStyle.secondary)
+
+            if let day = selectedDay {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(day.date, format: .dateTime.weekday(.wide).month(.abbreviated).day())
+                            .font(.subheadline.weight(.semibold))
+                        Spacer(minLength: 4)
+                        Button("Reset") { selectedActivityDay = nil }
+                            .font(.caption).frame(minHeight: 44)
+                    }
+                    if day.sessionCount == 0 {
+                        Text("No sessions on this day.")
+                            .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
+                    } else {
+                        Button {
+                            navigator.navigate(to: ProfileDestinations.readingHistory(day.date))
+                        } label: {
+                            HStack {
+                                Text("View sessions")
+                                Spacer()
+                                Image(systemName: "arrow.right")
+                            }
+                        }
+                        .buttonStyle(ReadingButtonStyle(prominent: false))
+                    }
+                }
+            } else {
+                Text("Tap a day to see your sessions.")
+                    .font(.caption).foregroundStyle(ReadingStyle.secondary)
+            }
         }
         .readingCard()
+    }
+
+    private func activityDayButton(_ day: ReadingDay, index: Int) -> some View {
+        let isSelected = selectedActivityDay == day.date
+        return Button {
+            selectedActivityDay = isSelected ? nil : day.date
+        } label: {
+            VStack(spacing: 10) {
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(day.seconds > 0
+                          ? AnyShapeStyle(LinearGradient(colors: [ReadingStyle.accent.opacity(0.7), ReadingStyle.accent],
+                                                         startPoint: .top, endPoint: .bottom))
+                          : AnyShapeStyle(ReadingStyle.line))
+                    .frame(height: day.seconds == 0 ? 4 : max(8, 84 * Double(day.seconds) / Double(maximumDailySeconds)))
+                    .frame(height: 84, alignment: .bottom)
+                    .scaleEffect(y: chartRevealed ? 1 : 0.02, anchor: .bottom)
+                    .animation(reduceMotion ? nil : ReadingMotion.progress.delay(Double(index) * 0.04),
+                               value: chartRevealed)
+                Text(day.date, format: .dateTime.weekday(.narrow))
+                    .font(.caption.weight(isSelected ? .bold : .regular))
+                    .foregroundStyle(isSelected ? ReadingStyle.ink : ReadingStyle.secondary)
+            }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(isSelected ? ReadingStyle.sage : .clear, in: .rect(cornerRadius: 10))
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text(day.date, format: .dateTime.weekday(.wide).month().day()))
+        .accessibilityValue(Text(DurationFormatter.compact(seconds: day.seconds, locale: locale))
+                            + Text(verbatim: ", ") + Text("\(day.pagesRead) pages"))
+        .accessibilityHint("View sessions")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private var selectedDay: ReadingDay? {
+        viewModel.recentDays.first { $0.date == selectedActivityDay }
+    }
+
+    private var activitySeconds: Int {
+        selectedDay?.seconds ?? viewModel.recentDays.reduce(0) { $0 + $1.seconds }
+    }
+
+    private var activityPages: Int {
+        selectedDay?.pagesRead ?? viewModel.recentDays.reduce(0) { $0 + $1.pagesRead }
+    }
+
+    private var activitySessionCount: Int {
+        selectedDay?.sessionCount ?? viewModel.recentDays.reduce(0) { $0 + $1.sessionCount }
     }
 
     private var maximumDailySeconds: Int { max(1, viewModel.recentDays.map(\.seconds).max() ?? 1) }
@@ -188,13 +271,20 @@ private struct ProfileContentView: View {
 
     private var recentSessions: some View {
         VStack(alignment: .leading, spacing: 16) {
-            ReadingSectionHeading(title: "Recent Sessions")
+            HStack {
+                ReadingSectionHeading(title: "Recent Sessions")
+                if !viewModel.sessionHistory.isEmpty {
+                    Button("See all") { navigator.navigate(to: ProfileDestinations.readingHistory(nil)) }
+                        .font(.caption.weight(.semibold)).frame(minHeight: 44)
+                        .accessibilityLabel("Reading history")
+                }
+            }
             if viewModel.recentSessions.isEmpty {
                 Text("Nothing recorded yet.").font(.subheadline).foregroundStyle(ReadingStyle.secondary)
             } else {
                 ForEach(Array(viewModel.recentSessions.enumerated()), id: \.element.id) { index, session in
                     if index > 0 { Divider().overlay(ReadingStyle.line) }
-                    SessionRow(session: session)
+                    ReadingSessionLink(session: session)
                 }
             }
         }
@@ -213,37 +303,6 @@ private struct ProfileContentView: View {
             }
         }
         .readingCard()
-    }
-}
-
-/// Kapağıyla birlikte tek bir oturum satırı.
-private struct SessionRow: View {
-    let session: RecentReadingSession
-    @Environment(\.locale) private var locale
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            BookVolumeView(book: session.book, height: 54, progress: nil)
-                .bookAtmosphere(session.book)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(session.bookTitle)
-                    .font(.system(.subheadline, design: .serif, weight: .medium)).lineLimit(2)
-                HStack(spacing: 6) {
-                    Text(session.startDate, format: .dateTime.day().month(.abbreviated))
-                    Text(verbatim: "·")
-                    Text("\(session.pagesRead) pages")
-                }
-                .font(.caption).foregroundStyle(ReadingStyle.secondary)
-            }
-
-            Spacer(minLength: 8)
-
-            Text(DurationFormatter.compact(seconds: session.durationSeconds, locale: locale))
-                .font(.caption.weight(.medium).monospacedDigit())
-        }
-        .padding(.vertical, 4)
-        .accessibilityElement(children: .combine)
     }
 }
 

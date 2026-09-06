@@ -52,4 +52,21 @@ struct BookAmbienceTests {
 
         #expect(Set(results).count == 1)
     }
+
+    @Test func unrelatedWordsDoNotAccidentallyChooseAGenre() {
+        #expect(BookAmbience.resolve(subjects: [], title: "The Universe Within") == .literary)
+        #expect(BookAmbience.resolve(subjects: [], title: "The Award") == .literary)
+        #expect(BookAmbience.resolve(subjects: ["Ecological fiction"]) == .literary)
+    }
+
+    @Test func punctuationAndTurkishDiacriticsAreNormalized() {
+        #expect(BookAmbience.resolve(subjects: ["Science—Fiction"]) == .scienceFiction)
+        #expect(BookAmbience.resolve(subjects: ["ŞİİR"]) == .poetry)
+        #expect(BookAmbience.resolve(subjects: ["ÇOCUK KİTAPLARI"]) == .children)
+    }
+
+    @Test func specificGenreDeterminesTheRoomBeforeAudienceAge() {
+        #expect(BookAmbience.resolve(subjects: ["Young Adult / Science Fiction"]) == .scienceFiction)
+        #expect(BookAmbience.resolve(subjects: ["Juvenile Fiction / General"]) == .children)
+    }
 }

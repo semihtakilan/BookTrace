@@ -107,7 +107,10 @@ final class LocalLibraryRepositoryImpl: LibraryRepository {
         var entry = record.toDomain()
         entry.apply(session)
 
-        let persistedSession = LocalReadingSessionModel(session: session)
+        // Domain kalan sayfayı aşan girişi kırpar. Ham oturumu yazmak ilerlemeyi
+        // doğru tutarken toplam sayfayı ve kişisel okuma hızını bozuyordu.
+        let normalizedSession = entry.readingSessions[entry.readingSessions.count - 1]
+        let persistedSession = LocalReadingSessionModel(session: normalizedSession)
         persistedSession.libraryEntry = record
         modelContext.insert(persistedSession)
 

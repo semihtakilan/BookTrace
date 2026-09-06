@@ -58,7 +58,7 @@ struct ReadingStreakStrip: View {
             .padding(.trailing, 3)
         }
         .padding(.horizontal, 18)
-        .padding(.vertical, 14)
+        .padding(.vertical, 12)
         .background(ReadingStyle.surface, in: .rect(cornerRadius: 18))
         .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(ReadingStyle.line, lineWidth: 0.7) }
         .accessibilityElement(children: .ignore)
@@ -89,12 +89,12 @@ private struct NowReadingCardBody: View {
     @Environment(\.locale) private var locale
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 14) {
             identity
             progress
             actions
         }
-        .padding(20)
+        .padding(18)
         .background {
             RoundedRectangle(cornerRadius: 28)
                 .fill(LinearGradient(colors: [palette.wash(colorScheme), palette.washEdge(colorScheme)],
@@ -115,7 +115,7 @@ private struct NowReadingCardBody: View {
             navigator.navigate(to: BooksDestinations.entryDetail(entry))
         } label: {
             layout {
-                BookVolumeView(book: entry.book, height: 148, progress: entry.progressFraction)
+                BookVolumeView(book: entry.book, height: 112, progress: entry.progressFraction)
 
                 VStack(alignment: .leading, spacing: 7) {
                     ReadingEyebrow(title: "NOW READING")
@@ -129,7 +129,6 @@ private struct NowReadingCardBody: View {
                             .foregroundStyle(ReadingStyle.secondary)
                             .lineLimit(2)
                     }
-                    Spacer(minLength: 0)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -162,7 +161,7 @@ private struct NowReadingCardBody: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Reading progress")
-        .accessibilityValue("\(entry.progressPercentage ?? 0)% complete")
+        .accessibilityValue(Text(progressLabel))
     }
 
     private var actions: some View {
@@ -171,7 +170,7 @@ private struct NowReadingCardBody: View {
         } label: {
             Label("Continue reading", systemImage: "play.fill")
                 .font(.subheadline.weight(.semibold))
-                .frame(maxWidth: .infinity, minHeight: 52)
+                .frame(maxWidth: .infinity, minHeight: 46)
                 .background(palette.accent(colorScheme), in: .capsule)
                 .foregroundStyle(palette.onAccent(colorScheme))
         }
@@ -179,7 +178,9 @@ private struct NowReadingCardBody: View {
     }
 
     private var progressLabel: LocalizedStringKey {
-        guard let total = entry.effectivePageCount else { return "Add a page count to track progress" }
+        guard let total = entry.effectivePageCount else {
+            return entry.currentPage > 0 ? "\(entry.currentPage) pages" : "Add a page count to track progress"
+        }
         switch entry.progressType {
         case .pages:      return "\(entry.currentPage) of \(total) pages"
         case .percentage: return "\(entry.progressPercentage ?? 0)% of \(total) pages"

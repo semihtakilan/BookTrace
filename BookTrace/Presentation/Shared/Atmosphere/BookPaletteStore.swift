@@ -23,7 +23,9 @@ final class BookPaletteStore {
 
     @ObservationIgnored private var resolving: Set<String> = []
     @ObservationIgnored private let defaults: UserDefaults
-    @ObservationIgnored private static let storageKey = "palette.covers"
+    // Cached values are derived data. The versioned key replaces the old
+    // book-ID cache, whose colors remained stale when a cover changed.
+    @ObservationIgnored private static let storageKey = "palette.covers.v2"
     /// Kütüphane büyüdükçe sözlük sınırsız büyümesin.
     @ObservationIgnored private static let storageLimit = 400
 
@@ -34,7 +36,11 @@ final class BookPaletteStore {
 
     /// Bilinen renk; yoksa kitabın kimliğinden türeyen sabit yedek.
     func palette(for book: BookReference) -> BookPalette {
-        palettes[book.id] ?? .fallback(for: book.id)
+        palettes[Self.coverIdentity(for: book)] ?? .fallback(for: book.id)
+    }
+
+    static func coverIdentity(for book: BookReference) -> String {
+        "\(book.id)|\(book.coverURL?.absoluteString ?? "")"
     }
 
     /// Kapağı indirir (önbellekteyse oradan alır) ve rengini çıkarır.
@@ -43,26 +49,27 @@ final class BookPaletteStore {
     /// çok kartı olduğunda (raf + arama sonucu) aksi hâlde aynı görsel birkaç
     /// kez çözümleniyordu.
     func resolve(for book: BookReference) async {
-        guard palettes[book.id] == nil, !resolving.contains(book.id) else { return }
+        let identity = Self.coverIdentity(for: book)
+        guard palettes[identity] == nil, !resolving.contains(identity) else { return }
         guard let url = book.coverURL else { return }
 
-        resolving.insert(book.id)
-        defer { resolving.remove(book.id) }
+        resolving.insert(identity)
+        defer { resolving.remove(identity) }
 
         guard let result = try? await KingfisherManager.shared.retrieveImage(with: url),
               let palette = BookPaletteExtractor.palette(from: result.image) else { return }
 
-        palettes[book.id] = palette
+        // Bound the in-memory cache too; the previous cap only affected disk.
+        if palettes.count >= Self.storageLimit,
+           let evicted = palettes.keys.sorted().first {
+            palettes.removeValue(forKey: evicted)
+        }
+        palettes[identity] = palette
         persist()
     }
 
     private func persist() {
-        // Sona eklenenler kalır: en son bakılan kitaplar en olası tekrar.
-        var stored = palettes
-        if stored.count > Self.storageLimit {
-            stored = Dictionary(uniqueKeysWithValues: stored.suffix(Self.storageLimit))
-        }
-        guard let data = try? JSONEncoder().encode(stored) else { return }
+        guard let data = try? JSONEncoder().encode(palettes) else { return }
         defaults.set(data, forKey: Self.storageKey)
     }
 
@@ -104,7 +111,7 @@ private struct BookAtmosphereModifier: ViewModifier {
         content
             .environment(\.bookPalette, store.palette(for: book))
             .environment(\.bookAmbience, BookAmbience.resolve(for: book))
-            .task(id: book.id) { await store.resolve(for: book) }
+            .task(id: BookPaletteStore.coverIdentity(for: book)) { await store.resolve(for: book) }
     }
 }
 

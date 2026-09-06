@@ -12,11 +12,7 @@ struct BooksTab: View {
     }
 }
 
-/// Kütüphane: önce okunan kitap, sonra raf.
-///
-/// Eski düzende ekranın ilk üçte biri başlık bloğuydu ve kitaplar tam genişlikte
-/// satırlar hâlinde dizildiği için bir ekranda ancak üç kitap görünüyordu.
-/// Şimdi başlık gezinme çubuğunda, kitaplar ise kapaklarıyla ızgarada.
+/// Okumaya devam etme kısayolları ve tüm kitapları kapsayan aranabilir raf.
 private struct BooksContentView: View {
     @Environment(AppRouteTypeManager.self) private var routeManager
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
@@ -28,17 +24,21 @@ private struct BooksContentView: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(alignment: .leading, spacing: 26) {
+                VStack(alignment: .leading, spacing: 22) {
                     if viewModel.isEmpty {
                         emptyState.padding(.horizontal, 20)
                     } else {
-                        ReadingStreakStrip(days: viewModel.streakDays, activity: viewModel.weekActivity)
-                            .padding(.horizontal, 20)
-                        nowReading(width: min(geometry.size.width, 760))
+                        if !viewModel.hasActiveFilters {
+                            ReadingStreakStrip(days: viewModel.streakDays, activity: viewModel.weekActivity)
+                                .padding(.horizontal, 20)
+                        }
+                        if viewModel.isShowingNowReading {
+                            nowReading(width: min(geometry.size.width, 760))
+                        }
                         shelf(width: min(geometry.size.width, 760))
-                        // Raf boşken de görünür: iki kitap okuyan ama rafı boş
-                        // olan kullanıcı için ekranın altı tamamen boş kalıyordu.
-                        discoverCard.padding(.horizontal, 20)
+                        if !viewModel.hasActiveFilters {
+                            discoverCard.padding(.horizontal, 20)
+                        }
                     }
                 }
                 .padding(.top, 8)
@@ -69,6 +69,11 @@ private struct BooksContentView: View {
         }
         .onAppear { viewModel.load() }
         .onChange(of: libraryChangeNotifier.revision) { _, _ in viewModel.load() }
+        .onChange(of: viewModel.nowReading.map(\.id)) { _, ids in
+            if let visibleReadingID, !ids.contains(visibleReadingID) {
+                self.visibleReadingID = ids.first
+            }
+        }
     }
 
     // MARK: - Boş kütüphane
@@ -109,14 +114,9 @@ private struct BooksContentView: View {
                 .scrollPosition(id: $visibleReadingID)
                 .contentMargins(.horizontal, 20, for: .scrollContent)
 
-                // Kaç kitap okunduğunu ve hangisine bakıldığını gösteren noktalar.
-                HStack(spacing: 7) {
-                    ForEach(viewModel.nowReading) { entry in
-                        Circle()
-                            .fill(entry.id == currentReadingID ? ReadingStyle.accent : ReadingStyle.line)
-                            .frame(width: 6, height: 6)
-                    }
-                }
+                Text("\(currentReadingIndex) of \(viewModel.nowReading.count) reading")
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(ReadingStyle.secondary)
                 .accessibilityHidden(true)
             }
         }
@@ -127,6 +127,10 @@ private struct BooksContentView: View {
         visibleReadingID ?? viewModel.nowReading.first?.id
     }
 
+    private var currentReadingIndex: Int {
+        (viewModel.nowReading.firstIndex { $0.id == currentReadingID } ?? 0) + 1
+    }
+
     // MARK: - Raf
 
     @ViewBuilder
@@ -134,25 +138,37 @@ private struct BooksContentView: View {
         if viewModel.shelfCount > 0 || viewModel.hasNoMatches {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    ReadingSectionHeading(title: "On your shelf", detail: String(viewModel.shelfCount))
+                    ReadingSectionHeading(title: "All Books", detail: String(viewModel.matchingCount))
                     organizationMenu
                 }
 
                 ReadingSearchField(text: $viewModel.searchText, prompt: "Title, author or tag")
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ReadingFilterChip(title: "All", isSelected: viewModel.statusFilter == nil,
-                                          count: viewModel.shelfCount) { viewModel.statusFilter = nil }
-                        ForEach(BooksViewModel.shelfStatuses, id: \.self) { status in
-                            ReadingFilterChip(title: status.titleKey, isSelected: viewModel.statusFilter == status,
-                                              count: viewModel.entries.filter { $0.readingStatus == status }.count) {
-                                viewModel.statusFilter = status
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ReadingFilterChip(title: "All", isSelected: viewModel.statusFilter == nil,
+                                              count: viewModel.searchMatchCount) { viewModel.statusFilter = nil }
+                                .id("all")
+                            ForEach(BooksViewModel.shelfStatuses, id: \.self) { status in
+                                ReadingFilterChip(title: status.titleKey, isSelected: viewModel.statusFilter == status,
+                                                  count: viewModel.count(for: status)) {
+                                    viewModel.statusFilter = status
+                                }
+                                .id(status.rawValue)
                             }
                         }
                     }
+                    .contentMargins(.trailing, 1)
+                    .onChange(of: viewModel.statusFilter) { _, status in
+                        proxy.scrollTo(status?.rawValue ?? "all", anchor: .leading)
+                    }
+                    .onChange(of: viewModel.searchText) { _, query in
+                        if query.isEmpty {
+                            proxy.scrollTo(viewModel.statusFilter?.rawValue ?? "all", anchor: .leading)
+                        }
+                    }
                 }
-                .contentMargins(.trailing, 1)
 
                 if viewModel.hasNoMatches {
                     noMatches
@@ -173,7 +189,7 @@ private struct BooksContentView: View {
             ForEach(viewModel.sections) { section in
                 if !section.entries.isEmpty {
                     VStack(alignment: .leading, spacing: 14) {
-                        if viewModel.grouping != .all {
+                        if viewModel.grouping != .all && !(viewModel.grouping == .status && viewModel.statusFilter != nil) {
                             sectionTitle(section.kind)
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(ReadingStyle.secondary)
@@ -196,6 +212,15 @@ private struct BooksContentView: View {
     private func shelfTile(entry: LibraryEntry, width: CGFloat) -> some View {
         NavigationLinkButton(entry: entry, width: width)
             .contextMenu {
+                Menu("Reading Status") {
+                    ForEach(BooksViewModel.shelfStatuses, id: \.self) { status in
+                        Button {
+                            viewModel.update(readingStatus: status, for: entry)
+                        } label: {
+                            Label(status.titleKey, systemImage: status == entry.readingStatus ? "checkmark" : status.systemImage)
+                        }
+                    }
+                }
                 Button("Remove from Library", role: .destructive) { viewModel.requestDeletion(of: entry) }
             }
             .accessibilityAction(named: "Remove from Library") { viewModel.requestDeletion(of: entry) }
@@ -203,12 +228,11 @@ private struct BooksContentView: View {
 
     private var noMatches: some View {
         VStack(spacing: 12) {
-            Text("No books here yet").font(ReadingStyle.title(.title3))
+            Text("No matching books").font(ReadingStyle.title(.title3))
             Text("Try a different search or choose another shelf.")
                 .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
             Button("Show all books") {
-                viewModel.searchText = ""
-                viewModel.statusFilter = nil
+                viewModel.clearFilters()
             }
             .buttonStyle(ReadingButtonStyle(prominent: false))
         }

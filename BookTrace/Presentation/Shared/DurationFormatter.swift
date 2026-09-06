@@ -33,7 +33,9 @@ enum DurationFormatter {
         Duration.seconds(max(0, seconds)).formatted(
             .units(
                 allowed: [.hours, .minutes, .seconds],
-                width: .narrow,
+                // Türkçede dar biçim dakikayı yalnızca "d" olarak verir.
+                // Yerelin açık kısaltması ("dk.") süreyi belirsiz bırakmaz.
+                width: locale.language.languageCode?.identifier == "tr" ? .abbreviated : .narrow,
                 maximumUnitCount: 2
             )
             .locale(locale)

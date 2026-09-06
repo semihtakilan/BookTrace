@@ -45,7 +45,9 @@ public enum ReadingSpeedEstimator {
     /// tahmini bozmaktan çıkar. Süre toplamları (`LibraryEntry.totalReadSeconds`)
     /// bu filtreden etkilenmez — o oturumlar gerçekten okunmuş zamandır.
     private static func measurable(_ sessions: [ReadingSession]) -> [ReadingSession] {
-        sessions.filter { $0.pagesRead > 0 }
+        // Eski ya da içe aktarılmış sıfır süreli kayıtlar da ölçüm değildir:
+        // sayfaları paydaya eklemek gerçek oturumların hızını yapay artırır.
+        sessions.filter { $0.pagesRead > 0 && $0.durationSeconds > 0 }
     }
 
     private static func totalPages(in sessions: [ReadingSession]) -> Int {

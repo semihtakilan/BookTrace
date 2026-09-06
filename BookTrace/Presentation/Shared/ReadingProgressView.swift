@@ -44,9 +44,15 @@ struct ReadingProgressView: View {
                 .font(.caption)
                 .foregroundStyle(ReadingStyle.secondary)
             } else {
-                Text("Add a page count to track progress")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    if entry.currentPage > 0 {
+                        Text("\(entry.currentPage) pages")
+                            .font(.subheadline.monospacedDigit())
+                    }
+                    Text("Add a page count to track progress")
+                        .font(.caption)
+                        .foregroundStyle(ReadingStyle.secondary)
+                }
             }
         }
     }

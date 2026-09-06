@@ -39,7 +39,7 @@ Built with **SwiftUI**, **SwiftData**, and local **Swift packages**, the project
 - Track ownership as **Borrowed**, **Not Owned**, or **Owned**.
 - Add custom categories or choose suggestions from existing tags and the book's subjects.
 - Set a page count and choose progress entry in pages or percentages.
-- See current books, progress bars, and estimated remaining time in **Now Reading**.
+- Search and filter **All Books**, including titles currently being read; use **Now Reading** to resume the most recently read books.
 - Update existing library details while preserving reading progress and saved sessions.
 - Remove individual books or erase the library from Settings.
 
@@ -57,6 +57,7 @@ Reading Mode tracks time spent reading a book outside the app; BookTrace does no
 
 - View library totals, books in progress, and finished books.
 - Review total reading time, recorded pages, session counts, and reading pace.
+- Select a day in the activity chart to inspect its totals and sessions; browse the complete reading history by date and open any session’s book.
 - Inspect reading-status and ownership breakdowns and the five most recent sessions.
 - Choose System, Light, or Dark appearance.
 - Switch between the system language, English, Turkish, and German.
@@ -65,9 +66,9 @@ Reading Mode tracks time spent reading a book outside the app; BookTrace does no
 
 ## Reading experience
 
-The interface uses a shared paper-and-ink design system with light and dark appearances, Dynamic Type, and English, Turkish, and German copy. Active reading stays at the top of Library; search, sorting, grouping, and status filters organize the other books below it. Adding a finished book completes its known page count. Discover offers subject spotlights, topic collections, a short-book shelf, and proportional cover grids. Book editing and session completion keep their save actions above the keyboard. The Journal tab shows real reading time, seven days of activity, and personal pace.
+The interface uses a shared paper-and-ink design system with light and dark appearances, Dynamic Type, and English, Turkish, and German copy. Library’s **All Books** search, sorting, grouping, and status filters include every saved book, while **Now Reading** provides quick access to recently read titles. Adding a finished book completes its known page count. Discover offers subject spotlights, topic collections, a short-book shelf, and proportional cover grids. Book editing and session completion keep their save actions above the keyboard. Journal combines reading time and personal pace with selectable daily activity and a complete session history that links back to each book.
 
-See the [simulator design review](Documentation/DesignReview/Review.md) for the baseline critique, screenshot feedback, corrections, and validation evidence.
+See the [latest simulator design review](Documentation/DesignReview/Iteration4/Review.md) for the findings, screenshots, changes, and validation evidence.
 
 ## Technology stack
 

@@ -50,10 +50,20 @@ public enum BookAmbience: String, CaseIterable, Sendable, Hashable, Codable {
     /// belirgin olan önce denenir.
     private static func match(in text: String) -> BookAmbience? {
         guard !text.isEmpty else { return nil }
+        let words = " \(normalized(text)) "
         for (ambience, keywords) in orderedKeywords {
-            if keywords.contains(where: text.contains) { return ambience }
+            if keywords.contains(where: { words.contains(" \(normalized($0)) ") }) { return ambience }
         }
         return nil
+    }
+
+    /// Match complete words and phrases. Substrings classified “universe” as
+    /// verse and “award” as war, giving unrelated books the wrong reading room.
+    private static func normalized(_ text: String) -> String {
+        text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
     }
 
     /// Belirginden genele doğru sıralı anahtar kelimeler.
@@ -61,23 +71,23 @@ public enum BookAmbience: String, CaseIterable, Sendable, Hashable, Codable {
     /// `Dictionary` değil dizi: sözlüğün sırası tanımsız olduğu için aynı kitap
     /// iki açılışta iki farklı havaya düşebiliyordu.
     private static let orderedKeywords: [(BookAmbience, [String])] = [
-        (.poetry, ["poetry", "poems", "poem", "verse", "şiir", "lyrik"]),
-        (.children, ["juvenile", "children", "picture book", "young adult", "çocuk", "kinderbuch"]),
+        (.poetry, ["poetry", "poems", "poem", "verse", "şiir", "şiirler", "lyrik"]),
         (.scienceFiction, ["science fiction", "sciencefiction", "space opera", "dystopia", "cyberpunk",
-                           "speculative", "bilim kurgu", "science-fiction"]),
-        (.mystery, ["mystery", "detective", "thriller", "crime", "suspense", "noir", "horror",
+                           "dystopian", "dystopias", "speculative", "bilim kurgu", "science-fiction"]),
+        (.mystery, ["mystery", "mysteries", "detective", "thriller", "thrillers", "crime", "suspense", "noir", "horror",
                     "polisiye", "gerilim", "krimi"]),
-        (.philosophy, ["philosophy", "ethics", "metaphysics", "stoic", "logic", "religion",
+        (.philosophy, ["philosophy", "ethics", "metaphysics", "stoic", "stoicism", "logic", "religion",
                        "spiritual", "felsefe", "philosophie"]),
         (.technology, ["computer", "computers", "programming", "software", "engineering",
                        "mathematics", "data", "artificial intelligence", "teknoloji", "bilgisayar",
                        "informatik"]),
         (.history, ["history", "historical", "war", "ancient", "medieval", "civilization",
                     "tarih", "geschichte"]),
-        (.biography, ["biography", "autobiography", "memoir", "letters", "diaries", "personal narrative",
-                      "biyografi", "anı", "biographie"]),
+        (.biography, ["biography", "biographies", "autobiography", "memoir", "memoirs", "letters", "diaries", "personal narrative",
+                      "biyografi", "anı", "anılar", "biographie"]),
         (.nature, ["nature", "science", "biology", "astronomy", "environment", "travel", "ecology",
                    "doğa", "gezi", "natur"]),
+        (.children, ["juvenile", "children", "picture book", "young adult", "çocuk", "kinderbuch"]),
         (.literary, ["fiction", "novel", "literary", "classics", "romance", "fantasy", "adventure",
                      "roman", "edebiyat", "öykü"])
     ]

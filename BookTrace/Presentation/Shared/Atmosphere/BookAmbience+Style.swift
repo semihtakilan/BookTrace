@@ -150,7 +150,7 @@ extension BookPalette {
     /// Kırmızı kapaklı bir bilim kurgu hâlâ kırmızıya çalıyor ama uzayın
     /// serinliğini alıyor.
     func biased(by ambience: BookAmbience) -> BookPalette {
-        guard let bias = ambience.hueBias else { return self }
+        guard vibrancy > 0, let bias = ambience.hueBias else { return self }
 
         // Ton çemberi dairesel: 0.95'ten 0.05'e giden yol 0.9 değil 0.1.
         var difference = bias.target - hue

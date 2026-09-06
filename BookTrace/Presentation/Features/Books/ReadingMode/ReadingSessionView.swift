@@ -51,8 +51,7 @@ private struct ReadingRoomView: View {
             let compact = geometry.size.height < 620
 
             ZStack {
-                AmbienceBackdrop(ambience: ambience, palette: palette.biased(by: ambience),
-                                 isActive: viewModel.isRunning)
+                ReadingRoomBackdrop(book: entry.book, isActive: viewModel.isRunning)
 
                 VStack(spacing: 0) {
                     roomBar
@@ -82,10 +81,9 @@ private struct ReadingRoomView: View {
             if !finishing { viewModel.resumeAfterFinishing() }
         }
         .confirmationDialog("Discard this session?", isPresented: $isConfirmingDiscard, titleVisibility: .visible) {
-            Button("Discard", role: .destructive) { navigator.dismiss() }
+            Button("Discard", role: .destructive) { viewModel.discard() }
             Button("Keep Reading", role: .cancel) {}
         } message: { Text("The elapsed time will not be recorded.") }
-        .errorAlert($viewModel.error)
     }
 
     // MARK: - Üst şerit
@@ -167,14 +165,6 @@ private struct ReadingRoomView: View {
             progress: entry.progressFraction,
             isFloating: viewModel.isRunning
         )
-        .background {
-            // Kitabın arkasındaki hale, kapağın rengini sahneye yayıyor.
-            Circle()
-                .fill(RadialGradient(colors: [palette.halo.opacity(0.45), .clear],
-                                     center: .center, startRadius: 0, endRadius: 190))
-                .frame(width: 380, height: 380)
-                .blur(radius: 26)
-        }
         .padding(.top, compact ? 4 : 12)
     }
 
@@ -189,6 +179,23 @@ private struct ReadingRoomView: View {
                     .font(.subheadline)
                     .foregroundStyle(.white.opacity(0.6))
             }
+
+            Label {
+                if let total = entry.effectivePageCount {
+                    Text("Page \(entry.currentPage) of \(total)")
+                } else {
+                    Text("Page \(entry.currentPage)")
+                }
+            } icon: {
+                Image(systemName: "bookmark.fill")
+                    .foregroundStyle(palette.glow)
+            }
+            .font(.caption.weight(.medium).monospacedDigit())
+            .foregroundStyle(.white.opacity(0.78))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 9)
+            .background(.white.opacity(0.07), in: .capsule)
+            .padding(.top, 8)
         }
         .multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)
@@ -212,7 +219,7 @@ private struct ReadingRoomView: View {
 
             Text(ambience.invitation)
                 .font(.footnote)
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(.white.opacity(0.65))
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
         }

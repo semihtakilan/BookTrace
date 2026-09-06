@@ -29,9 +29,11 @@ final class LibraryEntryDetailViewModel {
         do {
             if let refreshed = try libraryRepository.entry(for: entry.id) {
                 entry = refreshed
+                wasRemoved = false
             } else {
                 wasRemoved = true
             }
+            self.error = nil
         } catch {
             self.error = UserFacingError(error)
         }
@@ -61,6 +63,24 @@ final class LibraryEntryDetailViewModel {
         // geri alındığında kitabın "Bitirildi" kalmasına yol açıyordu.
         updated.setProgress(currentPage: currentPage)
         persist(updated)
+    }
+
+    /// Geçersiz girişler kaydet düğmesini kapatır; sessiz kırpma veya hiçbir
+    /// değişiklik yapmadan kapanan bir ilerleme formu kullanıcıyı yanıltır.
+    func page(forProgressInput input: String) -> Int? {
+        let trimmed = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.allSatisfy({ $0.wholeNumberValue != nil }) else { return nil }
+        let digits = trimmed.compactMap(\.wholeNumberValue).map(String.init).joined()
+        guard let value = Int(digits) else { return nil }
+        switch entry.progressType {
+        case .pages:
+            if let total = entry.effectivePageCount, value > total { return nil }
+            return value
+        case .percentage:
+            guard value <= 100, let total = entry.effectivePageCount else { return nil }
+            if value == 100 { return total }
+            return Int((Double(total) * Double(value) / 100).rounded())
+        }
     }
 
     func remove() {

@@ -92,7 +92,7 @@ struct BookPalette: Sendable, Hashable, Codable {
 
     private func color(hueOffset: Double = 0, saturation: Double, brightness: Double) -> Color {
         Color(hue: (hue + hueOffset).truncatingRemainder(dividingBy: 1),
-              saturation: saturation,
+              saturation: vibrancy == 0 ? 0 : saturation,
               brightness: brightness)
     }
 
@@ -110,7 +110,7 @@ struct BookPalette: Sendable, Hashable, Codable {
 enum BookPaletteExtractor {
 
     static func palette(from image: UIImage) -> BookPalette? {
-        guard let pixels = downsampledPixels(from: image) else { return nil }
+        guard let pixels = downsampledPixels(from: image), !pixels.isEmpty else { return nil }
 
         // Ton çemberi 24 dilime bölünür; her piksel doygunluğuna ve orta
         // parlaklığa yakınlığına göre ağırlıklandırılır. Kapakların büyük
@@ -135,11 +135,11 @@ enum BookPaletteExtractor {
             totalWeight += weight
         }
 
-        // Hiçbir piksel renkli değilse (tamamen gri bir kapak) ton uydurmak
-        // yanlış olur; çağıran taraf kimlikten türeyen yedeği kullanır.
+        // A grayscale cover has an identity too. Cache its neutral palette
+        // instead of repeatedly retrying extraction and inventing a hue.
         guard let dominant = bucketWeights.indices.max(by: { bucketWeights[$0] < bucketWeights[$1] }),
               bucketWeights[dominant] > 0, totalWeight > 0 else {
-            return nil
+            return BookPalette(hue: 0, vibrancy: 0)
         }
 
         let hue = bucketHueSums[dominant] / bucketWeights[dominant]

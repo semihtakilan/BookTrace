@@ -13,9 +13,14 @@ import SwiftUI
 @MainActor
 @Observable
 final class BookDetailViewModel {
+    enum DescriptionState: Equatable {
+        case idle, loading, available, unavailable, failed
+    }
+
     /// Kitap zenginleşebiliyor: liste kaydında açıklama yok, detay isteği
     /// geldiğinde ekran kendini tamamlıyor.
     private(set) var book: BookReference
+    private(set) var descriptionState: DescriptionState = .idle
 
     private(set) var existingEntry: LibraryEntry?
     private(set) var didSave = false
@@ -49,9 +54,14 @@ final class BookDetailViewModel {
         self.libraryRepository = libraryRepository
         self.bookDetailFetching = bookDetailFetching
         self.settings = settings
+        if hasDescription { descriptionState = .available }
     }
 
     var isInLibrary: Bool { existingEntry != nil }
+
+    private var hasDescription: Bool {
+        !(book.description?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
 
     var primaryActionTitle: LocalizedStringKey {
         isInLibrary ? "Update Library Details" : "Add to Library"
@@ -83,23 +93,39 @@ final class BookDetailViewModel {
     func load() {
         do {
             existingEntry = try libraryRepository.entry(for: book.id)
+            if let existingEntry {
+                book = book.merging(existingEntry.book)
+                if hasDescription { descriptionState = .available }
+            }
             knownCategories = try libraryRepository.fetchCategories()
         } catch {
             self.error = UserFacingError(error)
         }
     }
 
-    /// Eksik alanları — asıl olarak açıklamayı — tamamlar.
-    ///
-    /// Kütüphanedeki kitap için hiç çağrılmıyor: kayıt eklenirken metadata'sı
-    /// da saklandı, ağa çıkmanın karşılığı yok. Başarısızlık sessiz: ekran
-    /// elindeki veriyle zaten dolu, kullanıcının göreceği bir eksik yok.
+    /// Kayıtlı metadata önce gösterilir; kütüphanede olsa da eksik açıklama tamamlanır.
+    /// İptal edilen ekran isteği, sonradan dönen yanıtla görünümü değiştiremez.
     func enrich() async {
-        guard existingEntry == nil else { return }
-        guard book.description?.isEmpty ?? true else { return }
+        guard !Task.isCancelled else { return }
+        guard !hasDescription else {
+            descriptionState = .available
+            return
+        }
+        guard descriptionState != .loading else { return }
 
-        guard let enriched = try? await bookDetailFetching.detail(for: book) else { return }
-        book = enriched
+        descriptionState = .loading
+        do {
+            let enriched = try await bookDetailFetching.detail(for: book)
+            try Task.checkCancellation()
+            book = book.merging(enriched)
+            descriptionState = hasDescription ? .available : .unavailable
+        } catch {
+            if Task.isCancelled || error is CancellationError || (error as? URLError)?.code == .cancelled {
+                descriptionState = hasDescription ? .available : .idle
+            } else {
+                descriptionState = .failed
+            }
+        }
     }
 
     /// Formu açar; kitap zaten kütüphanedeyse mevcut seçimlerle doldurur.

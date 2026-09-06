@@ -106,11 +106,12 @@ final class OpenLibraryService: BookSearching, BookDetailFetching {
     /// Her isteği sıraya sokar ve ağ hatalarını uygulamanın tanıdığı hatalara
     /// çevirir.
     private func execute<Value>(_ work: () async throws -> Value) async throws -> Value {
-        await throttle.wait()
+        try await throttle.wait()
 
         do {
             return try await work()
         } catch let error as NetworkError {
+            if case .cancelled = error { throw CancellationError() }
             switch error.statusCode {
             case 404:      throw OpenLibraryServiceError.bookNotFound
             case 403, 429: throw OpenLibraryServiceError.rateLimited

@@ -37,6 +37,9 @@ struct GoogleBooksSearchEndpoint: Endpoint {
     var path: String = "volumes"
     var queryParameters: [String: String]?
     var baseURL: URL { GoogleBooksHost.baseURL }
+    var timeout: TimeInterval? { isDetailRequest ? 6 : 30 }
+    var maximumAttempts: Int? { isDetailRequest ? 1 : nil }
+    private var isDetailRequest = false
 
     /// Google, anahtara konan "iOS uygulamaları" kısıtlamasını bu başlıkla
     /// doğruluyor. Başlık gönderilmezse kısıtlanmış bir anahtar 403 döner —
@@ -70,6 +73,14 @@ struct GoogleBooksSearchEndpoint: Endpoint {
         Self(query: query, maxResults: maxResults, apiKey: apiKey)
     }
 
+    /// The hybrid detail loader owns fallback timing; transport retries must
+    /// not keep a description request alive after the reader has moved on.
+    static func detail(query: String, maxResults: Int, apiKey: String?) -> Self {
+        var endpoint = Self(query: query, maxResults: maxResults, apiKey: apiKey)
+        endpoint.isDetailRequest = true
+        return endpoint
+    }
+
     /// Konu rafı — Google Books `subject:` önekini bekler.
     static func subject(_ subject: String, maxResults: Int, apiKey: String?) -> Self {
         Self(query: "subject:\"\(subject)\"", maxResults: maxResults, apiKey: apiKey)
@@ -93,6 +104,8 @@ struct GoogleBooksVolumeEndpoint: Endpoint {
     var queryParameters: [String: String]?
     var baseURL: URL { GoogleBooksHost.baseURL }
     var headers: [String: String] { GoogleBooksSearchEndpoint.restrictionHeaders }
+    var timeout: TimeInterval? { 6 }
+    var maximumAttempts: Int? { 1 }
 
     init(volumeID: String, apiKey: String?) {
         path = "volumes/\(volumeID)"

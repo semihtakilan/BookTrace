@@ -29,7 +29,7 @@ public protocol RequestBudget: Sendable {
 ///
 /// * arama ve raflar → Open Library; yalnızca sonuç boş dönerse Google
 /// * barkod → Open Library baskı kaydı; bulunamazsa Google
-/// * detay → kitabın kendi kaynağı; açıklama hâlâ yoksa Google
+/// * detay → Open Library; kısa sürede açıklama gelmezse kota dahilinde Google
 ///
 /// Yedeğe düşerken kullanıcı hiçbir şey fark etmiyor: iki kaynak da aynı
 /// `BookReference`'ı üretiyor.
@@ -38,17 +38,23 @@ public struct HybridBookSearching: BookSearching, BookDetailFetching, Sendable {
     private let fallback: any BookSearching & BookDetailFetching
     private let primaryDetail: any BookDetailFetching
     private let budget: any RequestBudget
+    private let detailFallbackDelay: Duration
+    private let detailTimeout: Duration
 
     public init(
         primary: any BookSearching,
         primaryDetail: any BookDetailFetching,
         fallback: any BookSearching & BookDetailFetching,
-        budget: any RequestBudget
+        budget: any RequestBudget,
+        detailFallbackDelay: Duration = .milliseconds(800),
+        detailTimeout: Duration = .seconds(8)
     ) {
         self.primary = primary
         self.primaryDetail = primaryDetail
         self.fallback = fallback
         self.budget = budget
+        self.detailFallbackDelay = max(.zero, detailFallbackDelay)
+        self.detailTimeout = max(.milliseconds(1), detailTimeout)
     }
 
     public func searchBooks(query: String, maxResults: Int) async throws -> [BookReference] {
@@ -78,30 +84,107 @@ public struct HybridBookSearching: BookSearching, BookDetailFetching, Sendable {
         return book
     }
 
-    /// Kitabı, kendi kaynağından derinleştirir; açıklama hâlâ yoksa diğerine sorar.
-    ///
-    /// Açıklama tek başına ikinci bir isteği hak eden alan: detay ekranının
-    /// gövdesi o. Sayfa sayısı ya da kapak eksikse kullanıcı bunu kendi
-    /// girebiliyor, ama açıklamanın yerini hiçbir şey doldurmuyor.
+    /// Hızlı bir Open Library yanıtı kota harcamaz. Yavaş yanıtta Google da
+    /// devreye girer; ilk açıklama ekranı doldurur ve diğer istek iptal edilir.
+    /// Açıklamasız/başarısız bir yanıt yarışı kazanmaz: diğer kaynak beklenir.
+    /// Süre sınırı raf kuyruğunu ve bütün ağ denemelerini birlikte kapsar.
     public func detail(for book: BookReference) async throws -> BookReference {
-        let enriched = (try? await primaryDetailIfPossible(book)) ?? book
+        try Task.checkCancellation()
+        guard !Self.hasDescription(book) else { return book }
 
-        guard enriched.description?.isEmpty ?? true else { return enriched }
-        guard await budget.consume() else { return enriched }
+        return try await withThrowingTaskGroup(of: DetailEvent.self) { group in
+            defer { group.cancelAll() }
+            var enriched = book
+            var primaryFinished = book.source != .openLibrary
+            var fallbackStarted = false
+            var fallbackFinished = false
+            var receivedMetadata = false
+            var firstError: Error?
 
-        do {
-            return try await fallback.detail(for: enriched)
-        } catch {
-            if HybridBookSearching.isQuotaFailure(error) {
-                await budget.recordQuotaFailure()
+            group.addTask {
+                try await Task.sleep(for: detailTimeout)
+                return .deadline
+            }
+
+            if !primaryFinished {
+                group.addTask {
+                    do { return .primary(.success(try await primaryDetail.detail(for: book))) }
+                    catch {
+                        if Self.isCancellation(error) || Task.isCancelled { throw CancellationError() }
+                        return .primary(.failure(error))
+                    }
+                }
+                group.addTask {
+                    try await Task.sleep(for: detailFallbackDelay)
+                    return .startFallback
+                }
+            } else {
+                fallbackStarted = true
+                group.addTask { try await fallbackDetail(for: book) }
+            }
+
+            while let event = try await group.next() {
+                try Task.checkCancellation()
+                switch event {
+                case .primary(let result), .fallback(let result):
+                    if case .primary = event { primaryFinished = true }
+                    else { fallbackFinished = true }
+                    switch result {
+                    case .success(let detail):
+                        enriched = enriched.merging(detail)
+                        receivedMetadata = true
+                        if Self.hasDescription(enriched) { return enriched }
+                    case .failure(let error):
+                        firstError = firstError ?? error
+                    }
+                case .fallbackUnavailable:
+                    fallbackFinished = true
+                case .startFallback:
+                    break
+                case .deadline:
+                    throw firstError ?? URLError(.timedOut)
+                }
+
+                // Açıklamasız birincil yanıt geldiğinde bekleme penceresinin
+                // dolmasına gerek yok. Gecikme sinyali de aynı yolu kullanır.
+                if !fallbackStarted {
+                    fallbackStarted = true
+                    let input = enriched
+                    group.addTask { try await fallbackDetail(for: input) }
+                }
+
+                if primaryFinished && fallbackFinished {
+                    if !receivedMetadata, let firstError { throw firstError }
+                    return enriched
+                }
             }
             return enriched
         }
     }
 
-    private func primaryDetailIfPossible(_ book: BookReference) async throws -> BookReference {
-        guard book.source == .openLibrary else { return book }
-        return try await primaryDetail.detail(for: book)
+    private func fallbackDetail(for book: BookReference) async throws -> DetailEvent {
+        try Task.checkCancellation()
+        guard await budget.consume() else { return .fallbackUnavailable }
+        try Task.checkCancellation()
+        do {
+            return .fallback(.success(try await fallback.detail(for: book)))
+        } catch {
+            if Self.isCancellation(error) || Task.isCancelled { throw CancellationError() }
+            if Self.isQuotaFailure(error) { await budget.recordQuotaFailure() }
+            return .fallback(.failure(error))
+        }
+    }
+
+    private static func hasDescription(_ book: BookReference) -> Bool {
+        !(book.description?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
+
+    private enum DetailEvent: Sendable {
+        case primary(Result<BookReference, Error>)
+        case fallback(Result<BookReference, Error>)
+        case fallbackUnavailable
+        case startFallback
+        case deadline
     }
 
     /// Birincil kaynağı dener; boş ya da hatalı dönerse — ve bütçe elverirse —

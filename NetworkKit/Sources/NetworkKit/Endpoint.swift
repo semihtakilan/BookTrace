@@ -11,6 +11,8 @@ public protocol Endpoint: Sendable {
     var queryParameters: [String: String]? { get set }
     var httpBody: HTTPBody? { get }
     var timeout: TimeInterval? { get }
+    /// Overrides the service's total attempt count for latency-sensitive requests.
+    var maximumAttempts: Int? { get }
     var requiresAuthentication: Bool { get }
     var cachePolicy: URLRequest.CachePolicy { get }
     func urlRequest() throws -> URLRequest
@@ -22,6 +24,7 @@ public extension Endpoint {
     var queryParameters: [String: String]? { nil }
     var httpBody: HTTPBody? { nil }
     var timeout: TimeInterval? { 30.0 }
+    var maximumAttempts: Int? { nil }
     var requiresAuthentication: Bool { false }
     var cachePolicy: URLRequest.CachePolicy { .useProtocolCachePolicy }
 

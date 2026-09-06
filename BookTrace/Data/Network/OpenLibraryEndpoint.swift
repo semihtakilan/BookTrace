@@ -87,6 +87,8 @@ struct OpenLibraryWorkEndpoint: Endpoint {
     var queryParameters: [String: String]?
     var baseURL: URL { OpenLibraryHost.baseURL }
     var headers: [String: String] { ["User-Agent": OpenLibraryHost.userAgent] }
+    var timeout: TimeInterval? { 6 }
+    var maximumAttempts: Int? { 1 }
 
     /// - Parameter workKey: `/works/OL166894W` biçiminde, arama sonucundaki `key`.
     init(workKey: String) {

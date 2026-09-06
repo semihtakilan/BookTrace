@@ -231,8 +231,8 @@ private struct StubSource: BookSearching, BookDetailFetching {
         #expect(await budget.consumeCallCount == 1)
     }
 
-    /// Zenginleştirme başarısız olsa da ekran dolmalı: elde olan kayıt döner.
-    @Test func aFailedEnrichmentStillReturnsTheBookInHand() async throws {
+    /// İki kaynak da hata verirse ekran yeniden deneme sunabilmeli.
+    @Test func aFailedEnrichmentCanBeRetriedByTheCaller() async throws {
         let searching = HybridBookSearching(
             primary: EmptySearch(),
             primaryDetail: FailingDetail(),
@@ -240,10 +240,201 @@ private struct StubSource: BookSearching, BookDetailFetching {
             budget: BudgetMock()
         )
 
-        let book = try await searching.detail(for: makeReference("ol:/works/1"))
-        #expect(book.id == "ol:/works/1")
-        #expect(book.description == nil)
+        await #expect(throws: TestError.notFound) {
+            try await searching.detail(for: makeReference("ol:/works/1"))
+        }
     }
+
+    @Test func aSlowPrimaryDoesNotHoldUpAGoogleDescription() async throws {
+        let primary = TimedDetailSource(delay: .seconds(2), description: "Slow Open Library summary.")
+        let fallback = TimedDetailSource(description: "Fast Google summary.")
+        let budget = BudgetMock()
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: primary, fallback: fallback, budget: budget
+        )
+        let start = ContinuousClock.now
+        let book = try await searching.detail(for: makeReference("ol:/works/1"))
+        let elapsed = start.duration(to: .now)
+
+        #expect(book.description == "Fast Google summary.")
+        #expect(book.id == "ol:/works/1")
+        #expect(elapsed < .milliseconds(1800))
+        #expect(await primary.cancellationCount == 1)
+        #expect(await budget.consumeCallCount == 1)
+        print("Hybrid detail benchmark: 2-second primary, immediate fallback, default 800ms hedge -> \(elapsed)")
+    }
+
+    @Test func thePrimaryCanStillWinAfterTheFallbackHasStarted() async throws {
+        let primary = TimedDetailSource(delay: .milliseconds(80), description: "Open Library summary.")
+        let fallback = TimedDetailSource(delay: .seconds(2), description: "Google summary.")
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: primary, fallback: fallback, budget: BudgetMock(),
+            detailFallbackDelay: .zero
+        )
+        let book = try await searching.detail(for: makeReference("ol:/works/1"))
+        #expect(book.description == "Open Library summary.")
+        #expect(await fallback.cancellationCount == 1)
+    }
+
+    @Test func anEmptyFallbackDoesNotBeatAUsefulPrimaryDescription() async throws {
+        let primary = TimedDetailSource(delay: .milliseconds(50), description: "Still worth waiting for.")
+        let fallback = TimedDetailSource(description: nil)
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: primary, fallback: fallback, budget: BudgetMock(),
+            detailFallbackDelay: .zero
+        )
+        #expect(try await searching.detail(for: makeReference("ol:/works/1")).description
+                == "Still worth waiting for.")
+        #expect(await fallback.callCount == 1)
+    }
+
+    @Test func emptyPrimaryMetadataIsCarriedIntoTheFallbackWithoutWaitingForTheHedge() async throws {
+        let fallback = TimedDetailSource(description: "Found by ISBN.")
+        let searching = HybridBookSearching(
+            primary: EmptySearch(),
+            primaryDetail: StubDetail(result: BookReference(id: "ol:/works/1", title: "Dune", isbn13: "9780441013593")),
+            fallback: fallback, budget: BudgetMock(), detailFallbackDelay: .seconds(20), detailTimeout: .seconds(1)
+        )
+        let book = try await searching.detail(for: makeReference("ol:/works/1"))
+        #expect(book.description == "Found by ISBN.")
+        #expect(await fallback.receivedBook?.isbn13 == "9780441013593")
+    }
+
+    @Test func theDetailDeadlineCancelsBothTransports() async throws {
+        let primary = TimedDetailSource(delay: .seconds(2), description: "Late.")
+        let fallback = TimedDetailSource(delay: .seconds(2), description: "Also late.")
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: primary, fallback: fallback, budget: BudgetMock(),
+            detailFallbackDelay: .zero, detailTimeout: .milliseconds(50)
+        )
+        await #expect(throws: URLError(.timedOut)) {
+            try await searching.detail(for: makeReference("ol:/works/1"))
+        }
+        #expect(await primary.cancellationCount == 1)
+        #expect(await fallback.cancellationCount == 1)
+    }
+
+    @Test func exhaustedQuotaStillLetsOpenLibraryFinish() async throws {
+        let fallback = TimedDetailSource(description: "Must not be requested.")
+        let searching = HybridBookSearching(
+            primary: EmptySearch(),
+            primaryDetail: TimedDetailSource(delay: .milliseconds(50), description: "No quota needed."),
+            fallback: fallback, budget: BudgetMock(allowance: 0), detailFallbackDelay: .zero
+        )
+        #expect(try await searching.detail(for: makeReference("ol:/works/1")).description == "No quota needed.")
+        #expect(await fallback.callCount == 0)
+    }
+
+    @Test func aDeadlineAfterEmptyMetadataStillAllowsRetryingTheDescription() async throws {
+        let fallback = TimedDetailSource(delay: .seconds(2), description: "Late summary.")
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: StubDetail(result: makeReference("ol:/works/1")),
+            fallback: fallback, budget: BudgetMock(), detailTimeout: .milliseconds(50)
+        )
+        await #expect(throws: URLError(.timedOut)) {
+            try await searching.detail(for: makeReference("ol:/works/1"))
+        }
+        #expect(await fallback.cancellationCount == 1)
+    }
+
+    @Test func googleBooksIdentifiersGoDirectlyToTheirOwnSource() async throws {
+        let primary = TimedDetailSource(description: "Wrong route.")
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: primary,
+            fallback: TimedDetailSource(description: "Volume description."), budget: BudgetMock(),
+            detailFallbackDelay: .seconds(20), detailTimeout: .seconds(1)
+        )
+        #expect(try await searching.detail(for: makeReference("gb:1")).description == "Volume description.")
+        #expect(await primary.callCount == 0)
+    }
+
+    @Test func cancellingBeforeTheHedgeDoesNotSpendQuota() async throws {
+        let primary = TimedDetailSource(delay: .seconds(2), description: "Late.")
+        let budget = BudgetMock()
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: primary,
+            fallback: TimedDetailSource(description: "Unneeded."), budget: budget,
+            detailFallbackDelay: .seconds(10)
+        )
+        let task = Task { try await searching.detail(for: makeReference("ol:/works/1")) }
+        while await primary.callCount == 0 { await Task.yield() }
+        task.cancel()
+        await #expect(throws: CancellationError.self) { try await task.value }
+        #expect(await budget.consumeCallCount == 0)
+        #expect(await primary.cancellationCount == 1)
+    }
+
+    @Test func aSourceCancellationDoesNotLaunchAnotherRequest() async throws {
+        let budget = BudgetMock()
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: FailingSearch(error: URLError(.cancelled)),
+            fallback: TimedDetailSource(description: "Unneeded."), budget: budget
+        )
+        await #expect(throws: CancellationError.self) {
+            try await searching.detail(for: makeReference("ol:/works/1"))
+        }
+        #expect(await budget.consumeCallCount == 0)
+    }
+
+    @Test func anExistingDescriptionNeedsNeitherSource() async throws {
+        let primary = TimedDetailSource(description: "Unneeded.")
+        let budget = BudgetMock()
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: primary,
+            fallback: TimedDetailSource(description: "Unneeded."), budget: budget
+        )
+        #expect(try await searching.detail(for: makeReference("ol:/works/1", description: "Already here.")).description
+                == "Already here.")
+        #expect(await primary.callCount == 0)
+        #expect(await budget.consumeCallCount == 0)
+    }
+
+    @Test func whitespaceNeverOverridesAUsefulDescription() async throws {
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: StubDetail(result: makeReference("ol:/works/1", description: String(repeating: " ", count: 100))),
+            fallback: TimedDetailSource(description: "Summary."), budget: BudgetMock()
+        )
+        #expect(try await searching.detail(for: makeReference("ol:/works/1")).description == "Summary.")
+    }
+
+    @Test func aDetailQuotaFailureTripsTheBudgetCircuitBreaker() async throws {
+        let budget = BudgetMock()
+        let searching = HybridBookSearching(
+            primary: EmptySearch(), primaryDetail: StubDetail(result: makeReference("ol:/works/1")),
+            fallback: FailingSearch(error: QuotaError()), budget: budget
+        )
+        _ = try await searching.detail(for: makeReference("ol:/works/1"))
+        #expect(await budget.quotaFailureCount == 1)
+    }
+}
+
+private actor TimedDetailSource: BookSearching, BookDetailFetching {
+    let delay: Duration
+    let description: String?
+    private(set) var callCount = 0
+    private(set) var cancellationCount = 0
+    private(set) var receivedBook: BookReference?
+
+    init(delay: Duration = .zero, description: String?) {
+        self.delay = delay
+        self.description = description
+    }
+
+    func detail(for book: BookReference) async throws -> BookReference {
+        callCount += 1
+        receivedBook = book
+        do {
+            try await Task.sleep(for: delay)
+            return book.merging(BookReference(id: book.id, title: "", description: description))
+        } catch {
+            cancellationCount += 1
+            throw error
+        }
+    }
+
+    func searchBooks(query: String, maxResults: Int) async throws -> [BookReference] { [] }
+    func books(inSubject subject: String, maxResults: Int) async throws -> [BookReference] { [] }
+    func findBook(isbn: String) async throws -> BookReference { throw TestError.notFound }
 }
 
 @Suite struct BookIdentifierTests {

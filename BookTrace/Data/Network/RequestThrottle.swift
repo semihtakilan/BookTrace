@@ -12,8 +12,8 @@ import Foundation
 /// Open Library istek hızını IP başına sınırlıyor: kendini tanıtmayan istemci
 /// saniyede bir, uygulama adı ve iletişim adresi veren saniyede üç istek.
 /// Explore açılışta altı rafı birden istiyor; hepsi aynı anda giderse sınırın
-/// üstüne çıkıp 429 alırız. Burası çağrıları sıraya dizer — iptal edilirlerse
-/// yerlerini de bırakırlar.
+/// üstüne çıkıp 429 alırız. Burası çağrıları sıraya dizer; beklerken iptal
+/// edilen çağrıların ağa çıkmasını engeller.
 actor RequestThrottle {
     private let interval: Duration
     private var nextSlot: ContinuousClock.Instant = .now
@@ -26,12 +26,14 @@ actor RequestThrottle {
     ///
     /// Yer, uyumadan **önce** ayrılıyor: aksi hâlde aynı anda gelen çağrıların
     /// hepsi aynı boş aralığı görüp birlikte kalkardı.
-    func wait() async {
+    func wait() async throws {
+        try Task.checkCancellation()
         let now = ContinuousClock.now
         let slot = max(nextSlot, now)
         nextSlot = slot.advanced(by: interval)
 
         guard slot > now else { return }
-        try? await Task.sleep(until: slot, clock: .continuous)
+        try await Task.sleep(until: slot, clock: .continuous)
+        try Task.checkCancellation()
     }
 }

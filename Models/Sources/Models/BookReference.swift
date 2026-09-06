@@ -88,6 +88,8 @@ public struct BookReference: Identifiable, Hashable, Sendable, Codable {
     }
 
     private static func richer(_ first: String?, _ second: String?) -> String? {
+        let first = first.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+        let second = second.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
         guard let first else { return second }
         guard let second else { return first }
         return second.count > first.count ? second : first

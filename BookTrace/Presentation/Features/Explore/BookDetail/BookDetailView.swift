@@ -16,6 +16,7 @@ struct BookDetailView: View {
 private struct BookDetailContent: View {
     @State var viewModel: BookDetailViewModel
     @State private var isDescriptionExpanded = false
+    @State private var descriptionLoadAttempt = 0
     @Environment(AppRouteTypeManager.self) private var routeManager
     private var book: BookReference { viewModel.book }
 
@@ -37,22 +38,7 @@ private struct BookDetailContent: View {
                         }
                         .foregroundStyle(ReadingStyle.accent)
                     }
-                    if let description = book.description, !description.isEmpty {
-                        VStack(alignment: .leading, spacing: 14) {
-                            ReadingSectionHeading(title: "Inside the book")
-                            Text(description)
-                                .font(.body).lineSpacing(5)
-                                .foregroundStyle(ReadingStyle.secondary)
-                                .lineLimit(!isDescriptionExpanded && description.count > 250 ? 6 : nil)
-                            if description.count > 250 {
-                                Button(isDescriptionExpanded ? "Read less" : "Read more") {
-                                    isDescriptionExpanded.toggle()
-                                }
-                                .font(.subheadline.weight(.semibold))
-                                .frame(minHeight: 44)
-                            }
-                        }
-                    }
+                    descriptionSection
                     if !book.subjects.isEmpty {
                         VStack(alignment: .leading, spacing: 14) {
                             ReadingSectionHeading(title: "Subjects")
@@ -84,8 +70,48 @@ private struct BookDetailContent: View {
         }
         .sheet(isPresented: $viewModel.isPresentingForm) { AddToLibraryForm(viewModel: viewModel) }
         .errorAlert($viewModel.error)
-        .onAppear { viewModel.load() }
-        .task { await viewModel.enrich() }
+        .task(id: descriptionLoadAttempt) {
+            viewModel.load()
+            await viewModel.enrich()
+        }
+    }
+
+    private var descriptionSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ReadingSectionHeading(title: "Inside the book")
+            switch viewModel.descriptionState {
+            case .available:
+                if let description = book.description {
+                    Text(description)
+                        .font(.body).lineSpacing(5)
+                        .foregroundStyle(ReadingStyle.secondary)
+                        .lineLimit(!isDescriptionExpanded && description.count > 250 ? 6 : nil)
+                    if description.count > 250 {
+                        Button(isDescriptionExpanded ? "Read less" : "Read more") {
+                            isDescriptionExpanded.toggle()
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .frame(minHeight: 44)
+                    }
+                }
+            case .idle, .loading:
+                HStack(spacing: 10) {
+                    ProgressView().tint(ReadingStyle.accent)
+                    Text("Loading the description…")
+                        .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
+                }
+                .frame(minHeight: 44)
+            case .unavailable:
+                Text("A description isn’t available for this book yet.")
+                    .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
+            case .failed:
+                Text("The description couldn’t be loaded.")
+                    .font(.subheadline).foregroundStyle(ReadingStyle.secondary)
+                Button("Try again") { descriptionLoadAttempt += 1 }
+                    .font(.subheadline.weight(.semibold))
+                    .frame(minHeight: 44)
+            }
+        }
     }
 
     private var metadata: some View {

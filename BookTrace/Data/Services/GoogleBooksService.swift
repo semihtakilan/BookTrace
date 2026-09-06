@@ -55,10 +55,14 @@ final class GoogleBooksService: BookSearching, BookDetailFetching {
 
         let candidates: [BookReference]
         if let isbn13 = book.isbn13, !isbn13.isEmpty {
-            candidates = try await searchBooks(query: "isbn:\(isbn13)", maxResults: 1)
+            candidates = try await execute {
+                GoogleBooksSearchEndpoint.detail(query: "isbn:\(isbn13)", maxResults: 1, apiKey: $0)
+            }
         } else {
             let author = book.authors.first.map { " \($0)" } ?? ""
-            candidates = try await searchBooks(query: "\(book.title)\(author)", maxResults: 3)
+            candidates = try await execute {
+                GoogleBooksSearchEndpoint.detail(query: "\(book.title)\(author)", maxResults: 3, apiKey: $0)
+            }
         }
 
         guard let match = candidates.first(where: { $0.matchingKey == book.matchingKey })
@@ -101,7 +105,8 @@ final class GoogleBooksService: BookSearching, BookDetailFetching {
     }
 
     private static func mapped(_ error: NetworkError, hasAPIKey: Bool) -> Error {
-        switch error.statusCode {
+        if case .cancelled = error { return CancellationError() }
+        return switch error.statusCode {
         case 429, 403:
             GoogleBooksServiceError.quotaExceeded(hasAPIKey: hasAPIKey)
         case 404:

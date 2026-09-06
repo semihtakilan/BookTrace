@@ -56,7 +56,7 @@ public actor NetworkService: NetworkServiceProtocol {
         let urlRequest = try endpoint.urlRequest()
 
         let networkResponse = try await withRetry(
-            maxAttempts: configuration.retryCount,
+            maxAttempts: max(endpoint.maximumAttempts ?? configuration.retryCount, 1),
             retryDelay: configuration.retryDelay
         ) {
             try await self.performRequest(urlRequest)
@@ -91,6 +91,8 @@ public actor NetworkService: NetworkServiceProtocol {
 
             for i in responseInterceptors { networkResponse = try await i.intercept(networkResponse) }
             return networkResponse
+        } catch is CancellationError {
+            throw CancellationError()
         } catch let error as URLError {
             let ne = mapURLError(error)
             if let logger { await logger.logError(ne, for: intercepted) }
@@ -144,6 +146,7 @@ public actor NetworkService: NetworkServiceProtocol {
     ) async throws -> T {
         var lastError: Error?
         for attempt in 1...maxAttempts {
+            try Task.checkCancellation()
             do {
                 return try await operation()
             } catch let error as NetworkError {

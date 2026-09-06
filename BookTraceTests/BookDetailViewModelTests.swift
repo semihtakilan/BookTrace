@@ -58,7 +58,7 @@ struct BookDetailViewModelTests {
         book: BookReference = makeBook(pageCount: 412, subjects: ["Fiction", "Adventure"]),
         stored: [LibraryEntry] = [],
         categories: [Models.Category] = [],
-        detail: BookDetailFetchingMock = BookDetailFetchingMock()
+        detail: any BookDetailFetching = BookDetailFetchingMock()
     ) -> (BookDetailViewModel, LibraryRepositoryMock) {
         let repository = LibraryRepositoryMock()
         repository.storedEntries = stored
@@ -82,11 +82,24 @@ struct BookDetailViewModelTests {
         await viewModel.enrich()
 
         #expect(viewModel.book.description == "A desert planet.")
+        #expect(viewModel.descriptionState == .available)
         #expect(await detail.callCount == 1)
     }
 
-    /// Kütüphanedeki kitabın metadata'sı zaten saklandı: ağa çıkmanın karşılığı yok.
-    @Test func aBookAlreadyInTheLibraryIsNotEnriched() async {
+    @Test func aSavedDescriptionIsShownImmediatelyWithoutANetworkRequest() async {
+        let detail = BookDetailFetchingMock(description: "Replaced.")
+        let savedBook = makeBook(description: "Saved in the library.")
+        let (viewModel, _) = makeViewModel(book: makeBook(), stored: [LibraryEntry(book: savedBook)], detail: detail)
+
+        viewModel.load()
+        #expect(viewModel.book.description == "Saved in the library.")
+        #expect(viewModel.descriptionState == .available)
+        await viewModel.enrich()
+
+        #expect(await detail.callCount == 0)
+    }
+
+    @Test func aLibraryBookWithMissingDescriptionIsStillEnriched() async {
         let detail = BookDetailFetchingMock(description: "A desert planet.")
         let book = makeBook()
         let (viewModel, _) = makeViewModel(book: book, stored: [LibraryEntry(book: book)], detail: detail)
@@ -94,7 +107,9 @@ struct BookDetailViewModelTests {
         viewModel.load()
         await viewModel.enrich()
 
-        #expect(await detail.callCount == 0)
+        #expect(viewModel.book.description == "A desert planet.")
+        #expect(viewModel.descriptionState == .available)
+        #expect(await detail.callCount == 1)
     }
 
     @Test func aBookThatAlreadyHasADescriptionIsLeftAlone() async {
@@ -106,6 +121,77 @@ struct BookDetailViewModelTests {
 
         #expect(viewModel.book.description == "Already here.")
         #expect(await detail.callCount == 0)
+    }
+
+    @Test func aSuccessfulResponseWithoutADescriptionHasAnUnavailableState() async {
+        let (viewModel, _) = makeViewModel()
+
+        await viewModel.enrich()
+
+        #expect(viewModel.descriptionState == .unavailable)
+        #expect(viewModel.error == nil)
+    }
+
+    @Test func aSecondEnrichmentDoesNotDuplicateAnInFlightRequest() async {
+        let detail = ControlledBookDetailFetching()
+        let (viewModel, _) = makeViewModel(detail: detail)
+        let request = Task { await viewModel.enrich() }
+        await detail.waitUntilRequested()
+
+        #expect(viewModel.descriptionState == .loading)
+        await viewModel.enrich()
+        #expect(await detail.callCount == 1)
+
+        await detail.complete(with: makeBook(description: "A desert planet."))
+        await request.value
+        #expect(viewModel.descriptionState == .available)
+    }
+
+    @Test func aDescriptionFailureCanBeRetriedWithoutAnAlert() async {
+        let detail = ControlledBookDetailFetching()
+        let (viewModel, _) = makeViewModel(detail: detail)
+        let request = Task { await viewModel.enrich() }
+        await detail.waitUntilRequested()
+        await detail.fail(with: URLError(.notConnectedToInternet))
+        await request.value
+
+        #expect(viewModel.descriptionState == .failed)
+        #expect(viewModel.error == nil)
+
+        let retry = Task { await viewModel.enrich() }
+        await detail.waitUntilRequested()
+        await detail.complete(with: makeBook(description: "Available after retry."))
+        await retry.value
+
+        #expect(viewModel.descriptionState == .available)
+        #expect(viewModel.book.description == "Available after retry.")
+        #expect(await detail.callCount == 2)
+    }
+
+    @Test func aCancelledRequestCannotApplyALateDescription() async {
+        let detail = ControlledBookDetailFetching()
+        let (viewModel, _) = makeViewModel(detail: detail)
+        let request = Task { await viewModel.enrich() }
+        await detail.waitUntilRequested()
+        request.cancel()
+        await detail.complete(with: makeBook(description: "Arrived after leaving the screen."))
+        await request.value
+
+        #expect(viewModel.descriptionState == .idle)
+        #expect(viewModel.book.description == nil)
+        #expect(viewModel.error == nil)
+    }
+
+    @Test func aCancelledTransportDoesNotShowARetryError() async {
+        let detail = ControlledBookDetailFetching()
+        let (viewModel, _) = makeViewModel(detail: detail)
+        let request = Task { await viewModel.enrich() }
+        await detail.waitUntilRequested()
+        await detail.fail(with: URLError(.cancelled))
+        await request.value
+
+        #expect(viewModel.descriptionState == .idle)
+        #expect(viewModel.error == nil)
     }
 
     /// B6: kaynağın verdiği sayfa sayısı forma yazılmamalı. Yazılsaydı kullanıcı
@@ -225,5 +311,39 @@ struct BookDetailViewModelTests {
         #expect(!viewModel.canSave)
         viewModel.pageCountText = "  "
         #expect(viewModel.canSave)
+    }
+}
+
+/// The response is controlled by each test, so loading and cancellation checks need no sleeps.
+private actor ControlledBookDetailFetching: BookDetailFetching {
+    private var pending: CheckedContinuation<BookReference, any Error>?
+    private var startWaiters: [CheckedContinuation<Void, Never>] = []
+    private(set) var callCount = 0
+
+    func detail(for book: BookReference) async throws -> BookReference {
+        callCount += 1
+        return try await withCheckedThrowingContinuation { continuation in
+            pending = continuation
+            let waiters = startWaiters
+            startWaiters.removeAll()
+            waiters.forEach { $0.resume() }
+        }
+    }
+
+    func waitUntilRequested() async {
+        if pending != nil { return }
+        await withCheckedContinuation { startWaiters.append($0) }
+    }
+
+    func complete(with book: BookReference) {
+        let request = pending
+        pending = nil
+        request?.resume(returning: book)
+    }
+
+    func fail(with error: any Error) {
+        let request = pending
+        pending = nil
+        request?.resume(throwing: error)
     }
 }

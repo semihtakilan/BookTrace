@@ -2,6 +2,8 @@
 
 6 Eylül 2026
 
+Bu belgedeki test sayıları inceleme tarihinde çalıştırılan kapsamı gösterir; güncel HEAD toplamı değildir. Yeni doğrulamalar için [CI koşumlarına](https://github.com/semihtakilan/BookTrace/actions/workflows/ci.yml) ve ilgili commit’in test çıktılarına bakın.
+
 Bu çalışma Library, Discover, Journal, Settings ve okuma oturumu akışını çalışan uygulama üzerinden değerlendirdi. Amaç, mevcut kâğıt/mürekkep tasarım dilini ve MVVM–repository ayrımını koruyarak kitap bulma, okumaya devam etme ve geçmişe dönme işlerini daha anlaşılır hâle getirmekti. İnceleme önce simülatör ekran görüntüleriyle yapıldı; etkileşim hataları kod ve testlerle doğrulandı.
 
 ## Bulgular ve değişiklikler
@@ -59,25 +61,25 @@ SE’de görülen 11 kayıt, incelemeden önce var olan kısa ve sentetik test o
 
 | Ekran | Görüntü |
 | --- | --- |
-| Library başlangıcı | [01-library-before.png](01-library-before.png) |
-| Discover başlangıcı | [02-discover-before.png](02-discover-before.png) |
-| Journal başlangıcı | [03-journal-before.png](03-journal-before.png) |
-| Settings başlangıcı | [04-settings-before.png](04-settings-before.png) |
-| Okuma modu başlangıcı | [05-reading-before.png](05-reading-before.png) |
-| Oturum bitirme başlangıcı | [06-finish-before.png](06-finish-before.png) |
-| Library, Türkçe | [07-library-final-tr.png](07-library-final-tr.png) |
-| Library arama kontrolü | [08-library-search.png](08-library-search.png) |
-| Okuma odası ara sürümü | [09-reading-first-pass.png](09-reading-first-pass.png) — birleşim çizgisinin fark edildiği ara sürüm; son tasarım değildir. |
-| Bilimkurgu okuma odası | [10-reading-scifi-final.png](10-reading-scifi-final.png) |
-| Oturum bitirme ve ilerleme önizlemesi | [11-finish-preview-final.png](11-finish-preview-final.png) |
-| Tarih kitabının okuma odası | [12-reading-history-final.png](12-reading-history-final.png) |
-| Library, açık görünüm, iPhone SE | [13-library-se-light.png](13-library-se-light.png) |
-| Okuma modu, Accessibility Large, iPhone SE | [14-reading-se-accessibility.png](14-reading-se-accessibility.png) |
-| Okuma modu küçük cihaz ara kontrolü | [15-reading-se-final.png](15-reading-se-final.png) — adına rağmen ara sürümdür; hafif katman sınırı sonrasında giderildi. |
-| Discover, iPhone SE | [16-discover-se-final.png](16-discover-se-final.png) |
-| Tam okuma geçmişi, iPhone SE | [17-history-se-final.png](17-history-se-final.png) |
-| Journal son görünümü | [18-journal-final.png](18-journal-final.png) |
-| Okuma modu, son küçük cihaz doğrulaması | [19-reading-se-verified.png](19-reading-se-verified.png) |
+| Library başlangıcı | [01-library-before.jpg](01-library-before.jpg) |
+| Discover başlangıcı | [02-discover-before.jpg](02-discover-before.jpg) |
+| Journal başlangıcı | [03-journal-before.jpg](03-journal-before.jpg) |
+| Settings başlangıcı | [04-settings-before.jpg](04-settings-before.jpg) |
+| Okuma modu başlangıcı | [05-reading-before.jpg](05-reading-before.jpg) |
+| Oturum bitirme başlangıcı | [06-finish-before.jpg](06-finish-before.jpg) |
+| Library, Türkçe | [07-library-final-tr.jpg](07-library-final-tr.jpg) |
+| Library arama kontrolü | [08-library-search.jpg](08-library-search.jpg) |
+| Okuma odası ara sürümü | [09-reading-first-pass.jpg](09-reading-first-pass.jpg) — birleşim çizgisinin fark edildiği ara sürüm; son tasarım değildir. |
+| Bilimkurgu okuma odası | [10-reading-scifi-final.jpg](10-reading-scifi-final.jpg) |
+| Oturum bitirme ve ilerleme önizlemesi | [11-finish-preview-final.jpg](11-finish-preview-final.jpg) |
+| Tarih kitabının okuma odası | [12-reading-history-final.jpg](12-reading-history-final.jpg) |
+| Library, açık görünüm, iPhone SE | [13-library-se-light.jpg](13-library-se-light.jpg) |
+| Okuma modu, Accessibility Large, iPhone SE | [14-reading-se-accessibility.jpg](14-reading-se-accessibility.jpg) |
+| Okuma modu küçük cihaz ara kontrolü | [15-reading-se-final.jpg](15-reading-se-final.jpg) — adına rağmen ara sürümdür; hafif katman sınırı sonrasında giderildi. |
+| Discover, iPhone SE | [16-discover-se-final.jpg](16-discover-se-final.jpg) |
+| Tam okuma geçmişi, iPhone SE | [17-history-se-final.jpg](17-history-se-final.jpg) |
+| Journal son görünümü | [18-journal-final.jpg](18-journal-final.jpg) |
+| Okuma modu, son küçük cihaz doğrulaması | [19-reading-se-verified.jpg](19-reading-se-verified.jpg) |
 
 ## Sınırlar
 
@@ -87,8 +89,8 @@ Kamera ve gerçek barkod okuma fiziksel cihazda doğrulanmalıdır. Bu tur tam b
 
 ## Son görünüm örnekleri
 
-![Tüm kitapları kapsayan Library](07-library-final-tr.png)
+![Tüm kitapları kapsayan Library](07-library-final-tr.jpg)
 
-![Günlükten oturumlara geçiş](18-journal-final.png)
+![Günlükten oturumlara geçiş](18-journal-final.jpg)
 
-![Son küçük ekran okuma görünümü](19-reading-se-verified.png)
+![Son küçük ekran okuma görünümü](19-reading-se-verified.jpg)

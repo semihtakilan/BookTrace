@@ -24,7 +24,7 @@ Captured from the running app on iPhone 17 Pro, iOS 26.5, before implementation.
 4. **Add to library:** the save action sat below a long category list and was absent from the first viewport. Optional organization work competed with the essential decision to save the book.
 5. **Profile:** useful statistics were presented as a series of identical cards, without a time-based view of reading activity.
 
-Baseline evidence: [Library](before-library.png), [Explore](before-explore.png), [Book details](before-detail.png), [Add to library](before-add-book.png), [Profile](before-profile.png).
+Baseline evidence: [Library](before-library.jpg), [Explore](before-explore.jpg), [Book details](before-detail.jpg), [Add to library](before-add-book.jpg), [Profile](before-profile.jpg).
 
 ## Changes and self-review
 
@@ -76,14 +76,14 @@ Baseline evidence: [Library](before-library.png), [Explore](before-explore.png),
 
 | Screen | Evidence |
 | --- | --- |
-| Library, light | [Screenshot](library-light.png) |
-| Library, dark | [Screenshot](library-dark.png) |
-| Explore, light | [Screenshot](explore-light.png) |
-| Live search | [Screenshot](search-light.png) |
-| Book details | [Screenshot](book-detail-light.png) |
-| Add to library | [Screenshot](add-book-light.png) |
-| Journal | [Screenshot](journal-light.png) |
-| First launch, iPhone SE | [Screenshot](empty-iphone-se.png) |
-| Reading timer, iPhone SE | [Screenshot](reading-iphone-se.png) |
-| Session completion with keyboard, iPhone SE | [Screenshot](finish-keyboard-iphone-se.png) |
-| Turkish with accessibility-large text | [Screenshot](accessibility-turkish.png) |
+| Library, light | [Screenshot](library-light.jpg) |
+| Library, dark | [Screenshot](library-dark.jpg) |
+| Explore, light | [Screenshot](explore-light.jpg) |
+| Live search | [Screenshot](search-light.jpg) |
+| Book details | [Screenshot](book-detail-light.jpg) |
+| Add to library | [Screenshot](add-book-light.jpg) |
+| Journal | [Screenshot](journal-light.jpg) |
+| First launch, iPhone SE | [Screenshot](empty-iphone-se.jpg) |
+| Reading timer, iPhone SE | [Screenshot](reading-iphone-se.jpg) |
+| Session completion with keyboard, iPhone SE | [Screenshot](finish-keyboard-iphone-se.jpg) |
+| Turkish with accessibility-large text | [Screenshot](accessibility-turkish.jpg) |

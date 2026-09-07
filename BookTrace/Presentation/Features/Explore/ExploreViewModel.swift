@@ -36,7 +36,12 @@ final class ExploreViewModel {
         }
     }
     private(set) var searchState: ViewState<[BookReference]> = .idle
-    private(set) var shelves: [SubjectShelf] = BookSubject.featured.map { SubjectShelf(subject: $0) }
+    private(set) var shelves: [SubjectShelf] = BookSubject.featured.map { SubjectShelf(subject: $0) } {
+        didSet { rebuildDiscovery() }
+    }
+    private(set) var spotlights: [DiscoverSpotlight] = []
+    private(set) var discoverableBooks: [BookReference] = []
+    private(set) var shortReads: [BookReference] = []
 
     /// Barkod okunduğunda doldurulur; ekran bunu görüp detay sayfasına gider.
     var scannedBook: BookReference?
@@ -61,25 +66,21 @@ final class ExploreViewModel {
         !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// A different doorway into each loaded subject, using actual catalog books.
-    var spotlights: [DiscoverSpotlight] {
-        shelves.compactMap { shelf in
-            guard case .loaded(let books) = shelf.state,
-                  let book = books.first(where: { ($0.pageCount ?? Int.max) <= 500 }) ?? books.first else { return nil }
-            return DiscoverSpotlight(subject: shelf.subject, book: book)
-        }
-    }
-
-    var discoverableBooks: [BookReference] {
+    /// Rebuild only when shelf state changes, never while SwiftUI reads body.
+    private func rebuildDiscovery() {
         var seen = Set<String>()
-        return shelves.flatMap { shelf -> [BookReference] in
-            guard case .loaded(let books) = shelf.state else { return [] }
-            return books
-        }.filter { seen.insert($0.id).inserted }
-    }
-
-    var shortReads: [BookReference] {
-        discoverableBooks.filter { book in
+        var books: [BookReference] = []
+        var highlights: [DiscoverSpotlight] = []
+        for shelf in shelves {
+            guard case .loaded(let loaded) = shelf.state else { continue }
+            if let book = loaded.first(where: { ($0.pageCount ?? Int.max) <= 500 }) ?? loaded.first {
+                highlights.append(DiscoverSpotlight(subject: shelf.subject, book: book))
+            }
+            books.append(contentsOf: loaded.filter { seen.insert($0.id).inserted })
+        }
+        spotlights = highlights
+        discoverableBooks = books
+        shortReads = books.filter { book in
             guard let pages = book.pageCount else { return false }
             return (1...250).contains(pages)
         }.sorted {

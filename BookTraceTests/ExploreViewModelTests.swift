@@ -12,6 +12,39 @@ import Testing
 
 @MainActor
 struct ExploreViewModelTests {
+    @Test func discoveryCollectionsFollowShelfLoadsRetriesAndFailures() async {
+        let catalog = ControlledSearchCatalog()
+        let viewModel = ExploreViewModel(bookSearching: catalog)
+        let first = viewModel.shelves[0]
+        let second = viewModel.shelves[1]
+        let shared = makeBook(id: "shared", pageCount: 200)
+        let short = makeBook(id: "short", pageCount: 100)
+        let long = makeBook(id: "long", pageCount: 600)
+
+        let firstLoad = Task { await viewModel.retry(shelf: first) }
+        await catalog.waitForRequest(first.subject.query)
+        #expect(viewModel.spotlights.isEmpty)
+        await catalog.succeed(first.subject.query, books: [long, shared, shared])
+        await firstLoad.value
+        #expect(viewModel.spotlights.map(\.book.id) == ["shared"])
+        #expect(viewModel.discoverableBooks.map(\.id) == ["long", "shared"])
+
+        let secondLoad = Task { await viewModel.retry(shelf: second) }
+        await catalog.waitForRequest(second.subject.query)
+        await catalog.succeed(second.subject.query, books: [shared, short])
+        await secondLoad.value
+        #expect(viewModel.shortReads.map(\.id) == ["short", "shared"])
+        #expect(viewModel.discoverableBooks.map(\.id) == ["long", "shared", "short"])
+
+        let retry = Task { await viewModel.retry(shelf: second) }
+        await catalog.waitForRequest(second.subject.query)
+        #expect(viewModel.shortReads.map(\.id) == ["shared"])
+        await catalog.fail(second.subject.query)
+        await retry.value
+        #expect(viewModel.spotlights.count == 1)
+        #expect(viewModel.shortReads.map(\.id) == ["shared"])
+    }
+
     @Test func anOlderResponseCannotReplaceTheCurrentSearch() async {
         let catalog = ControlledSearchCatalog()
         let viewModel = ExploreViewModel(bookSearching: catalog)
@@ -117,6 +150,8 @@ private actor ControlledSearchCatalog: BookSearching {
         requests.removeValue(forKey: query)?.resume(throwing: URLError(.notConnectedToInternet))
     }
 
-    func books(inSubject subject: String, maxResults: Int) async throws -> [BookReference] { [] }
+    func books(inSubject subject: String, maxResults: Int) async throws -> [BookReference] {
+        try await searchBooks(query: subject, maxResults: maxResults)
+    }
     func findBook(isbn: String) async throws -> BookReference { BookReference(id: isbn, title: "Scanned book") }
 }

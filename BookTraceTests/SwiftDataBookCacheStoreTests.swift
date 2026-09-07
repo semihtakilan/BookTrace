@@ -21,6 +21,27 @@ struct SwiftDataBookCacheStoreTests {
         return SwiftDataBookCacheStore(modelContainer: container)
     }
 
+    @Test func repeatedReadsOnlyUpdateRecencyAfterAnHour() async throws {
+        let store = try makeStore()
+        let query = BookQuery.search(text: "test", maxResults: 20)
+        await store.store([BookReference(id: "1", title: "One")], for: query)
+        let original = try #require(await store.accessDate(id: "1"))
+        _ = await store.books(for: query)
+        _ = await store.book(id: "1")
+        #expect(await store.accessDate(id: "1") == original)
+
+        await store.setAccessDate(id: "1", date: Date(timeIntervalSinceNow: -7200))
+        _ = await store.books(for: query)
+        let touched = try #require(await store.accessDate(id: "1"))
+        #expect(touched >= original)
+        _ = await store.book(id: "1")
+        #expect(await store.accessDate(id: "1") == touched)
+
+        await store.setAccessDate(id: "1", date: Date(timeIntervalSinceNow: -7200))
+        _ = await store.book(id: "1")
+        #expect(try #require(await store.accessDate(id: "1")) >= touched)
+    }
+
     @Test func aStoredQueryComesBackInTheOrderItWasWritten() async throws {
         let store = try makeStore()
         let query = BookQuery.subject("history", maxResults: 15)
@@ -138,5 +159,19 @@ struct SwiftDataBookCacheStoreTests {
         await store.removeBook(id: "2")
 
         #expect(await store.books(for: query) == nil)
+    }
+}
+
+private extension SwiftDataBookCacheStore {
+    func accessDate(id: String) -> Date? {
+        let descriptor = FetchDescriptor<CachedBookModel>(predicate: #Predicate { $0.id == id })
+        return try? modelContext.fetch(descriptor).first?.lastAccessedAt
+    }
+
+    func setAccessDate(id: String, date: Date) {
+        let descriptor = FetchDescriptor<CachedBookModel>(predicate: #Predicate { $0.id == id })
+        guard let record = try? modelContext.fetch(descriptor).first else { return }
+        record.lastAccessedAt = date
+        try? modelContext.save()
     }
 }

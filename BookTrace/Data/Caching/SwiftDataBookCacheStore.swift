@@ -59,7 +59,6 @@ actor SwiftDataBookCacheStore: BookCacheStore {
         }
 
         touch(books, at: now)
-        try? modelContext.save()
 
         return CachedBooks(books: books.map(\.reference), isStale: now >= record.refreshAfter)
     }
@@ -92,8 +91,7 @@ actor SwiftDataBookCacheStore: BookCacheStore {
         descriptor.fetchLimit = 1
 
         guard let record = try? modelContext.fetch(descriptor).first else { return nil }
-        record.lastAccessedAt = Date()
-        try? modelContext.save()
+        touch([record], at: Date())
         return record.reference
     }
 
@@ -183,10 +181,15 @@ actor SwiftDataBookCacheStore: BookCacheStore {
         return ids.compactMap { byID[$0] }
     }
 
+    /// LRU needs approximate recency, not a write for every card render.
+    /// A shelf's eligible rows are saved together, at most once per hour per book.
     private func touch(_ books: [CachedBookModel], at date: Date) {
-        for book in books {
+        var changed = false
+        for book in books where date.timeIntervalSince(book.lastAccessedAt) >= 60 * 60 {
             book.lastAccessedAt = date
+            changed = true
         }
+        if changed { try? modelContext.save() }
     }
 }
 

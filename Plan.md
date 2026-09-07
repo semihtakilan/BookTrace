@@ -1,10 +1,12 @@
 # BookTrace — Proje Planı
 
+Güncelleme: 7 Eylül 2026. Bu plan uygulanan kapsamı ve ertelenen ürün işlerini ayırır.
+
 ## Proje Özeti
 
-Google Books API'sini kullanan, kitap keşfi, kişisel kütüphane yönetimi ve okuma
-takibi sunan bir iOS uygulaması. 3 tab: **Books** (kütüphane/okuma takibi),
-**Explore** (arama/kategori/barkod ile keşif), **Profile**.
+Open Library ve Google Books üzerinden kitap keşfi, kişisel kütüphane yönetimi
+ve okuma takibi sunan bir iPhone uygulaması. Üç sekme: **Library**, **Discover**,
+**Journal**. Kod içindeki özellik adları sırasıyla `Books`, `Explore`, `Profile`.
 
 **Kapsam hedefi:** Ne MVP kadar sınırlı ne de tüm fazları kasan bir kapsam —
 portföyde iyi durabilecek, öğretici, dengeli bir uygulama.
@@ -17,7 +19,7 @@ portföyde iyi durabilecek, öğretici, dengeli bir uygulama.
 * **Navigasyon:** NavigatorUI — her sekmenin kendi `Navigator`'ı var
 * **Ağ Katmanı:** `NetworkService` (actor), interceptor zinciri, `async/await`
 * **Yerel Kalıcılık:** SwiftData — `LocalLibraryEntryModel`, `LocalReadingSessionModel`, `LocalCategoryModel`
-* **Ortak veri tipi:** `BookReference` (volumeId + başlık + yazarlar + kapak + sayfa + konu).
+* **Ortak veri tipi:** `BookReference` (kaynak önekli kimlik (`gb:` / `ol:`) + başlık + yazarlar + kapak + sayfa + konu).
   Explore'un üç kaynağından (arama/kategori/barkod) gelen kitapları tek bir Detay
   akışına bağlar. Kütüphane kaydı ise `LibraryEntry` — içinde bir `BookReference`
   taşır, üzerine yalnızca kullanıcıya ait durumu ekler.
@@ -38,7 +40,12 @@ Network katmanı, `Endpoint` protokolü, DI kurulumu, interceptor zinciri.
   * `.search(query:)` — serbest metin arama
   * `.subject(_:)` — kategori bazlı keşif (`q=subject:"..."`)
   * `.isbn(_:)` — barkoddan gelen ISBN ile tek kitap
-* `CacheFirstBookSearching` — arama/konu/ISBN sonuçlarını 24 saat diskte tutar
+* Open Library birincil kaynak; boş/hatalı sonuçta bütçe dahilinde Google Books yedeği
+* `CachedBookSearching` — taze sonucu doğrudan döndürür, bayat sonucu gösterip arkada yeniler
+* Arama/konu/ISBN yenileme aralıkları 1/7/30 gün; son kullanma süreleri 7/30/365 gün
+* Ayrı SwiftData önbelleği ve ilk açılış için `ShelfSeed.json`
+* Detayda Open Library'ye 800 ms öncelik, ortak 8 saniye sınırı ve paylaşılan eşzamanlı istekler
+* `DailyRequestBudget` — cihaz başına 25 Google Books işlemi/gün, kota hatasından sonra bir saat askı
 * Kapak görselleri Kingfisher ile önbelleklenir
 
 ## Faz 3 — Explore Tab (Arama + Kategori + Barkod) ✅
@@ -87,8 +94,8 @@ birim üzerinden hesaplanabilsin.
 ## Faz 5 — Books Tab (Kütüphane Listesi) ✅
 
 * Üstte "Now Reading" bölümü: kapak, ilerleme çubuğu, tahmini kalan süre
-* Reading Status, Ownership Status ve Categories bölümleri — yatay raflar
-* "Edit" ile raflardan kitap silme
+* All Books: arama, sıralama, durum filtresi ve durum/sahiplik/kategori gruplaması
+* Kitap silmeden önce onay
 * Kitaba dokununca `BookLibraryDetailView`, plandaki üç eylem:
   * Reading Mode
   * Reading Status (değiştirmek için)
@@ -98,7 +105,9 @@ birim üzerinden hesaplanabilsin.
 ## Faz 6 — Reading Mode (Okuma Oturumu Sayaç Ekranı) ✅
 
 * Tam ekran sayaç, Pause/Resume
-* Sağ üstte Finish → "kaç sayfa okudunuz" sayfası, Discard ve Save
+* Finish → sayfa çarkı veya klavye ile giriş, ilerleme önizlemesi, Discard ve Save
+* Kapaktan renk paleti, türe göre atmosfer, Reduce Motion ve düşük güç desteği
+* İlk oturum, ilerleme eşikleri ve kitap bitişi için kısa kutlamalar
 * Save → yeni `ReadingSession`, `currentPage` ilerler, gerekirse durum
   `.reading`/`.finished` olur
 
@@ -118,8 +127,8 @@ görüntüyü tazeliyor, bu yüzden uygulama arka plandayken de süre doğru kal
 ## Faz 7 — Okuma Hızı Tahmini ✅
 
 * Varsayılan hız: sayfa başına 2 dakika (hiç oturum yokken)
-* En az bir `ReadingSession` varsa: o kitabın tüm oturumlarının toplam süresi ÷
-  toplam okunan sayfa = kişiye ve kitaba özel sayfa başına süre
+* Pozitif süre ve sayfa içeren oturumların toplam süresi ÷ toplam sayfası, kitaba
+  özel okuma hızını verir. Sıfır sayfalı veya sıfır süreli kayıtlar hesaba katılmaz.
 * İlerleme çubuğunun yanında "tahmini kalan süre" olarak gösterilir. Tahmin
   varsayılan hızdan geliyorsa metinde `(estimate)` ibaresi yer alır; ilk
   oturumdan sonra bu ibare düşer.
@@ -134,13 +143,33 @@ Yazar arama, profil, bibliyografi.
 Kütüphanedeki konu/kategori dağılımına dayalı basit bir benzerlik skoru ile
 "Sana Göre" önerileri.
 
-## Faz 10 — Profile Tab & İstatistikler ⬜
+## Faz 10 — Journal & İstatistikler ◐
 
-Okuma hedefleri, streak takvimi, Swift Charts ile trendler.
+* [x] Kütüphane toplamları, durum ve sahiplik dağılımları
+* [x] Toplam okuma süresi, sayfalar, oturum sayısı ve kişisel hız
+* [x] Gün seçilebilen etkinlik görünümü ve kitaba bağlanan tam oturum geçmişi
+* [x] Güncel okuma serisi ve son yedi günün etkinlik şeridi
+* [ ] Kullanıcının belirleyeceği okuma hedefleri
+* [ ] Swift Charts ile daha zengin trendler ve uzun dönem takvim
 
-## Faz 11 — Cilalama & Dokümantasyon ⬜
+## Faz 11 — Cilalama & Dokümantasyon ◐
 
-Tema desteği, boş/hata durumlarının gözden geçirilmesi, README, portföy sunumu.
+* [x] Sistem/açık/koyu tema, İngilizce/Türkçe/Almanca ve çoğul metinler
+* [x] Boş/hata durumları, silme onayları ve depolama kurtarma ekranı
+* [x] Dynamic Type, VoiceOver etiketleri ve Reduce Motion desteği
+* [x] README, simülatör tasarım incelemeleri ve performans incelemesi
+* [x] GitHub Actions iş akışı: iki paket testi, uygulama testleri, Debug ve Release derlemesi
+* [x] CI günlükleri, test özeti ve `.xcresult` çıktıları; raporlarda tarihli ölçüm ayrımı
+* [x] İnceleme görselleri için boyut sınırı ve dönüştürme betiği
+* [ ] Bağımsız portföy sunumu ve yayın hazırlığı
+
+CI dosyası depoda hazırdır; uzak koşum, değişiklikler GitHub'a gönderildikten sonra
+başlar. Güncel sonuçlar için [CI koşumlarına](https://github.com/semihtakilan/BookTrace/actions/workflows/ci.yml) bakın.
+
+## Sonraki ürün kapsamı
+
+Yazar modülü ve öneriler dışında; arama sayfalaması, kütüphane içe/dışa aktarımı,
+bulut eşitleme ve Google Books anahtarını cihazdan çıkaracak backend proxy henüz yok.
 
 ## Notlar
 
@@ -149,5 +178,5 @@ Tema desteği, boş/hata durumlarının gözden geçirilmesi, README, portföy s
   ekranlar bunu dinleyerek tazelenir. `onAppear` tek başına yetmiyordu — tam
   ekran okuma oturumu kapandığında altındaki detay ekranı "yeniden görünmüş"
   sayılmadığı için eski ilerlemeyi göstermeye devam ediyordu.
-* Google Books API anahtarı için `README.md`'ye bakın. Anahtarsız çağrılar
-  Google'ın paylaşımlı anonim kotasını kullanıyor ve pratikte sürekli HTTP 429 dönüyor.
+* Open Library anahtar gerektirmez. Google Books yedeği için API anahtarı
+  yapılandırması `README.md` içinde; derleme ve yerel testler anahtarsız çalışır.

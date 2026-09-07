@@ -1,0 +1,24 @@
+{
+  "validatedAt": "2026-09-07T10:18:05+03:00",
+  "baseCommit": "2b4ff02",
+  "scope": "Working-tree changes implementing the 7 September 2026 review; not yet pushed.",
+  "toolchain": "Xcode 26.6 (17F113)",
+  "simulator": "iPhone 17 Pro / iOS 26.5",
+  "passedTests": {
+    "Models": 94,
+    "NetworkKit": 12,
+    "BookTraceTests": 168
+  },
+  "totalPassed": 274,
+  "appFailedTests": 0,
+  "appSkippedTests": 0,
+  "debugBuild": "Passed as part of xcodebuild test",
+  "releaseBuild": "Passed",
+  "workflowValidation": "YAML parse and bash -n for every run step; remote execution pending push",
+  "warning": "AppIntents metadata extraction skipped because no AppIntents.framework dependency exists.",
+  "screenshots": {
+    "count": 60,
+    "beforeBytes": 64533031,
+    "afterBytes": 6283290
+  }
+}

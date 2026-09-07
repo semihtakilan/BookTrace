@@ -167,15 +167,15 @@ previous fixed sage box made every book look the same.
 
 | Screen | Evidence |
 | --- | --- |
-| Library, dark | [Screenshot](01-library-dark.png) |
-| Reading Mode, science fiction | [Screenshot](02-reading-room-scifi.png) |
-| Page dial | [Screenshot](03-page-dial.png) |
-| Discover | [Screenshot](04-discover.png) |
-| Discovery shelves | [Screenshot](05-discover-shelves.png) |
-| Journal | [Screenshot](06-journal.png) |
-| Recent sessions | [Screenshot](07-journal-sessions.png) |
-| Book detail | [Screenshot](08-book-hero.png) |
-| Cover grid, light, iPhone SE | [Screenshot](09-shelf-light-iphone-se.png) |
-| Reading Mode, mystery, iPhone SE | [Screenshot](10-reading-room-mystery-iphone-se.png) |
-| Projected progress | [Screenshot](11-projected-progress-iphone-se.png) |
-| Milestone celebration | [Screenshot](12-milestone-celebration-iphone-se.png) |
+| Library, dark | [Screenshot](01-library-dark.jpg) |
+| Reading Mode, science fiction | [Screenshot](02-reading-room-scifi.jpg) |
+| Page dial | [Screenshot](03-page-dial.jpg) |
+| Discover | [Screenshot](04-discover.jpg) |
+| Discovery shelves | [Screenshot](05-discover-shelves.jpg) |
+| Journal | [Screenshot](06-journal.jpg) |
+| Recent sessions | [Screenshot](07-journal-sessions.jpg) |
+| Book detail | [Screenshot](08-book-hero.jpg) |
+| Cover grid, light, iPhone SE | [Screenshot](09-shelf-light-iphone-se.jpg) |
+| Reading Mode, mystery, iPhone SE | [Screenshot](10-reading-room-mystery-iphone-se.jpg) |
+| Projected progress | [Screenshot](11-projected-progress-iphone-se.jpg) |
+| Milestone celebration | [Screenshot](12-milestone-celebration-iphone-se.jpg) |

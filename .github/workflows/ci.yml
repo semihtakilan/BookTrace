@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Match the locally validated compiler; Release also guards the ViewModelHolder workaround.
+env:
+  DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  GOOGLE_BOOKS_API_KEY: ''
+
+jobs:
+  packages:
+    name: Swift package tests
+    runs-on: macos-26
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record toolchain and revision
+        run: |
+          mkdir -p build/ci
+          git rev-parse HEAD | tee build/ci/revision.txt
+          xcodebuild -version | tee build/ci/toolchain.txt
+          swift --version | tee -a build/ci/toolchain.txt
+      - name: Models tests
+        run: |
+          set -o pipefail
+          swift test --package-path Models 2>&1 | tee build/ci/models-tests.log
+      - name: NetworkKit tests
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          swift test --package-path NetworkKit 2>&1 | tee build/ci/network-tests.log
+      - name: Test summary
+        if: always()
+        run: |
+          echo "## Package tests — $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          for log in build/ci/*-tests.log; do
+            if [ -f "$log" ]; then
+              echo "### $log" >> "$GITHUB_STEP_SUMMARY"
+              grep -E 'Test run with|Executed .* tests|error:' "$log" | tail -15 >> "$GITHUB_STEP_SUMMARY" || true
+            fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: package-test-results
+          path: build/ci/
+          retention-days: 14
+
+  ios:
+    name: iOS tests and Debug / Release builds
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record toolchain and choose an installed iPhone
+        run: |
+          mkdir -p build/ci
+          git rev-parse HEAD | tee build/ci/revision.txt
+          xcodebuild -version | tee build/ci/toolchain.txt
+          xcrun simctl list devices available -j > build/ci/devices.json
+          python3 - <<'PY'
+          import json, os
+          with open('build/ci/devices.json') as f:
+              devices = json.load(f)['devices']
+          for runtime in sorted(devices, reverse=True):
+              if '.iOS-' not in runtime:
+                  continue
+              candidates = [d for d in devices[runtime] if d.get('isAvailable') and d['name'].startswith('iPhone')]
+              if candidates:
+                  device = candidates[0]
+                  with open(os.environ['GITHUB_ENV'], 'a') as f:
+                      f.write(f"SIMULATOR_UUID={device['udid']}\n")
+                  print(f"Using {device['name']} ({runtime}): {device['udid']}")
+                  break
+          else:
+              raise SystemExit('No available iPhone Simulator')
+          PY
+      - name: Debug build
+        run: |
+          set -o pipefail
+          xcodebuild -project BookTrace.xcodeproj -scheme BookTrace -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO SWIFT_EMIT_LOC_STRINGS=NO GOOGLE_BOOKS_API_KEY= \
+            build 2>&1 | tee build/ci/debug-build.log
+      - name: App tests
+        run: |
+          set -o pipefail
+          xcodebuild -project BookTrace.xcodeproj -scheme BookTrace -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_UUID" \
+            -derivedDataPath build/DerivedData -parallel-testing-enabled NO \
+            -resultBundlePath build/ci/AppTests.xcresult \
+            CODE_SIGNING_ALLOWED=NO SWIFT_EMIT_LOC_STRINGS=NO GOOGLE_BOOKS_API_KEY= \
+            test 2>&1 | tee build/ci/app-tests.log
+      - name: Release build
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          xcodebuild -project BookTrace.xcodeproj -scheme BookTrace -configuration Release \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO SWIFT_EMIT_LOC_STRINGS=NO GOOGLE_BOOKS_API_KEY= \
+            build 2>&1 | tee build/ci/release-build.log
+      - name: Test and build summary
+        if: always()
+        run: |
+          echo "## iOS validation — $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          for log in build/ci/*.log; do
+            echo "### $log" >> "$GITHUB_STEP_SUMMARY"
+            grep -E 'Test run with|BUILD SUCCEEDED|BUILD FAILED|TEST SUCCEEDED|TEST FAILED|error:' "$log" | tail -15 >> "$GITHUB_STEP_SUMMARY" || true
+          done
+          if [ -d build/ci/AppTests.xcresult ]; then
+            xcrun xcresulttool get test-results summary --path build/ci/AppTests.xcresult > build/ci/app-test-summary.json
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat build/ci/app-test-summary.json >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-validation-results
+          path: build/ci/
+          retention-days: 14

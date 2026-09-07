@@ -13,6 +13,7 @@ struct ApplicationRootView: View {
     private let libraryChangeNotifier: LibraryChangeNotifier
     private let settings: AppSettings
 
+    @Environment(\.scenePhase) private var scenePhase
     @State private var routeManager = AppRouteTypeManager()
     @State private var paletteStore = BookPaletteStore()
     @State private var booksViewModel: BooksViewModel
@@ -59,6 +60,9 @@ struct ApplicationRootView: View {
         // Tema kökten uygulanır; ağacın kimliğinden bağımsız.
         .preferredColorScheme(settings.theme.colorScheme)
         .tint(ReadingStyle.accent)
+        .task(id: scenePhase) {
+            if scenePhase != .active { await paletteStore.flush() }
+        }
         .task {
             await routeManager.bootstrap()
         }

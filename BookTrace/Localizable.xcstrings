@@ -561,128 +561,296 @@
 
     },
     "%lld books" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld Bücher"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld books"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld kitap"
-          }
-        }
-      }
-    },
-    "%lld days in a row" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld Tage in Folge"
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld day in a row"
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Buch"
                 }
               },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld days in a row"
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Bücher"
                 }
               }
             }
           }
         },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld gün üst üste"
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld book"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld books"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld kitap"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld kitap"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld days in a row" : {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tag in Folge"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tage in Folge"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day in a row"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days in a row"
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün üst üste"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gün üst üste"
+                }
+              }
+            }
           }
         }
       }
     },
     "%lld minutes. The world can wait." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld Minuten. Die Welt kann warten."
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minute. Die Welt kann warten."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minuten. Die Welt kann warten."
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld minutes. The world can wait."
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minute. The world can wait."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minutes. The world can wait."
+                }
+              }
+            }
           }
         },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld dakika. Dünya bekleyebilir."
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dakika. Dünya bekleyebilir."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dakika. Dünya bekleyebilir."
+                }
+              }
+            }
           }
         }
       }
     },
     "%lld minutes. This is a real sitting." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld Minuten. Das ist eine richtige Sitzung."
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minute. Das ist eine richtige Sitzung."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minuten. Das ist eine richtige Sitzung."
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld minutes. This is a real sitting."
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minute. This is a real sitting."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minutes. This is a real sitting."
+                }
+              }
+            }
           }
         },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld dakika. Bu gerçek bir oturuş."
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dakika. Bu gerçek bir oturuş."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dakika. Bu gerçek bir oturuş."
+                }
+              }
+            }
           }
         }
       }
     },
     "%lld minutes. You’ve settled in." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld Minuten. Du bist angekommen."
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minute. Du bist angekommen."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Minuten. Du bist angekommen."
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld minutes. You’ve settled in."
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minute. You’ve settled in."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld minutes. You’ve settled in."
+                }
+              }
+            }
           }
         },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld dakika. Yerleştin."
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dakika. Yerleştin."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld dakika. Yerleştin."
+                }
+              }
+            }
           }
         }
       }
@@ -5501,23 +5669,59 @@
       }
     },
     "Search results are cached on this device so browsing works offline and uses fewer requests. Erasing the library removes all %lld books and their reading sessions." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suchergebnisse werden auf diesem Gerät gespeichert, damit das Stöbern offline funktioniert und weniger Anfragen benötigt. Beim Löschen der Bibliothek werden alle %lld Bücher und ihre Lesesitzungen entfernt."
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Suchergebnisse werden auf diesem Gerät gespeichert, damit das Stöbern offline funktioniert und weniger Anfragen benötigt. Beim Löschen der Bibliothek wird %lld Buch mit seinen Lesesitzungen entfernt."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Suchergebnisse werden auf diesem Gerät gespeichert, damit das Stöbern offline funktioniert und weniger Anfragen benötigt. Beim Löschen der Bibliothek werden alle %lld Bücher und ihre Lesesitzungen entfernt."
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search results are cached on this device so browsing works offline and uses fewer requests. Erasing the library removes all %lld books and their reading sessions."
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Search results are cached on this device so browsing works offline and uses fewer requests. Erasing the library removes %lld book and its reading sessions."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Search results are cached on this device so browsing works offline and uses fewer requests. Erasing the library removes all %lld books and their reading sessions."
+                }
+              }
+            }
           }
         },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arama sonuçları bu cihazda saklanıyor; böylece çevrimdışı da gezinebiliyor ve daha az istek harcıyorsunuz. Kütüphaneyi silmek %lld kitabın tamamını ve okuma oturumlarını kaldırır."
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Arama sonuçları bu cihazda saklanıyor; böylece çevrimdışı da gezinebiliyor ve daha az istek harcıyorsunuz. Kütüphaneyi silmek %lld kitabın tamamını ve okuma oturumlarını kaldırır."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Arama sonuçları bu cihazda saklanıyor; böylece çevrimdışı da gezinebiliyor ve daha az istek harcıyorsunuz. Kütüphaneyi silmek %lld kitabın tamamını ve okuma oturumlarını kaldırır."
+                }
+              }
+            }
           }
         }
       }
@@ -6673,24 +6877,60 @@
       }
     },
     "This book only has %lld pages left." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In diesem Buch sind nur noch %lld Seiten übrig."
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "In diesem Buch ist nur noch %lld Seite übrig."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "In diesem Buch sind nur noch %lld Seiten übrig."
+                }
+              }
+            }
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This book only has %lld pages left."
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "This book only has %lld page left."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "This book only has %lld pages left."
+                }
+              }
+            }
           }
         },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bu kitapta yalnızca %lld sayfa kaldı."
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Bu kitapta yalnızca %lld sayfa kaldı."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Bu kitapta yalnızca %lld sayfa kaldı."
+                }
+              }
+            }
           }
         }
       }

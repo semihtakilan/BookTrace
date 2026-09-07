@@ -23,8 +23,8 @@ iPhone 17 Pro / iOS 26.5 simülatöründe gerçek kataloglarla kontrol edildi: T
 
 ## Ekran görüntüleri
 
-- [Önce: yüklenirken açıklama bölümü görünmüyor](before-detail.png)
-- [Sonra: yüklenen açıklama](after-detail.png)
-- [Açıklaması bulunmayan kitap](description-status.png)
+- [Önce: yüklenirken açıklama bölümü görünmüyor](before-detail.jpg)
+- [Sonra: yüklenen açıklama](after-detail.jpg)
+- [Açıklaması bulunmayan kitap](description-status.jpg)
 
 Görüntüler arayüz kanıtıdır; ağ süresi ölçmek için kullanılmadı. Dış servislerin yanıt süresi ve Google bütçesi ilk açılış hızını etkilemeye devam eder.

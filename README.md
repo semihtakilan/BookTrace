@@ -71,7 +71,7 @@ Reading Mode tracks time spent reading a book outside the app; BookTrace does no
 
 The interface uses a shared paper-and-ink design system with light and dark appearances, Dynamic Type, and English, Turkish, and German copy. Library’s **All Books** search, sorting, grouping, and status filters include every saved book, while **Now Reading** provides quick access to recently read titles. Adding a finished book completes its known page count. Discover offers subject spotlights, topic collections, a short-book shelf, and proportional cover grids. Book editing and session completion keep their save actions above the keyboard.
 
-Book covers supply the color palette, while subjects and titles select one of ten visual atmospheres for details and Reading Mode. Ambient motion respects Reduce Motion and Low Power Mode. Session completion includes a page dial, keyboard entry, and projected progress, with brief celebrations for the first reading session, progress milestones, and finishing a book.
+Cover palettes use a bounded LRU cache, batch persistence, and background JSON encoding; pending changes are flushed when the app becomes inactive. Book covers supply the color palette, while subjects and titles select one of ten visual atmospheres for details and Reading Mode. Ambient motion respects Reduce Motion and Low Power Mode. Session completion includes a page dial, keyboard entry, and projected progress, with brief celebrations for the first reading session, progress milestones, and finishing a book.
 
 Journal combines reading time and personal pace with selectable daily activity and a complete session history that links back to each book.
 
@@ -256,7 +256,7 @@ This applies only to launches started by Xcode. An archived or installed app nev
 - Whitespace is trimmed. An empty value or an unresolved `$(...)` placeholder is treated as a missing key.
 - `.env` files are not loaded by the app.
 - Requests include a `country` value from `Locale.current.region`, with `US` as the fallback. This follows the device region, independently of the app's selected interface language.
-- The network logger can include the API key in request URLs. Remove the `key` query value before sharing logs.
+- Network logging uses the unified logging system. URL credentials and sensitive headers are redacted before logging; request/response content and error details use private visibility.
 - Without a key the app still runs: Open Library is the primary source. A failed Google Books fallback does not guarantee that the lookup can be resolved.
 - Debug builds show the day's Google Books request count under **Journal → Settings → About**.
 
@@ -411,7 +411,7 @@ Query freshness and expiry are defined in `BookQuery`:
 
 Library management, saved progress, session recording, and Journal calculations work locally. Discover’s bundled shelves work offline on a first launch when the cache store is available. Stale results remain usable until their expiry; expired queries are removed, with bundled shelves available as a fallback for matching subjects. Uncached searches and cover images require a connection.
 
-The cache has a separate SwiftData store in the app’s cache directory. Clearing it deletes cached query and book rows without touching the library. Startup pruning removes expired queries and keeps at most 2,000 cached books. If the cache store cannot open, discovery falls back to direct network requests.
+The cache has a separate SwiftData store in the app’s cache directory. Clearing it deletes cached query and book rows without touching the library. Read access timestamps are updated at most once per hour per book, with one save for the eligible rows in a shelf. Startup pruning removes expired queries and keeps at most 2,000 cached books. If the cache store cannot open, discovery falls back to direct network requests.
 
 **Clear search cache** removes the stored discovery results. It does not erase library entries, reading sessions, or Kingfisher's image cache, and already displayed results may remain in memory. **Erase library** removes all saved books, their sessions, and stored categories after confirmation.
 
@@ -426,6 +426,10 @@ When adding interface text, use the existing localization approach and update th
 ## Build and test
 
 Run commands from the repository root with the required Xcode toolchain selected.
+
+The [CI workflow](.github/workflows/ci.yml) runs on pushes, pull requests, and manual dispatch. It uses macOS 26 with Xcode 26.6, runs both package suites and the app tests, and builds Debug and Release. Release compilation also protects the documented `ViewModelHolder` compiler workaround. No API key or signing secret is required.
+
+Each run publishes a commit-specific summary, logs, and the app’s `.xcresult` bundle as artifacts retained for 14 days. See [CI runs](https://github.com/semihtakilan/BookTrace/actions/workflows/ci.yml) for current results; test counts in dated review documents describe those historical runs. The workflow becomes active after it is pushed to GitHub. Xcode availability follows the [GitHub runner image manifest](https://github.com/actions/runner-images/blob/main/images/macos/macos-26-Readme.md).
 
 ### Build for the Simulator
 
@@ -504,4 +508,4 @@ The following work remains planned:
 - Reading goals and richer reading trends; the current streak and recent-activity strip are already implemented.
 - A backend proxy to keep the Google Books key off devices and manage shared usage limits.
 
-See [Plan.md](Plan.md) for the original phased development plan, written in Turkish. Its phase checklists predate some of the implemented profile and settings features described here.
+See [Plan.md](Plan.md) for the current phased plan in Turkish, and [Documentation/README.md](Documentation/README.md) for review evidence and screenshot conventions.

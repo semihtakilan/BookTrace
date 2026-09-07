@@ -12,21 +12,21 @@ A finished record with a known length also normalizes on loading, covering older
 
 ## Discover direction and screenshot feedback
 
-1. [Starting screen](01-discover-before.png): a single arbitrary feature and six repeated shelves gave browsing little structure. The tilted cover also made proportion comparisons harder.
-2. [New discovery entrance](04-discover-light.png): a compact title and search lead into a horizontal selection from different subjects. The visible next card signals more books. The shuffle action opens an actual loaded book, with no additional request or invented recommendation claim.
-3. [Topics and shorter books](05-discover-collections.png): six distinct topic cards lead to complete collections. A separate short-book selection uses known lengths of 1–250 pages and removes duplicate book IDs across subjects. Repeated subject shelves on the home screen are reduced to two previews with See all actions.
-4. [Light collection](03-subject-light.png) and [dark collection](02-subject-dark.png): two columns provide a complete shelf. Covers retain their original aspect ratio within consistent, unrotated display areas. Title and author rows reserve the same space at normal text sizes, so adjacent books align. Source images are fitted rather than stretched or cropped.
+1. [Starting screen](01-discover-before.jpg): a single arbitrary feature and six repeated shelves gave browsing little structure. The tilted cover also made proportion comparisons harder.
+2. [New discovery entrance](04-discover-light.jpg): a compact title and search lead into a horizontal selection from different subjects. The visible next card signals more books. The shuffle action opens an actual loaded book, with no additional request or invented recommendation claim.
+3. [Topics and shorter books](05-discover-collections.jpg): six distinct topic cards lead to complete collections. A separate short-book selection uses known lengths of 1–250 pages and removes duplicate book IDs across subjects. Repeated subject shelves on the home screen are reduced to two previews with See all actions.
+4. [Light collection](03-subject-light.jpg) and [dark collection](02-subject-dark.jpg): two columns provide a complete shelf. Covers retain their original aspect ratio within consistent, unrotated display areas. Title and author rows reserve the same space at normal text sizes, so adjacent books align. Source images are fitted rather than stretched or cropped.
 5. Navigation feedback: the first collection implementation mixed native item navigation with the existing NavigatorUI path. Book details then replaced the selected collection. Collections now use the same navigation path and the same loaded view model; opening a book and going back retains the subject.
-6. [iPhone SE](06-discover-iphone-se.png): the feature card adapts to the narrower width while preserving cover proportions and keeping its action inside the card.
-7. [Accessibility text](10-accessibility-subject.png): the collection switches to one column and removes title/author line limits. Topic tiles also switch to one column; feature cards stack their content vertically.
+6. [iPhone SE](06-discover-iphone-se.jpg): the feature card adapts to the narrower width while preserving cover proportions and keeping its action inside the card.
+7. [Accessibility text](10-accessibility-subject.jpg): the collection switches to one column and removes title/author line limits. Topic tiles also switch to one column; feature cards stack their content vertically.
 
 ## Real simulator flow
 
 The original iPhone 17 Pro library was left untouched. Two additional test books were added to the existing iPhone SE test library through the real interface.
 
-1. Open The Caves of Steel, choose Finished in Add to Library, and save without entering a custom length. The resulting detail shows [259 / 259 pages and Finished](07-finished-progress.png). Opening the manual progress dialog also shows 259. No reading session was generated.
+1. Open The Caves of Steel, choose Finished in Add to Library, and save without entering a custom length. The resulting detail shows [259 / 259 pages and Finished](07-finished-progress.jpg). Opening the manual progress dialog also shows 259. No reading session was generated.
 2. Relaunch the app. The completed book still appears under Finished with 259 / 259 pages.
-3. Add Frankenstein as To Read. The [upper section](09-library-reading-first.png) keeps the existing Dorian Gray session at 5 / 246 pages. The [lower shelf](08-library-other-statuses.png) lists Frankenstein under To Read and The Caves of Steel under Finished.
+3. Add Frankenstein as To Read. The [upper section](09-library-reading-first.jpg) keeps the existing Dorian Gray session at 5 / 246 pages. The [lower shelf](08-library-other-statuses.jpg) lists Frankenstein under To Read and The Caves of Steel under Finished.
 4. Select To Read and then All. Only the lower shelf changes; Dorian Gray remains in the active reading section.
 
 ## Validation

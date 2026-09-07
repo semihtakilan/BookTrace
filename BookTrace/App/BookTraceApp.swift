@@ -28,6 +28,9 @@ struct BookTraceApp: App {
                     settings: dependencies.settings
                 )
                     .modelContainer(dependencies.modelContainer)
+                    .environment(dependencies.entitlementStore)
+                    .environment(dependencies.syncStatus)
+                    .environment(dependencies.readingWorkspace)
 
             case .storageUnavailable(let reason):
                 StorageUnavailableView(reason: reason) {

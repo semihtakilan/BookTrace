@@ -14,6 +14,8 @@ struct ExploreTab: View {
 private struct ExploreContentView: View {
     @Bindable var viewModel: ExploreViewModel
     @Environment(\.navigator) private var navigator
+    @Environment(ReadingWorkspace.self) private var workspace
+    @Environment(LibraryChangeNotifier.self) private var changes
     @State private var isPresentingScanner = false
     @State private var pendingISBN: String?
 
@@ -34,6 +36,24 @@ private struct ExploreContentView: View {
                     if viewModel.isShowingSearchResults {
                         searchResults.padding(.horizontal, 20)
                     } else {
+                        if !workspace.recommendations.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("For you").font(.title2.bold())
+                                Text("Inspired by the books you enjoy.").font(.subheadline).foregroundStyle(ReadingStyle.secondary)
+                                ScrollView(.horizontal) {
+                                    HStack(alignment: .top, spacing: 16) {
+                                        ForEach(workspace.recommendations) { book in
+                                            Button { navigator.navigate(to: ExploreDestinations.bookDetail(book)) } label: {
+                                                VStack(alignment: .leading, spacing: 8) {
+                                                    RemoteBookCover(url: book.coverURL, width: 100, height: 150, contentMode: .fit, fallbackTitle: book.title)
+                                                    Text(book.title).font(.caption).lineLimit(2).frame(width: 100, alignment: .leading)
+                                                }
+                                            }.buttonStyle(.plain)
+                                        }
+                                    }
+                                }
+                            }.padding(.horizontal, 20)
+                        }
                         discoveryContent(width: min(geometry.size.width, 840))
                     }
                 }
@@ -56,6 +76,7 @@ private struct ExploreContentView: View {
             await viewModel.performSearch()
         }
         .onAppear { viewModel.loadShelvesIfNeeded() }
+        .task(id: changes.revision) { await workspace.loadRecommendations() }
         .sheet(isPresented: $isPresentingScanner, onDismiss: resolvePendingBarcode) {
             BarcodeScannerSheet { pendingISBN = $0 }
         }

@@ -5,6 +5,7 @@
 //  Created by Semih TAKILAN on 03.09.2026.
 //
 
+import BookTraceShared
 import SwiftUI
 
 /// Yerel kütüphane açılamadığında gösterilen kurtarma ekranı.
@@ -52,7 +53,7 @@ struct StorageUnavailableView: View {
             Button("Reset", role: .destructive) { reset() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Every book and reading session stored on this device will be deleted. This cannot be undone.")
+            Text("Books, sessions, notes, quotes, and goals stored on this device will be deleted. This local reset cannot be undone. Data already in iCloud may download again.")
         }
     }
 

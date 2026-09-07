@@ -5,6 +5,7 @@
 //  Created by Semih TAKILAN on 03.09.2026.
 //
 
+import BookTraceShared
 import Foundation
 import Models
 import SwiftData
@@ -84,7 +85,7 @@ enum TestStore {
             return try ModelContainer(
                 for: LocalStore.schema,
                 migrationPlan: LibraryMigrationPlan.self,
-                configurations: ModelConfiguration(schema: LocalStore.schema, isStoredInMemoryOnly: true)
+                configurations: ModelConfiguration(schema: LocalStore.schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
             )
         } catch {
             fatalError("in-memory ModelContainer could not be created: \(error)")
@@ -96,20 +97,27 @@ enum TestStore {
 ///
 /// Toplu silme (`delete(model:)`) burada kullanılamıyor: kategori ile kayıt
 /// arasındaki çok-çoğa ilişkinin nullify kısıtı toplu silmeyi reddediyor.
-/// Nesneler tek tek siliniyor — kayıtlar önce, oturumlar onlarla birlikte
-/// cascade ile gidiyor.
+/// Nesneler tek tek siliniyor; sahipsiz oturum/alıntılar ve hedefler de temizleniyor.
 @MainActor
 func makeInMemoryRepository() throws -> (LocalLibraryRepositoryImpl, LibraryChangeNotifier) {
     let context = TestStore.container.mainContext
+    context.rollback()
+
+    for session in try context.fetch(FetchDescriptor<LocalReadingSessionModel>()) {
+        context.delete(session)
+    }
+    for quote in try context.fetch(FetchDescriptor<BookTraceShared.LocalQuoteModel>()) {
+        context.delete(quote)
+    }
+    for goal in try context.fetch(FetchDescriptor<BookTraceShared.LocalReadingGoalModel>()) {
+        context.delete(goal)
+    }
 
     for entry in try context.fetch(FetchDescriptor<LocalLibraryEntryModel>()) {
         context.delete(entry)
     }
     for category in try context.fetch(FetchDescriptor<LocalCategoryModel>()) {
         context.delete(category)
-    }
-    for session in try context.fetch(FetchDescriptor<LocalReadingSessionModel>()) {
-        context.delete(session)
     }
     try context.save()
 

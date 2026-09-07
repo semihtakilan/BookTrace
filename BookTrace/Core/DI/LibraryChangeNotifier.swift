@@ -6,6 +6,7 @@
 //
 
 import Observation
+import WidgetKit
 
 /// Yerel kütüphaneye her yazımdan sonra artan bir sayaç.
 ///
@@ -20,5 +21,6 @@ final class LibraryChangeNotifier {
 
     func notifyChanged() {
         revision &+= 1
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }

@@ -5,8 +5,10 @@
 //  Created by Semih TAKILAN on 03.09.2026.
 //
 
+import BookTraceShared
 import Foundation
 import Models
+import SwiftData
 import Testing
 @testable import BookTrace
 
@@ -203,4 +205,131 @@ struct LocalLibraryRepositoryTests {
         #expect(stored.isbn13 == "9780441013593")
         #expect(stored.subjects == ["Fiction"])
     }
+
+    @Test func erasingTheLibraryAlsoRemovesUnattachedImportedSessionsAndQuotes() throws {
+        let (repository, context) = try makeRepositoryAndContext()
+        context.insert(LocalReadingSessionModel(session: ReadingSession(startDate: Date(), durationSeconds: 600, pagesRead: 10)))
+        context.insert(BookTraceShared.LocalQuoteModel(quote: Quote(text: "Orphan quote")))
+        context.insert(BookTraceShared.LocalReadingGoalModel(goal: ReadingGoal(period: .yearly, metric: .books, target: 12)))
+        try context.save()
+
+        try repository.deleteAll()
+
+        #expect(try context.fetchCount(FetchDescriptor<LocalReadingSessionModel>()) == 0)
+        #expect(try context.fetchCount(FetchDescriptor<BookTraceShared.LocalQuoteModel>()) == 0)
+        #expect(try context.fetchCount(FetchDescriptor<BookTraceShared.LocalReadingGoalModel>()) == 0)
+    }
+
+    @Test func deletingABookRemovesEveryPendingCloudDuplicateAndItsChildren() throws {
+        let (repository, context) = try makeRepositoryAndContext()
+        for suffix in ["a", "b"] {
+            var entry = makeEntry(id: "duplicate", sessions: [ReadingSession(id: suffix, startDate: Date(), durationSeconds: 600, pagesRead: 10)])
+            entry.quotes = [Quote(id: suffix, text: "Quote")]
+            context.insert(LocalLibraryEntryModel(entry: entry))
+        }
+        try context.save()
+
+        try repository.delete(id: "duplicate")
+
+        #expect(try repository.fetchEntries().isEmpty)
+        #expect(try context.fetchCount(FetchDescriptor<LocalReadingSessionModel>()) == 0)
+        #expect(try context.fetchCount(FetchDescriptor<BookTraceShared.LocalQuoteModel>()) == 0)
+    }
+
+    @Test func editingOrDeletingABookDoesNotPruneAnUnrelatedIncomingCategory() throws {
+        let (repository, context) = try makeRepositoryAndContext()
+        let incoming = LocalCategoryModel(category: Models.Category(name: "Incoming cloud category"))
+        context.insert(incoming)
+        try context.save()
+        let detached = Models.Category(name: "Locally removed")
+        try repository.add(makeEntry(id: "a", categories: [detached]))
+        var edited = try #require(try repository.entry(for: "a"))
+        edited.categories = []
+        try repository.update(edited)
+
+        #expect(try repository.fetchCategories().map(\.name) == ["Incoming cloud category"])
+
+        try repository.delete(id: "a")
+        #expect(try repository.fetchCategories().map(\.name) == ["Incoming cloud category"])
+    }
+
+    @Test func appendingTheSameSessionIDTwiceDoesNotAdvanceProgressOrNotifyTwice() throws {
+        let (repository, notifier) = try makeInMemoryRepository()
+        try repository.add(makeEntry(pageCount: 100))
+        let date = Date(timeIntervalSince1970: 1_700_000_000)
+        let session = ReadingSession(id: "replayed", startDate: date, durationSeconds: 60, pagesRead: 5)
+        try repository.appendSession(session, toEntryWith: "book-1")
+        let revision = notifier.revision
+
+        let replay = ReadingSession(id: session.id, startDate: date, durationSeconds: 120, pagesRead: 10)
+        let result = try repository.appendSession(replay, toEntryWith: "book-1")
+
+        #expect(result.currentPage == 5)
+        #expect(result.readingSessions == [session])
+        #expect(result.totalReadSeconds == 60)
+        #expect(notifier.revision == revision)
+    }
+
+    @Test(arguments: RepositoryFailingMutation.allCases)
+    func aFailedMutationRollsBackBeforeAnyLaterSuccessfulWrite(_ operation: RepositoryFailingMutation) throws {
+        _ = try makeInMemoryRepository()
+        let context = TestStore.container.mainContext
+        let notifier = LibraryChangeNotifier()
+        var shouldFailSave = false
+        let repository = LocalLibraryRepositoryImpl(modelContext: context, changeNotifier: notifier, saveChanges: { context in
+            if shouldFailSave { throw RepositoryInjectedSaveError.failed }
+            try context.save()
+        })
+        let date = Date(timeIntervalSince1970: 1_700_000_000)
+        var entry = makeEntry(pageCount: 200, currentPage: 20, categories: [Models.Category(name: "Original")],
+                              sessions: [ReadingSession(id: "original", startDate: date, durationSeconds: 600, pagesRead: 20)])
+        entry.quotes = [Quote(id: "original", text: "Keep this quote", createdDate: date)]
+        try repository.add(entry)
+        let baseline = try #require(try repository.entry(for: entry.id))
+        let revision = notifier.revision
+        shouldFailSave = true
+
+        #expect(throws: RepositoryInjectedSaveError.self) {
+            switch operation {
+            case .add:
+                try repository.add(makeEntry(id: "failed-add", categories: [Models.Category(name: "Transient")]))
+            case .upsert, .update:
+                var changed = baseline
+                changed.currentPage = 50
+                changed.categories = [Models.Category(name: "Transient")]
+                changed.quotes = []
+                if operation == .upsert { try repository.add(changed) }
+                else { try repository.update(changed) }
+            case .append:
+                try repository.appendSession(ReadingSession(id: "failed-session", startDate: date, durationSeconds: 300, pagesRead: 10), toEntryWith: entry.id)
+            case .delete:
+                try repository.delete(id: entry.id)
+            case .deleteAll:
+                try repository.deleteAll()
+            }
+        }
+
+        #expect(!context.hasChanges)
+        #expect(try repository.fetchEntries() == [baseline])
+        #expect(try repository.fetchCategories().map(\.name) == ["Original"])
+        #expect(notifier.revision == revision)
+
+        shouldFailSave = false
+        try repository.add(makeEntry(id: "later-success"))
+        #expect(try repository.entry(for: baseline.id) == baseline)
+        #expect(try repository.entry(for: "failed-add") == nil)
+        #expect(try context.fetchCount(FetchDescriptor<LocalReadingSessionModel>()) == 1)
+        #expect(try context.fetchCount(FetchDescriptor<BookTraceShared.LocalQuoteModel>()) == 1)
+    }
+
+    private func makeRepositoryAndContext() throws -> (LocalLibraryRepositoryImpl, ModelContext) {
+        let (repository, _) = try makeInMemoryRepository()
+        return (repository, TestStore.container.mainContext)
+    }
 }
+
+nonisolated enum RepositoryFailingMutation: CaseIterable, Sendable {
+    case add, upsert, update, append, delete, deleteAll
+}
+
+nonisolated enum RepositoryInjectedSaveError: Error { case failed }

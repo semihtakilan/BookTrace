@@ -5,6 +5,7 @@
 //  Created by Semih TAKILAN on 03.09.2026.
 //
 
+import BookTraceShared
 import Foundation
 import Models
 import SwiftData

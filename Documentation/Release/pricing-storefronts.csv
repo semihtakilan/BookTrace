@@ -1,0 +1,67 @@
+pricing_group,tier,storefront_alpha2,asc_territory_alpha3,storefront_name,currency,plan,proposed_price,product_id,product_type,subscription_group,period,intro_trial_days,selected_asc_price,asc_price_point_id,status,source
+us,T1,US,USA,United States,USD,monthly,3.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+us,T1,US,USA,United States,USD,yearly,24.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+us,T1,US,USA,United States,USD,lifetime,59.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+uk,T1,GB,GBR,United Kingdom,GBP,monthly,2.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+uk,T1,GB,GBR,United Kingdom,GBP,yearly,17.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+uk,T1,GB,GBR,United Kingdom,GBP,lifetime,43.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,DE,DEU,Germany,EUR,monthly,2.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,DE,DEU,Germany,EUR,yearly,20.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,DE,DEU,Germany,EUR,lifetime,50.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,FR,FRA,France,EUR,monthly,2.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,FR,FRA,France,EUR,yearly,20.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,FR,FRA,France,EUR,lifetime,50.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,NL,NLD,Netherlands,EUR,monthly,2.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,NL,NLD,Netherlands,EUR,yearly,20.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,NL,NLD,Netherlands,EUR,lifetime,50.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,BE,BEL,Belgium,EUR,monthly,2.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,BE,BEL,Belgium,EUR,yearly,20.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,BE,BEL,Belgium,EUR,lifetime,50.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,AT,AUT,Austria,EUR,monthly,2.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,AT,AUT,Austria,EUR,yearly,20.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,AT,AUT,Austria,EUR,lifetime,50.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,IE,IRL,Ireland,EUR,monthly,2.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,IE,IRL,Ireland,EUR,yearly,20.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,IE,IRL,Ireland,EUR,lifetime,50.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,FI,FIN,Finland,EUR,monthly,2.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,FI,FIN,Finland,EUR,yearly,20.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+euro_core,T1,FI,FIN,Finland,EUR,lifetime,50.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+canada,T1,CA,CAN,Canada,CAD,monthly,4.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+canada,T1,CA,CAN,Canada,CAD,yearly,33.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+canada,T1,CA,CAN,Canada,CAD,lifetime,79.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+australia,T1,AU,AUS,Australia,AUD,monthly,4.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+australia,T1,AU,AUS,Australia,AUD,yearly,33.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+australia,T1,AU,AUS,Australia,AUD,lifetime,79.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+japan,T1,JP,JPN,Japan,JPY,monthly,600,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+japan,T1,JP,JPN,Japan,JPY,yearly,3900,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+japan,T1,JP,JPN,Japan,JPY,lifetime,9400,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,ES,ESP,Spain,EUR,monthly,1.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,ES,ESP,Spain,EUR,yearly,14.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,ES,ESP,Spain,EUR,lifetime,35.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,IT,ITA,Italy,EUR,monthly,1.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,IT,ITA,Italy,EUR,yearly,14.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,IT,ITA,Italy,EUR,lifetime,35.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,PT,PRT,Portugal,EUR,monthly,1.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,PT,PRT,Portugal,EUR,yearly,14.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,PT,PRT,Portugal,EUR,lifetime,35.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,GR,GRC,Greece,EUR,monthly,1.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,GR,GRC,Greece,EUR,yearly,14.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+southern_europe,T2,GR,GRC,Greece,EUR,lifetime,35.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+poland,T2,PL,POL,Poland,PLN,monthly,6.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+poland,T2,PL,POL,Poland,PLN,yearly,44.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+poland,T2,PL,POL,Poland,PLN,lifetime,107.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+south_korea,T2,KR,KOR,South Korea,KRW,monthly,4000,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+south_korea,T2,KR,KOR,South Korea,KRW,yearly,25000,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+south_korea,T2,KR,KOR,South Korea,KRW,lifetime,59000,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+brazil,T3,BR,BRA,Brazil,BRL,monthly,9.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+brazil,T3,BR,BRA,Brazil,BRL,yearly,59.99,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+brazil,T3,BR,BRA,Brazil,BRL,lifetime,144.99,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+mexico,T3,MX,MEX,Mexico,MXN,monthly,33.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+mexico,T3,MX,MEX,Mexico,MXN,yearly,199,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+mexico,T3,MX,MEX,Mexico,MXN,lifetime,479,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+turkey,T3,TR,TUR,Türkiye,TRY,monthly,69.99,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+turkey,T3,TR,TUR,Türkiye,TRY,yearly,449,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+turkey,T3,TR,TUR,Türkiye,TRY,lifetime,1099,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+india,T4,IN,IND,India,INR,monthly,150,com.semihtakilan.BookTrace.pro.monthly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1M,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+india,T4,IN,IND,India,INR,yearly,850,com.semihtakilan.BookTrace.pro.yearly,AUTO_RENEWABLE_SUBSCRIPTION,BookTracePro,P1Y,7,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07
+india,T4,IN,IND,India,INR,lifetime,2000,com.semihtakilan.BookTrace.pro.lifetime,NON_CONSUMABLE,,,0,,,PENDING_ASC_PRICE_POINT_VALIDATION,Pricing.md section 3; 2026-09-07

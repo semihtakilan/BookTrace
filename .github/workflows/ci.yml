@@ -39,6 +39,11 @@ jobs:
         run: |
           set -o pipefail
           swift test --package-path NetworkKit 2>&1 | tee build/ci/network-tests.log
+      - name: Shared persistence package build
+        if: ${{ !cancelled() }}
+        run: |
+          set -o pipefail
+          swift build --package-path BookTraceShared 2>&1 | tee build/ci/shared-build.log
       - name: Test summary
         if: always()
         run: |
@@ -57,34 +62,51 @@ jobs:
           retention-days: 14
 
   ios:
-    name: iOS tests and Debug / Release builds
+    name: App and widget tests, Debug / Release builds
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-      - name: Record toolchain and choose an installed iPhone
+      - name: Record toolchain and revision
         run: |
           mkdir -p build/ci
           git rev-parse HEAD | tee build/ci/revision.txt
           xcodebuild -version | tee build/ci/toolchain.txt
+      # iOS 26.5 rejects local SKTestSession configuration in our validated setup.
+      # Keep the compiler current while using the validated StoreKit test runtime.
+      - name: Install the iOS 18.4 test runtime
+        timeout-minutes: 20
+        run: |
+          set -o pipefail
+          xcodebuild -downloadPlatform iOS -buildVersion 18.4 -architectureVariant universal \
+            2>&1 | tee build/ci/simulator-install.log
+      - name: Create an iPhone with the exact test runtime
+        run: |
+          xcrun simctl list runtimes -j > build/ci/runtimes.json
           xcrun simctl list devices available -j > build/ci/devices.json
           python3 - <<'PY'
-          import json, os
-          with open('build/ci/devices.json') as f:
-              devices = json.load(f)['devices']
-          for runtime in sorted(devices, reverse=True):
-              if '.iOS-' not in runtime:
-                  continue
-              candidates = [d for d in devices[runtime] if d.get('isAvailable') and d['name'].startswith('iPhone')]
-              if candidates:
-                  device = candidates[0]
-                  with open(os.environ['GITHUB_ENV'], 'a') as f:
-                      f.write(f"SIMULATOR_UUID={device['udid']}\n")
-                  print(f"Using {device['name']} ({runtime}): {device['udid']}")
-                  break
-          else:
-              raise SystemExit('No available iPhone Simulator')
+          import json, os, subprocess
+          runtime_id = 'com.apple.CoreSimulator.SimRuntime.iOS-18-4'
+          with open('build/ci/runtimes.json') as f:
+              runtimes = json.load(f)['runtimes']
+          if not any(r['identifier'] == runtime_id and r.get('version') == '18.4'
+                     and r.get('isAvailable') for r in runtimes):
+              raise SystemExit('Required iOS 18.4 runtime is unavailable; refusing to substitute another runtime')
+          device_id = subprocess.check_output([
+              'xcrun', 'simctl', 'create', 'BookTrace CI iOS 18.4',
+              'com.apple.CoreSimulator.SimDeviceType.iPhone-16', runtime_id
+          ], text=True).strip()
+          with open(os.environ['GITHUB_ENV'], 'a') as f:
+              f.write(f'SIMULATOR_UUID={device_id}\n')
+          with open('build/ci/test-destination.txt', 'w') as f:
+              f.write(f'iPhone 16 / iOS 18.4 / {device_id}\n')
+          print(f'Using iPhone 16 (iOS 18.4): {device_id}')
           PY
+      - name: Boot the test Simulator
+        timeout-minutes: 5
+        run: |
+          xcrun simctl boot "$SIMULATOR_UUID"
+          xcrun simctl bootstatus "$SIMULATOR_UUID" -b
       - name: Debug build
         run: |
           set -o pipefail
@@ -92,14 +114,29 @@ jobs:
             -destination 'generic/platform=iOS Simulator' -derivedDataPath build/DerivedData \
             CODE_SIGNING_ALLOWED=NO SWIFT_EMIT_LOC_STRINGS=NO GOOGLE_BOOKS_API_KEY= \
             build 2>&1 | tee build/ci/debug-build.log
-      - name: App tests
+      - name: Verify app and widget test suites are in the shared scheme
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from xml.etree import ElementTree
+          scheme = ElementTree.parse(Path('BookTrace.xcodeproj/xcshareddata/xcschemes/BookTrace.xcscheme'))
+          enabled = {
+              test.find('BuildableReference').attrib['BlueprintName']
+              for test in scheme.findall('./TestAction/Testables/TestableReference')
+              if test.attrib.get('skipped', 'NO') == 'NO'
+          }
+          assert {'BookTraceTests', 'BookTraceWidgetsTests'} <= enabled, enabled
+          PY
+      - name: App and widget tests
         run: |
           set -o pipefail
           xcodebuild -project BookTrace.xcodeproj -scheme BookTrace -configuration Debug \
             -destination "platform=iOS Simulator,id=$SIMULATOR_UUID" \
             -derivedDataPath build/DerivedData -parallel-testing-enabled NO \
             -resultBundlePath build/ci/AppTests.xcresult \
-            CODE_SIGNING_ALLOWED=NO SWIFT_EMIT_LOC_STRINGS=NO GOOGLE_BOOKS_API_KEY= \
+            -only-testing:BookTraceTests -only-testing:BookTraceWidgetsTests \
+            CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
+            SWIFT_EMIT_LOC_STRINGS=NO GOOGLE_BOOKS_API_KEY= \
             test 2>&1 | tee build/ci/app-tests.log
       - name: Release build
         if: ${{ !cancelled() }}

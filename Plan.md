@@ -168,8 +168,21 @@ başlar. Güncel sonuçlar için [CI koşumlarına](https://github.com/semihtaki
 
 ## Sonraki ürün kapsamı
 
-Yazar modülü ve öneriler dışında; arama sayfalaması, kütüphane içe/dışa aktarımı,
-bulut eşitleme ve Google Books anahtarını cihazdan çıkaracak backend proxy henüz yok.
+Bu plan Faz 1-11 arasındaki **tamamlanmış** mimariyi kaydeder. App Store'a
+abonelikli çıkış için yapılacak iş — CloudKit eşitlemesi, StoreKit 2, Live
+Activity, hedefler, widget'lar, zengin istatistik, alıntı/OCR, yıl sonu özeti,
+dışa aktarma ve öneri motoru — ayrı bir belgede fazlandı:
+
+* **[ReleasePlan.md](ReleasePlan.md)** — yayın planı ve faz sıralaması
+* [Documentation/MarketAnalysis/pazar-raporu.md](Documentation/MarketAnalysis/pazar-raporu.md) — kararların dayandığı rakip analizi (7 Eylül 2026)
+
+Oradaki kararların özeti: hesap sistemi **yok** (Bookly hesapsız çalışıp
+top-grossing #62'de), eşitleme CloudKit ile ve **ücretsiz**, paywall kitap
+sayısında değil **özellikte**, LLM öneri botu kapsam dışı (Faz 9'un yerel motoru
+yeterli — AI öneri alanı yedi rakiple dolu).
+
+Hâlâ kapsam dışı: arama sayfalaması ve Google Books anahtarını cihazdan çıkaracak
+backend proxy.
 
 ## Notlar
 

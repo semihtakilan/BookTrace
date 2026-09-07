@@ -1,0 +1,29 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BookTrace uses the camera to scan book barcodes and recognize text from pages for quotes."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BookTrace, kitap barkodlarını taramak ve alıntılar için sayfalardaki metni tanımak üzere kamerayı kullanır."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BookTrace verwendet die Kamera, um Buchbarcodes zu scannen und Text auf Seiten für Zitate zu erkennen."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

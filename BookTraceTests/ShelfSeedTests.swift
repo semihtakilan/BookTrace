@@ -66,7 +66,7 @@ struct SeededCacheStoreTests {
     }
 
     private func makeStore(seed: any BookSeedProviding) async throws -> SwiftDataBookCacheStore {
-        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: BookCacheStorage.schema, configurations: configuration)
         let store = SwiftDataBookCacheStore(modelContainer: container)
         await store.use(seed: seed)

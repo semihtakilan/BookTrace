@@ -14,6 +14,10 @@ struct ApplicationRootView: View {
     private let settings: AppSettings
 
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(EntitlementStore.self) private var entitlementStore
+    @Environment(CloudSyncStatus.self) private var syncStatus
+    @Environment(ReadingWorkspace.self) private var readingWorkspace
+    @State private var showsPaywall = false
     @State private var routeManager = AppRouteTypeManager()
     @State private var paletteStore = BookPaletteStore()
     @State private var booksViewModel: BooksViewModel
@@ -60,11 +64,29 @@ struct ApplicationRootView: View {
         // Tema kökten uygulanır; ağacın kimliğinden bağımsız.
         .preferredColorScheme(settings.theme.colorScheme)
         .tint(ReadingStyle.accent)
+        .onOpenURL { url in
+            guard url.scheme == "booktrace" else { return }
+            switch url.host {
+            case "pro": showsPaywall = true
+            case "journal": routeManager.selectedTab = .profile
+            default: routeManager.selectedTab = .books
+            }
+        }
+        .sheet(isPresented: $showsPaywall) { PaywallView() }
+        .onChange(of: libraryChangeNotifier.revision) { _, _ in readingWorkspace.load() }
         .task(id: scenePhase) {
+            if scenePhase == .active {
+                await entitlementStore.refresh()
+                await syncStatus.refresh()
+                readingWorkspace.load()
+            }
             if scenePhase != .active { await paletteStore.flush() }
         }
         .task {
+            entitlementStore.start()
+            readingWorkspace.load()
             await routeManager.bootstrap()
+            await syncStatus.start()
         }
     }
 }

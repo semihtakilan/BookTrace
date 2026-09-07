@@ -19,3 +19,8 @@ GOOGLE_BOOKS_API_KEY =
 
 // Gerçek anahtarı aşağıdaki dosya getirir. Yoksa derleme yine de sürer.
 #include? "Secrets.xcconfig"
+
+// Public HTTPS policy URL is filled after the release pages are hosted.
+// Keep empty for local development; the paywall opens the in-app policy.
+BOOKTRACE_PRIVACY_POLICY_URL =
+BOOKTRACE_TERMS_OF_USE_URL =

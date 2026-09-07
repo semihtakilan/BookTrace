@@ -20,6 +20,7 @@ private struct ProfileContentView: View {
     @Environment(\.navigator) private var navigator
     @Environment(AppRouteTypeManager.self) private var routeManager
     @Environment(LibraryChangeNotifier.self) private var libraryChangeNotifier
+    @Environment(ReadingWorkspace.self) private var workspace
     @Environment(\.locale) private var locale
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -31,6 +32,28 @@ private struct ProfileContentView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                if Calendar.current.component(.month, from: Date()) == 12 {
+                    NavigationLink { YearReviewView() } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Your reading year is ready", systemImage: "sparkles").font(.headline)
+                            Text("Look back at the stories that stayed with you.").font(.subheadline)
+                        }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
+                            .background(ReadingStyle.sage, in: .rect(cornerRadius: 20))
+                    }.buttonStyle(.plain)
+                }
+                VStack(alignment: .leading, spacing: 16) {
+                    NavigationLink { ReadingGoalsView() } label: { Label("Reading goals", systemImage: "target") }
+                    if let goal = workspace.goals.first(where: \.isActive) {
+                        let progress = GoalProgressCalculator.progress(for: goal, entries: workspace.entries)
+                        ProgressView(value: progress.fraction) { Text("\(progress.value) / \(goal.target)") + Text(" ") + Text(goal.metric.title) }
+                            .tint(ReadingStyle.accent)
+                    }
+                    NavigationLink { ReadingInsightsView() } label: { Label("Reading insights", systemImage: "chart.xyaxis.line") }
+                    NavigationLink { QuoteNotebookView() } label: { Label("Quote notebook", systemImage: "quote.opening") }
+                    NavigationLink { YearReviewView() } label: { Label("Your year in books", systemImage: "sparkles") }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20).background(ReadingStyle.sage, in: .rect(cornerRadius: 20))
                 if viewModel.isEmpty {
                     ReadingEmptyState(symbol: "leaf", title: "Let your story grow.",
                                       message: "Your time, your pages, your progress. Add a book and your reading story begins here.",

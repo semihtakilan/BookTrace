@@ -16,7 +16,7 @@ import Testing
 struct SwiftDataBookCacheStoreTests {
 
     private func makeStore() throws -> SwiftDataBookCacheStore {
-        let configuration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let configuration = ModelConfiguration(isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try ModelContainer(for: BookCacheStorage.schema, configurations: configuration)
         return SwiftDataBookCacheStore(modelContainer: container)
     }

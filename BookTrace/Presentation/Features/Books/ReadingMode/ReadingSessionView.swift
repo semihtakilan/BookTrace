@@ -67,7 +67,7 @@ private struct ReadingRoomView: View {
         .toolbar(.hidden, for: .navigationBar)
         .statusBarHidden(false)
         .task {
-            viewModel.start()
+            viewModel.start(palette: palette)
             while !Task.isCancelled {
                 do { try await Task.sleep(for: .seconds(1)) } catch { break }
                 viewModel.tick()

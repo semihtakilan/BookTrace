@@ -6,5 +6,20 @@
 	     kalan girdileri (GENERATE_INFOPLIST_FILE) bu dosyanın üzerine ekler. -->
 	<key>GOOGLE_BOOKS_API_KEY</key>
 	<string>$(GOOGLE_BOOKS_API_KEY)</string>
+	<key>BOOKTRACE_PRIVACY_POLICY_URL</key>
+	<string>$(BOOKTRACE_PRIVACY_POLICY_URL)</string>
+	<key>BOOKTRACE_TERMS_OF_USE_URL</key>
+	<string>$(BOOKTRACE_TERMS_OF_USE_URL)</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array><string>remote-notification</string></array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key><string>com.semihtakilan.BookTrace</string>
+			<key>CFBundleURLSchemes</key><array><string>booktrace</string></array>
+		</dict>
+	</array>
 </dict>
 </plist>

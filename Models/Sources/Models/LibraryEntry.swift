@@ -14,7 +14,15 @@ import Foundation
 /// eklenmesini engellemek için kullanılır.
 public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
     public var book: BookReference
-    public var readingStatus: ReadingStatus
+    public var readingStatus: ReadingStatus {
+        didSet {
+            if readingStatus != .finished {
+                finishedDate = nil
+            } else if oldValue != .finished {
+                finishedDate = Date()
+            }
+        }
+    }
     public var ownershipStatus: OwnershipStatus
     public var progressType: ProgressType
     /// Kullanıcının girdiği sayfa sayısı; boşsa kaynağın verdiği değer kullanılır.
@@ -24,6 +32,14 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
     public var categories: [Category]
     public var addedDate: Date
     public var readingSessions: [ReadingSession]
+    /// Invalid ratings are treated as unrated, including values from imports.
+    public var rating: Int? {
+        didSet { rating = rating.flatMap { (1...5).contains($0) ? $0 : nil } }
+    }
+    public var finishedDate: Date?
+    public var notes: String?
+    public var isFavorite: Bool
+    public var quotes: [Quote]
 
     public var id: String { book.id }
 
@@ -36,7 +52,12 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
         currentPage: Int = 0,
         categories: [Category] = [],
         addedDate: Date = Date(),
-        readingSessions: [ReadingSession] = []
+        readingSessions: [ReadingSession] = [],
+        rating: Int? = nil,
+        finishedDate: Date? = nil,
+        notes: String? = nil,
+        isFavorite: Bool = false,
+        quotes: [Quote] = []
     ) {
         self.book = book
         self.readingStatus = readingStatus
@@ -47,6 +68,13 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
         self.categories = categories
         self.addedDate = addedDate
         self.readingSessions = readingSessions
+        self.rating = rating.flatMap { (1...5).contains($0) ? $0 : nil }
+        // A missing historical finish date remains unknown; transitions below
+        // record the date without inventing one when restoring a legacy entry.
+        self.finishedDate = readingStatus == .finished ? finishedDate : nil
+        self.notes = notes
+        self.isFavorite = isFavorite
+        self.quotes = quotes
         // Eski kayıtlarda da "bitmiş" durumunu bilinen son sayfayla eşleştir.
         if readingStatus == .finished, let total = effectivePageCount {
             self.currentPage = total
@@ -105,8 +133,10 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
 
     /// Bitmiş olarak işaretlemek ilerlemeyi tamamlar; ölçülmemiş bir okuma
     /// oturumu üretmez. Sayfa sayısı bilinmiyorsa kullanıcının durumu korunur.
-    public mutating func setReadingStatus(_ status: ReadingStatus) {
+    public mutating func setReadingStatus(_ status: ReadingStatus, at date: Date = Date()) {
+        let wasFinished = readingStatus == .finished
         readingStatus = status
+        if status == .finished, !wasFinished { finishedDate = date }
         if status == .finished, let total = effectivePageCount {
             currentPage = total
         }
@@ -118,9 +148,9 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
     /// biter, geri alınırsa bitmiş sayılamaz. Bu kural daha önce üç ayrı yerde
     /// (form, elle güncelleme, okuma oturumu) farklı biçimlerde uygulandığı için
     /// kayıtlar tutarsız hâle gelebiliyordu; artık tek yer burası.
-    public mutating func setProgress(currentPage newValue: Int) {
+    public mutating func setProgress(currentPage newValue: Int, at date: Date = Date()) {
         currentPage = clampedPage(newValue)
-        reconcileStatus()
+        reconcileStatus(at: date)
     }
 
     /// Sayfa sayısını değiştirir ve ilerlemeyi yeni tavana göre yeniden kırpar.
@@ -151,7 +181,7 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
                 pagesRead: allowedPages
             )
         )
-        setProgress(currentPage: currentPage + allowedPages)
+        setProgress(currentPage: currentPage + allowedPages, at: session.endDate)
     }
 
     /// İlerlemeyi sayfa sayısını aşmayacak biçimde artırır ve gerekirse durumu günceller.
@@ -168,7 +198,7 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
     ///
     /// `.abandoned` ve `.wishlist` gibi kullanıcının bilinçli seçimleri, ilerleme
     /// başlamadıkça korunur.
-    private mutating func reconcileStatus() {
+    private mutating func reconcileStatus(at date: Date) {
         guard let total = effectivePageCount, total > 0 else {
             if currentPage > 0, readingStatus == .toRead || readingStatus == .wishlist {
                 readingStatus = .reading
@@ -177,12 +207,38 @@ public struct LibraryEntry: Identifiable, Hashable, Sendable, Codable {
         }
 
         if currentPage >= total {
-            readingStatus = .finished
+            setReadingStatus(.finished, at: date)
         } else if readingStatus == .finished {
             // İlerleme geri alındıysa kitap artık bitmiş değil.
             readingStatus = .reading
         } else if currentPage > 0, readingStatus == .toRead || readingStatus == .wishlist {
             readingStatus = .reading
         }
+    }
+
+    // New optional/defaulted fields must not invalidate backups from V1.
+    private enum CodingKeys: String, CodingKey {
+        case book, readingStatus, ownershipStatus, progressType, pageCount, currentPage
+        case categories, addedDate, readingSessions, rating, finishedDate, notes, isFavorite, quotes
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            book: try values.decode(BookReference.self, forKey: .book),
+            readingStatus: try values.decodeIfPresent(ReadingStatus.self, forKey: .readingStatus) ?? .toRead,
+            ownershipStatus: try values.decodeIfPresent(OwnershipStatus.self, forKey: .ownershipStatus) ?? .notOwned,
+            progressType: try values.decodeIfPresent(ProgressType.self, forKey: .progressType) ?? .pages,
+            pageCount: try values.decodeIfPresent(Int.self, forKey: .pageCount),
+            currentPage: try values.decodeIfPresent(Int.self, forKey: .currentPage) ?? 0,
+            categories: try values.decodeIfPresent([Category].self, forKey: .categories) ?? [],
+            addedDate: try values.decode(Date.self, forKey: .addedDate),
+            readingSessions: try values.decodeIfPresent([ReadingSession].self, forKey: .readingSessions) ?? [],
+            rating: try values.decodeIfPresent(Int.self, forKey: .rating),
+            finishedDate: try values.decodeIfPresent(Date.self, forKey: .finishedDate),
+            notes: try values.decodeIfPresent(String.self, forKey: .notes),
+            isFavorite: try values.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false,
+            quotes: try values.decodeIfPresent([Quote].self, forKey: .quotes) ?? []
+        )
     }
 }

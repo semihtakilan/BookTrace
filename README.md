@@ -1,18 +1,20 @@
 # BookTrace
 
-BookTrace is a native iOS app for discovering books, organizing a personal library, and tracking reading time and progress. Find books through Open Library and Google Books, keep your reading list on your device, and turn reading sessions into a record of your activity and pace.
+BookTrace is a native iOS app for discovering books, organizing a personal library, and tracking reading time and progress. Find books through Open Library and Google Books, keep a library that works offline, and turn reading sessions into a record of your activity and pace. The app includes private iCloud synchronization, local recommendations, and optional BookTrace Pro features without requiring a BookTrace account.
 
 Built with **SwiftUI**, **SwiftData**, and local **Swift packages**, the project uses MVVM and repository abstractions to keep presentation, persistence, networking, and domain logic separate.
 
 ## Contents
 
 - [Features](#features)
+- [Free and Pro](#free-and-pro)
 - [Reading experience](#reading-experience)
 - [Technology stack](#technology-stack)
 - [Requirements](#requirements)
 - [Getting started](#getting-started)
 - [Book data sources](#book-data-sources)
 - [Google Books API configuration](#google-books-api-configuration)
+- [Release setup](#release-setup)
 - [Using BookTrace](#using-booktrace)
 - [Architecture](#architecture)
 - [Project structure](#project-structure)
@@ -32,6 +34,7 @@ Built with **SwiftUI**, **SwiftData**, and local **Swift packages**, the project
 - Scan book barcodes with the device camera and look up the corresponding ISBN.
 - View book descriptions, authors, covers, subjects, page counts, publication dates, and ISBNs when available.
 - Retry individual shelves when a request fails; each shelf loads independently.
+- Discover personal recommendations scored locally from reading status, ratings, favorites, subjects, and authors; candidate books come from the cached catalogues.
 - Show cached results immediately, with separate refresh and expiry windows for searches, subject shelves, and ISBN lookups.
 - Load missing descriptions on demand, share concurrent requests for the same book, and reuse enriched metadata on later visits.
 
@@ -43,7 +46,9 @@ Built with **SwiftUI**, **SwiftData**, and local **Swift packages**, the project
 - Set a page count and choose progress entry in pages or percentages.
 - Search and filter **All Books**, including titles currently being read; use **Now Reading** to resume the most recently read books.
 - Update existing library details while preserving reading progress and saved sessions.
-- Remove individual books or erase the library from Settings.
+- Rate books from one to five, mark favorites, and keep personal notes. Completion dates are recorded when books become Finished.
+- Import Goodreads CSV files or a BookTrace JSON backup, preview the import, and keep existing progress and notes when matching entries merge.
+- Remove individual books or erase the library from Settings. With iCloud enabled, deletions can propagate to your other devices.
 
 ### Reading sessions
 
@@ -52,6 +57,7 @@ Built with **SwiftUI**, **SwiftData**, and local **Swift packages**, the project
 - Save the session to advance progress and update the reading status when appropriate.
 - Review a book's session history and accumulated reading time.
 - Get a remaining-time estimate that adapts to the sessions recorded for that book.
+- With Pro, show the active session on the Lock Screen and Dynamic Island through a Live Activity, including paused and resumed states.
 
 Reading Mode tracks time spent reading a book outside the app; BookTrace does not currently include an EPUB or PDF reader.
 
@@ -66,6 +72,36 @@ Reading Mode tracks time spent reading a book outside the app; BookTrace does no
 - Switch between the system language, English, Turkish, and German.
 - Set the default reading status and progress type for newly added books.
 - Clear the search cache independently of the personal library.
+- Check iCloud synchronization status, manage BookTrace Pro, and restore purchases from Settings.
+
+### Goals, insights, and quotes
+
+- Set daily, weekly, monthly, or yearly targets for minutes, pages, books, or sessions.
+- Explore an annual reading heatmap, monthly time and page trends, pace over time, reading hours, subjects, ratings, and finished-book averages with Swift Charts.
+- Save quotes with a page number, note, and favorite flag; search across the whole notebook or view one book’s quotes.
+- Scan a page with on-device Vision OCR, edit the recognized text, and explicitly save it. Recognition support is checked at runtime; accuracy can vary by language.
+- Share quote cards using the book’s cover palette and a BookTrace mark.
+- View and share a basic year-in-review card for free; Pro adds the complete set and high-resolution exports.
+- Export a Goodreads-compatible CSV or a full JSON backup containing books, sessions, quotes, and goals.
+- Add Now Reading, Reading Streak, and Reading Goal widgets; supported widgets also offer Lock Screen accessory layouts.
+
+## Free and Pro
+
+There is no book-count limit or mandatory onboarding paywall. A paywall opens when a user requests a Pro action or visits **Settings → BookTrace Pro**.
+
+| Free | BookTrace Pro |
+| --- | --- |
+| Unlimited books, discovery, search, and barcode lookup | Live Activities and widgets |
+| Reading sessions, atmospheres, basic Journal statistics, and streaks | Creating and editing reading goals; detailed Swift Charts insights |
+| Private iCloud synchronization and local recommendations | Creating and editing quotes, page OCR, and quote-card sharing |
+| Goodreads CSV / BookTrace JSON import | CSV and full JSON export |
+| Basic year-in-review card and standard-resolution sharing | All year-in-review cards and high-resolution sharing |
+
+Existing quotes and goals remain readable when Pro expires. Free users can continue managing their books and recording sessions.
+
+The US base catalogue is **$3.99 monthly**, **$24.99 yearly**, and **$59.99 lifetime**. Only the yearly subscription offers a **7-day free trial**, subject to Apple’s eligibility result. The yearly option is selected initially; prices use `Product.displayPrice`, and its savings badge is calculated from the current storefront’s monthly and yearly prices. The US configuration produces a 48% badge; other storefronts can differ. Lifetime is a separate non-consumable purchase, outside the subscription group.
+
+See [Pricing.md](Pricing.md) for the regional pricing plan and [Release setup](#release-setup) for local testing and App Store configuration. The bundled StoreKit configuration describes local test products; it does not create or publish App Store Connect products.
 
 ## Reading experience
 
@@ -83,14 +119,17 @@ See the [latest simulator design review](Documentation/DesignReview/Iteration4/R
 | --- | --- | --- |
 | Interface | SwiftUI | Screens, forms, navigation presentation, and shared components |
 | State | Observation | Observable view models and shared application settings |
-| Persistence | SwiftData | Library entries, categories, and saved reading sessions |
+| Persistence and sync | SwiftData / CloudKit | Versioned library schema, private iCloud sync, and local fallback |
+| Purchases | StoreKit 2 / Keychain | Verified Pro entitlements, purchase and restore flows, and an offline cache |
+| Widgets and Live Activities | WidgetKit / ActivityKit | App Group library access, Lock Screen widgets, and reading-session activity |
+| Reading insights | Swift Charts | Reading calendar, trends, and distributions |
 | Networking | Foundation / URLSession | Asynchronous requests through the local `NetworkKit` package |
 | Dependency injection | [FactoryKit](https://github.com/hmlongco/Factory) | Service registration and dependency composition |
 | Navigation | [NavigatorUI](https://github.com/hmlongco/Navigator) | Independent navigation stacks for each tab |
 | Cover images | [Kingfisher](https://github.com/onevcat/Kingfisher) | Remote image loading and caching |
-| Barcode scanning | AVFoundation | Camera access and barcode capture |
+| Barcode and page scanning | AVFoundation / VisionKit / Vision | Barcode lookup and editable on-device text recognition |
 | Localization | String Catalogs | English, Turkish, and German interface strings |
-| Testing | Swift Testing | Domain, cache behavior, and endpoint tests |
+| Testing | Swift Testing / StoreKitTest | Domain, persistence, migration, purchase scenarios, widgets, and networking |
 
 Dependencies are managed through Swift Package Manager. The committed Xcode [dependency resolution](BookTrace.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved) records Factory **3.3.2**, Navigator **2.1.3**, and Kingfisher **8.11.0**.
 
@@ -101,7 +140,8 @@ Dependencies are managed through Swift Package Manager. The committed Xcode [dep
 | Development environment | macOS with Xcode 26.x and a Swift 6.2 or newer toolchain |
 | Deployment target | iOS 17.6 or later; the app currently targets iPhone |
 | Book discovery | Internet access for uncached requests; a Google Books API key is optional for the primary Open Library flow |
-| Barcode scanning | A physical device with an available camera and camera permission |
+| Barcode / page scanning | A supported physical device with camera permission; manual entry remains available |
+| iCloud and shared widgets | Valid App Group / iCloud signing capabilities; iCloud also requires an available Apple Account |
 
 The app target uses Swift 6 language mode, while the local packages use Swift 6 tools. In particular, `Models/Package.swift` requires Swift tools version 6.2. The app and project deployment settings both specify iOS 17.6.
 
@@ -120,13 +160,13 @@ The app target uses Swift 6 language mode, while the local packages use Swift 6 
    open BookTrace.xcodeproj
    ```
 
-3. Allow Xcode to resolve Swift package dependencies. Keep `Models`, `NetworkKit`, and `NetworkRegistration` beside the app project; they are local package dependencies.
+3. Allow Xcode to resolve Swift package dependencies. Keep `Models`, `NetworkKit`, `NetworkRegistration`, and `BookTraceShared` beside the app project; they are local package dependencies.
 4. Optionally configure `GOOGLE_BOOKS_API_KEY` using the [steps below](#google-books-api-configuration) to enable Google Books fallback and enrichment.
 5. Select the **BookTrace** scheme and an iOS Simulator or connected device.
-6. For a physical device, select your development team under **Signing & Capabilities** and adjust the bundle identifier if needed for your signing setup.
+6. For a physical device, set the development team for both the app and widget extension. Register their App Group and the app’s CloudKit container as described in [Release setup](#release-setup). If identifiers change, update the app, extension, capabilities, and shared configuration together.
 7. Run the app with **Command-R**.
 
-You can explore the Library, Discover, and Journal flows in the Simulator. Use a physical device to exercise camera scanning.
+You can explore Library, Discover, Journal, and the local StoreKit catalogue in the Simulator. Use a physical device for camera scanning and signed device builds for iCloud and Live Activity validation. The main scheme includes the widget extension and both test targets.
 
 ## Book data sources
 
@@ -141,7 +181,7 @@ BookTrace uses Open Library for discovery and Google Books for fallback and miss
 | Book detail | Cached description, then the book's own catalogue | For Open Library books, Google Books starts after 800 ms or an earlier empty/error response | Return the first usable description within the available budget |
 | Barcode / ISBN | Open Library edition record | Google Books | Edition records carry the printing the user scanned |
 
-The app uses public book metadata and keeps its personal library locally. It requires no sign-in to either service.
+The app uses public book metadata and keeps a local personal library, with private iCloud synchronization when available. It requires no sign-in to either catalogue service.
 
 Text search displays up to 20 results and each subject shelf up to 15. Open Library shelf requests fetch up to 30 candidates to prefer books with covers. Barcode lookup returns one book and may make an additional search to resolve an edition or its author. Discovery displays a single batch per query; pagination is not implemented.
 
@@ -260,6 +300,20 @@ This applies only to launches started by Xcode. An archived or installed app nev
 - Without a key the app still runs: Open Library is the primary source. A failed Google Books fallback does not guarantee that the lookup can be resolved.
 - Debug builds show the day's Google Books request count under **Journal → Settings → About**.
 
+## Release setup
+
+The current phase prepares the project; account setup, store configuration, and publication are deferred to the next phase. See the [implementation and validation record](Documentation/Release/Validation.md) for completed work and the [release checklist](Documentation/Release/ReleaseChecklist.md) for that handoff.
+
+The Xcode project contains four targets: **BookTrace**, **BookTraceTests**, **BookTraceWidgets**, and **BookTraceWidgetsTests**. The `BookTraceShared` package supplies the versioned persistence schema, App Group configuration, widget snapshots, and ActivityKit values shared by the app and extension.
+
+- Register App Group `group.com.semihtakilan.BookTrace` for the app and widget extension, and CloudKit container `iCloud.com.semihtakilan.BookTrace` for the app. Entitlement files are in `Config`. Validate synchronization in the development container before deploying its schema to production.
+- The **BookTrace** Run scheme selects [Config/BookTrace.storekit](Config/BookTrace.storekit) for local purchase testing. StoreKit tests load the same configuration from their test bundle. Disable the local configuration when validating real App Store sandbox products.
+- In App Store Connect, create subscription group `BookTracePro`, monthly and yearly auto-renewable products, and a separate lifetime non-consumable. Use the exact IDs in the local configuration and [ReleasePlan.md](ReleasePlan.md); configure the yearly introductory trial and storefront prices there.
+- Set `BOOKTRACE_PRIVACY_POLICY_URL` and, when using a custom agreement, `BOOKTRACE_TERMS_OF_USE_URL` in the app’s Info.plist configuration. The app accepts HTTPS URLs, provides local privacy text if no policy URL is supplied, and otherwise defaults to Apple’s standard EULA. A hosted privacy policy, support URL, and the required App Store metadata must be supplied before release.
+- Complete the paid-app agreement, banking/tax information, product localization, privacy disclosures, screenshots, and release review steps in [ReleasePlan.md](ReleasePlan.md). [Documentation/Release](Documentation/Release) contains release materials, including draft store metadata and regional pricing data.
+
+Local builds and automated StoreKit tests do not establish that production purchases or synchronization between two signed-in devices work. Those require the registered Apple resources, sandbox/device checks, and the release checklist. No production CloudKit deployment or App Store publication is implied by the repository configuration.
+
 ## Using BookTrace
 
 1. Open **Discover** and search for a book, browse a subject shelf, or scan a barcode.
@@ -269,7 +323,7 @@ This applies only to launches started by Xcode. An archived or installed app nev
 5. In Reading Mode, choose **Finish**, enter the number of pages read, and select **Save Session**.
 6. Visit **Journal** to review activity and open the gear button for Settings.
 
-When you encounter a book that is already saved, **Update Library Details** edits its existing entry. Library identity uses the source-prefixed book ID (`gb:` or `ol:`). Legacy Google Books IDs are migrated at launch. Different editions or records from different catalogues can remain separate library entries; metadata matching during enrichment does not automatically merge saved entries.
+When you encounter a book that is already saved, **Update Library Details** edits its existing entry. Library identity uses a source-prefixed book ID (`gb:`, `ol:`, or `local:` for imported metadata). Legacy Google Books IDs are migrated at launch. Different editions or records from different catalogues can remain separate library entries; metadata matching during enrichment does not automatically merge saved entries. Imports match IDs, normalized ISBNs, and available metadata keys within the existing library and the current batch, adding distinct sessions and quotes without replacing saved progress or notes. Cloud synchronization deduplicates repeated logical IDs after remote changes.
 
 ## Architecture
 
@@ -290,7 +344,11 @@ flowchart TD
     OpenLibrary --> Network[NetworkKit / URLSession]
     Google --> Network
     Library --> Repository[LocalLibraryRepositoryImpl]
-    Repository --> Persistence[SwiftData]
+    Repository --> Persistence[BookTraceShared / SwiftData V2]
+    Persistence --> Cloud[CloudKit private database]
+    Persistence --> Widgets[App Group / WidgetKit]
+    Views --> Entitlement[EntitlementStore]
+    Entitlement --> Purchases[StoreKit 2 / Keychain]
 ```
 
 Each layer answers one question. `CachedBookSearching` asks whether the answer is already on the device; `HybridBookSearching` asks which catalogue should answer; `DailyRequestBudget` asks whether the expensive one may be asked at all. View models see none of this — they depend on the `BookSearching` and `BookDetailFetching` protocols.
@@ -299,7 +357,8 @@ Each layer answers one question. `CachedBookSearching` asks whether the answer i
 
 | Package | Responsibility |
 | --- | --- |
-| [Models](Models) | Domain values, repository protocols, progress rules, reading-speed estimates, and the source-routing and caching decorators; independent of SwiftUI, SwiftData, and both catalogues |
+| [Models](Models) | Domain values, goals, statistics, recommendations, backup codecs, progress rules, and catalogue decorators; independent of SwiftUI, SwiftData, and both catalogues |
+| [BookTraceShared](BookTraceShared) | SwiftData V1/V2 schemas and migration, App Group configuration, widget snapshots, and reading-activity values |
 | [NetworkKit](NetworkKit) | Typed endpoints, the `NetworkService` actor, HTTP request construction, request/response interceptors, logging, and retries for eligible failures |
 | [NetworkRegistration](NetworkRegistration) | Factory registrations for networking configuration, the environment manager, and request/response interceptors |
 
@@ -311,7 +370,9 @@ Each layer answers one question. `CachedBookSearching` asks whether the answer i
 - **Source-tagged identity:** book ids carry their catalogue (`gb:zyTCAlFPjgYC`, `ol:/works/OL166894W`), so two catalogues cannot collide on one string. An id with no prefix is read as Google Books, which is how entries saved before the second source was added keep working. `BookReference.matchingKey` — ISBN when known, otherwise title, author and year — is what lets the two catalogues agree on a book.
 - **Field-level merging:** a book gathers data as it travels from a shelf to a detail screen to the library. `merging` never lets an empty value overwrite a known one, so the poorer record arriving second cannot erase the richer one.
 - **Tab navigation:** Library, Discover, and Journal each have their own Navigator instance. Their internal feature names remain `Books`, `Explore`, and `Profile`.
-- **Data refresh:** `LibraryChangeNotifier` publishes a revision after successful writes so library details, shelves, and profile statistics refresh after changes.
+- **Data refresh:** `LibraryChangeNotifier` publishes a revision after successful writes and imported cloud changes, refreshing open screens and widget timelines. Recommendation requests discard results for obsolete library revisions.
+- **Pro access:** one long-lived `EntitlementStore` observes verified StoreKit transactions and renewal status, is injected through the environment, and refreshes access after purchases, restore, foreground activation, and expiration.
+- **Shared persistence:** `BookTraceShared` owns the V2 library schema. App-level repository and synchronization coordinators manage mutations; widgets read shared data without initiating CloudKit synchronization.
 - **Error presentation:** `UserFacingError` maps service and persistence errors into localized messages and suppresses cancellation errors.
 
 ## Project structure
@@ -323,12 +384,15 @@ BookTrace/
 │   ├── Core/
 │   │   ├── DI/                      # Registrations and dependency composition
 │   │   ├── ErrorPresentation/       # User-facing error mapping
+│   │   ├── Subscription/            # StoreKit, entitlement cache, and feature gates
+│   │   ├── Sync/                    # CloudKit status and remote-change handling
+│   │   ├── LiveActivity/            # Reading-session activity lifecycle
 │   │   ├── Settings/                # Persisted theme, language, and defaults
 │   │   └── ViewState/               # Loading, success, and failure state
 │   ├── Data/
 │   │   ├── Caching/                 # Search-result disk cache
 │   │   ├── Network/                 # Open Library and Google Books endpoints and response mapping
-│   │   ├── Persistence/             # SwiftData models and library repository
+│   │   ├── Persistence/             # Repository, identity migration, and deduplication
 │   │   └── Services/                # Book lookup and API-key resolution
 │   ├── Domain/Repositories/         # App-facing repository protocol aliases
 │   ├── Presentation/
@@ -336,15 +400,20 @@ BookTrace/
 │   │   │   ├── Books/               # Library, book progress, and reading sessions
 │   │   │   ├── Explore/             # Search, discovery, details, and scanning
 │   │   │   ├── Profile/             # Journal, reading history, and settings
+│   │   │   ├── Paywall/             # Localized product selection and purchase flows
+│   │   │   ├── Release/             # Goals, insights, quotes/OCR, transfer, and year review
 │   │   │   └── Splash/              # Launch screen
 │   │   └── Shared/                  # Covers, rows, tags, and formatters
 │   ├── Resources/ShelfSeed.json     # Bundled subject shelves
 │   ├── Assets.xcassets/
 │   └── Localizable.xcstrings
 ├── BookTrace.xcodeproj/
-├── BookTraceTests/                  # App, persistence, transport, and view-model tests
-├── Config/                          # Shared build settings and API-key template
-├── Documentation/                   # Design and performance reviews
+├── BookTraceTests/                  # App, migration, StoreKit, OCR, and view-model tests
+├── BookTraceShared/                 # Shared persistence, snapshots, and activity values
+├── BookTraceWidgets/                # Widget extension and Live Activity presentation
+├── BookTraceWidgetsTests/           # Shared widget projection and activity-clock tests
+├── Config/                          # Build settings, entitlements, StoreKit config, API-key template
+├── Documentation/                   # Design/performance reviews and release materials
 ├── Scripts/generate_shelf_seed.py    # Refresh the bundled subject shelves
 ├── Models/
 │   ├── Sources/Models/
@@ -354,6 +423,8 @@ BookTrace/
 │   └── Tests/NetworkKitTests/
 ├── NetworkRegistration/
 │   └── Sources/NetworkRegistration/
+├── Pricing.md                       # Base products and regional pricing plan
+├── ReleasePlan.md                   # Release phases and external setup checklist
 ├── Plan.md                          # Original development plan, in Turkish
 └── README.md
 ```
@@ -365,7 +436,10 @@ BookTrace/
 | Type | Purpose |
 | --- | --- |
 | `BookReference` | A source-prefixed book ID and available metadata, including title, authors, cover URL, page count, description, ISBN, and subjects |
-| `LibraryEntry` | A book plus reading status, ownership, preferred progress unit, current page, categories, and saved sessions |
+| `LibraryEntry` | A book plus reading status, ownership, progress, categories, sessions, rating, completion date, notes, favorites, and quotes |
+| `Quote`, `ReadingGoal` | Quote notebook values and calendar-based reading targets |
+| `ReadingStatistics`, `YearInReview`, `GoalProgressCalculator` | Pure projections for charts, annual cards, and goal progress |
+| `RecommendationEngine` | Local preference scoring and existing-library exclusion |
 | `ReadingSession` | A session ID, start date, active duration in seconds, and number of pages read |
 | `Category` | A user tag with an identity derived from its normalized name |
 | `ReadingSpeedEstimator` | Pure calculations for reading pace and estimated remaining time |
@@ -395,9 +469,11 @@ The session timer measures elapsed time from timestamps and accumulated active i
 
 | Data | Storage | Behavior |
 | --- | --- | --- |
-| Library metadata, categories, and sessions | SwiftData | Persisted on the device and available without fetching book details again |
+| Library metadata, categories, sessions, quotes, and goals | SwiftData V2 in the App Group container when available | Available offline, with private CloudKit synchronization in a configured signed app |
+| Pro entitlement | Verified StoreKit history and a device-only Keychain cache | Cached subscriptions never extend past verified expiry; current StoreKit results replace the bootstrap cache |
+| Widget access | App Group defaults and the shared library store | The app publishes Pro availability and expiry; the extension reads library snapshots |
 | Search, subject, and ISBN results | SwiftData store in the app's cache directory, separate from the library | Served immediately, refreshed in the background once stale: searches after a day, shelves after a week, ISBN lookups after a month |
-| Books themselves | One row per book in the same store | Deduplicated across shelves and enriched in place as detail data arrives |
+| Cached catalogue books | One row per book in the discovery cache store | Deduplicated across shelves and enriched in place as detail data arrives |
 | Cover images | Kingfisher cache | Cached separately from search results; a generated placeholder appears while unavailable |
 | Theme, language, and new-book defaults | UserDefaults | Restored on subsequent launches |
 
@@ -413,9 +489,11 @@ Library management, saved progress, session recording, and Journal calculations 
 
 The cache has a separate SwiftData store in the app’s cache directory. Clearing it deletes cached query and book rows without touching the library. Read access timestamps are updated at most once per hour per book, with one save for the eligible rows in a shelf. Startup pruning removes expired queries and keeps at most 2,000 cached books. If the cache store cannot open, discovery falls back to direct network requests.
 
-**Clear search cache** removes the stored discovery results. It does not erase library entries, reading sessions, or Kingfisher's image cache, and already displayed results may remain in memory. **Erase library** removes all saved books, their sessions, and stored categories after confirmation.
+**Clear search cache** removes the stored discovery results. It does not erase library entries, reading sessions, or Kingfisher's image cache, and already displayed results may remain in memory. **Erase library** removes saved books, sessions, categories, quotes, notes, and goals after confirmation. If iCloud is enabled, deletion can synchronize to the user’s other devices.
 
-The current implementation has no account system, cloud synchronization, or library import/export.
+The library uses a versioned V1 → V2 migration. The move into the App Group copies the original store and SQLite journals before opening the new location; the original files remain available if the move fails. CloudKit setup failure falls back to local storage. Logical book, session, category, quote, and goal identifiers are deduplicated in application code because CloudKit-compatible models do not use unique constraints. The discovery cache stays outside both the App Group library migration and CloudKit.
+
+BookTrace has no separate account or application backend. Cloud synchronization uses the user’s Apple Account and private database; StoreKit uses the App Store account for purchases. A completed StoreKit entitlement query is authoritative, including an empty result after a refund. The Keychain bootstrap cache is limited to 30 days and never extends a subscription’s verified expiration. OCR runs on the device, and imported files are limited to 25 MB before decoding.
 
 ## Localization and appearance
 
@@ -427,7 +505,9 @@ When adding interface text, use the existing localization approach and update th
 
 Run commands from the repository root with the required Xcode toolchain selected.
 
-The [CI workflow](.github/workflows/ci.yml) runs on pushes, pull requests, and manual dispatch. It uses macOS 26 with Xcode 26.6, runs both package suites and the app tests, and builds Debug and Release. Release compilation also protects the documented `ViewModelHolder` compiler workaround. No API key or signing secret is required.
+The [CI workflow](.github/workflows/ci.yml) runs on pushes, pull requests, and manual dispatch. It uses macOS 26 with Xcode 26.6, runs the Models and NetworkKit suites, builds BookTraceShared, runs all app and widget tests on iOS 18.4 with ad hoc signing, and builds the app with its widget extension in Debug and Release. Release compilation also protects the documented `ViewModelHolder` compiler workaround. No API key or signing secret is required.
+
+CI downloads the exact iOS 18.4 runtime and fails if it cannot install or select it; StoreKit tests are never skipped or moved to an arbitrary runtime. Local Xcode 26.6 testing found that iOS 26.5 rejects `SKTestSession` with “not installed for development,” including with ad hoc signing, while iOS 18.4 loads the local catalogue. This is a local StoreKit test-environment finding, not evidence of production purchase behavior. The [macOS 26 runner inventory](https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md) includes only iOS 26.x runtimes, so CI uses Apple's [documented version-specific runtime download command](https://developer.apple.com/documentation/xcode/downloading-and-installing-additional-xcode-components).
 
 Each run publishes a commit-specific summary, logs, and the app’s `.xcresult` bundle as artifacts retained for 14 days. See [CI runs](https://github.com/semihtakilan/BookTrace/actions/workflows/ci.yml) for current results; test counts in dated review documents describe those historical runs. The workflow becomes active after it is pushed to GitHub. Xcode availability follows the [GitHub runner image manifest](https://github.com/actions/runner-images/blob/main/images/macos/macos-26-Readme.md).
 
@@ -444,13 +524,14 @@ xcodebuild \
   build
 ```
 
-This builds the app without installing or launching it. No API key is needed for compilation or Open Library discovery. Google Books credentials are optional, as described above.
+This builds the app and embedded widget extension without installing or launching them. No API key is needed for compilation or Open Library discovery. Google Books credentials are optional, as described above.
 
 ### Run package tests
 
 ```bash
 swift test --package-path Models
 swift test --package-path NetworkKit
+swift build --package-path BookTraceShared
 ```
 
 The existing Swift Testing suites cover:
@@ -466,17 +547,21 @@ The existing Swift Testing suites cover:
 | `BookReferenceMergingTests` | An empty value never overwriting a known one |
 | `ReadingStreakTests`, `BookAmbienceTests` | Consecutive reading days, recent activity, and subject/title atmosphere classification |
 | `CategoryTests`, `ReadingSpeedEstimatorValidationTests` | Category normalization and pace validation |
+| `ReleaseDomainTests`, `GoodreadsCSVCodecTests` | Goals and calendar boundaries, statistics, recommendations, quote/completion values, and backup/import codecs |
 | `EndpointTests`, `NetworkServiceRetryTests` | URL construction, request encoding, endpoint overrides, retry limits, and cancellation |
 
-The `BookTraceTests` target covers library persistence, the SwiftData cache, bundled shelves, request budgets, both catalogue decoders, detail transport limits, view models, error presentation, cover palettes, and session outcomes. Choose an installed Simulator with `xcrun simctl list devices available`, then substitute its UUID below:
+The `BookTraceTests` target covers library persistence, the SwiftData cache, bundled shelves, request budgets, both catalogue decoders, detail transport limits, view models, error presentation, cover palettes, session outcomes, schema migration, import cancellation and deduplication, entitlement policy, local StoreKit transactions, and OCR language selection. `BookTraceWidgetsTests` covers shared widget projections and activity-clock calculations. Install iOS 18.4 if needed, choose an iOS 18.4 iPhone with `xcrun simctl list devices available`, then substitute its UUID below:
 
 ```bash
+xcodebuild -downloadPlatform iOS -buildVersion 18.4 -architectureVariant universal
+
 xcodebuild test -project BookTrace.xcodeproj -scheme BookTrace \
   -destination 'platform=iOS Simulator,id=SIMULATOR_UUID' \
-  CODE_SIGNING_ALLOWED=NO
+  -parallel-testing-enabled NO \
+  CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=YES CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=
 ```
 
-These tests use local values and mocks; they call neither catalogue and need no API key. Swift Package Manager may need network access to resolve dependencies before the first run. The repository currently has no app-level UI test target, and `NetworkRegistration` has no dedicated test target.
+The main scheme includes both test targets. Tests use local values, mocks, and `SKTestSession` with the bundled StoreKit catalogue; they need no catalogue API key or live purchase. They do not verify a production CloudKit account or production App Store products. Swift Package Manager may need network access to resolve dependencies before the first run. The repository currently has no app-level UI test target, and `NetworkRegistration` has no dedicated test target.
 
 ## Troubleshooting
 
@@ -493,19 +578,19 @@ These tests use local values and mocks; they call neither catalogue and need no 
 | A book description is missing | Wait for detail loading to finish. Use the retry action after a failure; an unavailable description means the completed lookup supplied none. Successful empty results are reused for 30 seconds. |
 | A shelf shows the same books on a brand-new install with no connection | That is the bundled snapshot in `BookTrace/Resources/ShelfSeed.json`. It refreshes from Open Library as soon as a request succeeds. |
 | Search returns nothing for a title you can find on Google Books | Open Library answers search first. Confirm the daily Google Books budget is not spent (debug builds show it under **Settings → About**) and that a fallback request is not being blocked by a quota suspension. |
-| Xcode reports a missing local package | Check that all three package directories are present beside `BookTrace.xcodeproj`. |
+| Xcode reports a missing local package | Check that Models, NetworkKit, NetworkRegistration, and BookTraceShared are present beside `BookTrace.xcodeproj`. |
+| Pro plans do not load | For local development, select Config/BookTrace.storekit in the Run scheme. For sandbox testing, check the signed app, App Store account, product IDs, and App Store Connect configuration. |
+| iCloud shows unavailable or local mode | Check the Apple Account, network, registered CloudKit container, and signing capabilities. Library actions remain local when cloud setup is unavailable. |
+| Widgets show no library or require Pro | Launch the app, verify Pro/Restore Purchases, and ensure the app and extension share the registered App Group. Widgets cannot read a legacy store outside the group. |
 | Swift tools version is unsupported | Select an Xcode installation that includes Swift 6.2 or newer and check the active command-line toolchain. |
 | Device signing fails | Set your development team and, if needed, a bundle identifier available to that team. |
 
 ## Project status and roadmap
 
-Book discovery, library management, timed reading sessions, pace estimates, reading streaks, Journal statistics, cover palettes, visual reading atmospheres, themes, and language settings are implemented.
+The repository implements the original discovery, library, and reading-session flows plus the release features: CloudKit-compatible V2 storage, StoreKit Pro, Live Activities and widgets, goals, detailed statistics, quotes/OCR, year-in-review cards, import/export, and local recommendations.
 
-The following work remains planned:
+Release readiness still depends on external setup and verification: Apple agreements and product configuration, signing and registered capabilities, two-device iCloud checks, StoreKit sandbox/device validation, hosted legal/support pages, store assets, TestFlight feedback, and App Review. Source implementation is separate from completing those steps.
 
-- Author search, author profiles, and bibliographies.
-- Recommendations based on library subjects and categories.
-- Reading goals and richer reading trends; the current streak and recent-activity strip are already implemented.
-- A backend proxy to keep the Google Books key off devices and manage shared usage limits.
+Author profiles and bibliographies, a backend proxy, and broader device support remain future product decisions. The app still targets iPhone and does not include a social account system, an LLM service, or an EPUB/PDF reader.
 
-See [Plan.md](Plan.md) for the current phased plan in Turkish, and [Documentation/README.md](Documentation/README.md) for review evidence and screenshot conventions.
+See [ReleasePlan.md](ReleasePlan.md) and [Pricing.md](Pricing.md) for release scope and pricing, [Plan.md](Plan.md) for the original phased architecture, [Documentation/Release](Documentation/Release) for release materials, and [Documentation/README.md](Documentation/README.md) for review evidence and screenshot conventions.

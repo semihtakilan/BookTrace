@@ -5,6 +5,7 @@
 //  Created by Semih TAKILAN on 07.08.2026.
 //
 
+import BookTraceShared
 import FactoryKit
 import Models
 import SwiftData
@@ -23,9 +24,14 @@ struct AppDependencies {
     let libraryChangeNotifier: LibraryChangeNotifier
     let settings: AppSettings
     let modelContainer: ModelContainer
+    let entitlementStore: EntitlementStore
+    let syncStatus: CloudSyncStatus
+    let readingWorkspace: ReadingWorkspace
 
     init(container: Container) throws {
-        modelContainer = try LocalStore.makeContainer()
+        ReadingLiveActivityController.cleanupStaleActivities()
+        let opened = try LocalStore.open(preferCloud: true)
+        modelContainer = opened.container
         libraryChangeNotifier = container.libraryChangeNotifier()
         settings = container.appSettings()
 
@@ -34,11 +40,16 @@ struct AppDependencies {
         // anda uygulamayı çökertirdi. Burada kurulup elden geçiriliyor.
         // Kimlik biçimi değişti; kayıtlı kitaplar yeni biçime taşınıyor.
         BookIdentifierMigration.run(in: modelContainer.mainContext)
+        try LibraryDeduplicator.run(in: modelContainer.mainContext)
 
         let repository = LocalLibraryRepositoryImpl(
             modelContext: modelContainer.mainContext,
             changeNotifier: libraryChangeNotifier
         )
+
+        entitlementStore = EntitlementStore()
+        syncStatus = CloudSyncStatus(cloudEnabled: opened.cloudEnabled, sharingAvailable: opened.sharingAvailable,
+                                    context: modelContainer.mainContext, notifier: libraryChangeNotifier)
 
         // Cache mağazası açılamazsa uygulama yine çalışmalı: her istek ağa
         // gider, kütüphane etkilenmez. Bu yüzden hata yukarı fırlatılmıyor.
@@ -56,13 +67,17 @@ struct AppDependencies {
             store: cacheStore
         )
 
+        readingWorkspace = ReadingWorkspace(repository: repository, context: modelContainer.mainContext,
+                                            notifier: libraryChangeNotifier, search: bookSearching)
+
         viewModelFactory = ViewModelFactory(
             libraryRepository: repository,
             bookSearching: bookSearching,
             bookDetailFetching: bookSearching,
             bookCacheStore: cacheStore,
             googleBooksBudget: container.googleBooksBudget(),
-            settings: settings
+            settings: settings,
+            entitlementStore: entitlementStore
         )
     }
 }

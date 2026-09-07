@@ -53,6 +53,12 @@ private struct BookLibraryDetailContent: View {
                 VStack(alignment: .leading, spacing: 24) {
                     actionButtons
                     progressSection
+                    NavigationLink { PersonalBookView(bookID: entry.id) } label: {
+                        Label("My notes & rating", systemImage: "star.bubble")
+                    }
+                    NavigationLink { QuoteNotebookView(bookID: entry.id) } label: {
+                        Label("Quote notebook", systemImage: "quote.opening")
+                    }
                     if !entry.categories.isEmpty { categoriesSection }
                     sessionsSection
                     if let description = entry.book.description, !description.isEmpty {

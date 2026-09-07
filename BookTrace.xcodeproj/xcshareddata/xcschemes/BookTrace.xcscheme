@@ -38,6 +38,9 @@
                ReferencedContainer = "container:BookTrace.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference skipped = "NO">
+            <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "B7D00000000000000000003D" BuildableName = "BookTraceWidgetsTests.xctest" BlueprintName = "BookTraceWidgetsTests" ReferencedContainer = "container:BookTrace.xcodeproj" />
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
@@ -60,6 +63,7 @@
             ReferencedContainer = "container:BookTrace.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <StoreKitConfigurationFileReference identifier = "../../Config/BookTrace.storekit" />
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

@@ -22,6 +22,7 @@ final class ViewModelFactory {
     @ObservationIgnored private let bookCacheStore: any BookCacheStore
     @ObservationIgnored private let googleBooksBudget: DailyRequestBudget
     @ObservationIgnored private let settings: AppSettings
+    @ObservationIgnored private let entitlementStore: EntitlementStore?
 
     init(
         libraryRepository: any LibraryRepository,
@@ -29,7 +30,8 @@ final class ViewModelFactory {
         bookDetailFetching: any BookDetailFetching,
         bookCacheStore: any BookCacheStore,
         googleBooksBudget: DailyRequestBudget,
-        settings: AppSettings
+        settings: AppSettings,
+        entitlementStore: EntitlementStore? = nil
     ) {
         self.libraryRepository = libraryRepository
         self.bookSearching = bookSearching
@@ -37,6 +39,7 @@ final class ViewModelFactory {
         self.bookCacheStore = bookCacheStore
         self.googleBooksBudget = googleBooksBudget
         self.settings = settings
+        self.entitlementStore = entitlementStore
     }
 
     func makeBooksViewModel() -> BooksViewModel {
@@ -73,6 +76,6 @@ final class ViewModelFactory {
     }
 
     func makeReadingSessionViewModel(entry: LibraryEntry) -> ReadingSessionViewModel {
-        ReadingSessionViewModel(entry: entry, libraryRepository: libraryRepository)
+        ReadingSessionViewModel(entry: entry, libraryRepository: libraryRepository, isProProvider: { [entitlementStore] in entitlementStore?.isPro ?? false })
     }
 }

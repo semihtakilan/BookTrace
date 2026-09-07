@@ -104,7 +104,7 @@ enum BookCacheStorage {
         )
         removeLegacyCache(in: directory)
 
-        let configuration = ModelConfiguration(schema: schema, url: directory.appending(path: "BookCache.store"))
+        let configuration = ModelConfiguration(schema: schema, url: directory.appending(path: "BookCache.store"), cloudKitDatabase: .none)
         return try ModelContainer(for: schema, configurations: configuration)
     }
 

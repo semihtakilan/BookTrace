@@ -253,6 +253,130 @@ struct BookDetailViewModelTests {
         #expect(stored.readingSessions.count == 1)
     }
 
+    @Test func ownershipEditPreservesCloudChangesMadeWhileTheFormWasOpen() throws {
+        let original = makeEntry(readingStatus: .reading, pageCount: 412, currentPage: 120)
+        let (viewModel, repository) = makeViewModel(stored: [original])
+        viewModel.load()
+        viewModel.presentForm()
+
+        var remote = original
+        remote.book = makeBook(title: "Updated catalogue title", pageCount: 700)
+        remote.setPageCount(600)
+        remote.setReadingStatus(.finished)
+        remote.rating = 5
+        remote.notes = "A note from the other device"
+        remote.isFavorite = true
+        remote.progressType = .percentage
+        remote.categories = [Models.Category(name: "Remote tag")]
+        remote.quotes = [Quote(id: "cloud-quote", text: "A quote saved remotely")]
+        remote.readingSessions = [ReadingSession(id: "cloud-session", startDate: .now, durationSeconds: 900, pagesRead: 30)]
+        repository.storedEntries = [remote]
+        // Refreshing the displayed entry must not reset the form's opening baseline.
+        viewModel.load()
+        viewModel.ownershipStatus = .owned
+        viewModel.save()
+
+        let saved = try #require(repository.storedEntries.first)
+        #expect(saved.ownershipStatus == .owned)
+        #expect(saved.book == remote.book)
+        #expect(saved.pageCount == 600)
+        #expect(saved.currentPage == 600)
+        #expect(saved.readingStatus == .finished)
+        #expect(saved.finishedDate == remote.finishedDate)
+        #expect(saved.rating == 5)
+        #expect(saved.notes == remote.notes)
+        #expect(saved.isFavorite)
+        #expect(saved.progressType == .percentage)
+        #expect(saved.categories == remote.categories)
+        #expect(saved.quotes == remote.quotes)
+        #expect(saved.readingSessions == remote.readingSessions)
+        #expect(viewModel.didSave)
+    }
+
+    @Test func unchangedFinishedSelectionDoesNotUndoARemoteReopen() throws {
+        let original = makeEntry(readingStatus: .finished, pageCount: 412, currentPage: 412)
+        let (viewModel, repository) = makeViewModel(stored: [original])
+        viewModel.load()
+        viewModel.presentForm()
+        var remote = original
+        remote.setProgress(currentPage: 200)
+        repository.storedEntries = [remote]
+        viewModel.ownershipStatus = .owned
+        viewModel.save()
+
+        let saved = try #require(repository.storedEntries.first)
+        #expect(saved.readingStatus == .reading)
+        #expect(saved.currentPage == 200)
+        #expect(saved.finishedDate == nil)
+    }
+
+    @Test func explicitPageCountCorrectionClampsTheLatestProgress() throws {
+        let original = makeEntry(readingStatus: .reading, pageCount: 412, currentPage: 100)
+        let (viewModel, repository) = makeViewModel(stored: [original])
+        viewModel.load()
+        viewModel.presentForm()
+        var remote = original
+        remote.setProgress(currentPage: 250)
+        repository.storedEntries = [remote]
+        viewModel.pageCountText = "200"
+        viewModel.save()
+
+        let saved = try #require(repository.storedEntries.first)
+        #expect(saved.pageCount == 200)
+        #expect(saved.currentPage == 200)
+        #expect(saved.readingStatus == .finished)
+    }
+
+    @Test func explicitStatusEditOverridesRemoteStatusButKeepsRemoteQuotes() throws {
+        let original = makeEntry(readingStatus: .reading, pageCount: 412, currentPage: 100)
+        let (viewModel, repository) = makeViewModel(stored: [original])
+        viewModel.load()
+        viewModel.presentForm()
+        var remote = original
+        remote.setReadingStatus(.finished)
+        remote.quotes = [Quote(id: "new-quote", text: "Still here")]
+        repository.storedEntries = [remote]
+        viewModel.readingStatus = .abandoned
+        viewModel.save()
+
+        let saved = try #require(repository.storedEntries.first)
+        #expect(saved.readingStatus == .abandoned)
+        #expect(saved.finishedDate == nil)
+        #expect(saved.currentPage == remote.currentPage)
+        #expect(saved.quotes == remote.quotes)
+    }
+
+    @Test func categoryEditsKeepTagsAddedRemotely() throws {
+        let removed = Models.Category(name: "Remove this")
+        let remoteTag = Models.Category(name: "Remote addition")
+        let localTag = Models.Category(name: "Local addition")
+        let original = makeEntry(categories: [removed])
+        let (viewModel, repository) = makeViewModel(stored: [original])
+        viewModel.load()
+        viewModel.presentForm()
+        repository.storedEntries[0].categories.append(remoteTag)
+        viewModel.toggle(removed)
+        viewModel.toggle(localTag)
+        viewModel.save()
+
+        let saved = try #require(repository.storedEntries.first)
+        #expect(Set(saved.categories.map(\.id)) == Set([remoteTag.id, localTag.id]))
+    }
+
+    @Test func remotelyDeletedEntryIsNotRecreatedByAnOldEditSheet() {
+        let (viewModel, repository) = makeViewModel(stored: [makeEntry()])
+        viewModel.load()
+        viewModel.presentForm()
+        repository.storedEntries = []
+        viewModel.ownershipStatus = .owned
+        viewModel.save()
+
+        #expect(repository.storedEntries.isEmpty)
+        #expect(viewModel.error == .notInLibrary)
+        #expect(!viewModel.didSave)
+        #expect(viewModel.isPresentingForm)
+    }
+
     /// C3: etiket önerisi için tüm kütüphaneyi materyalize etmeye gerek yok.
     @Test func tagSuggestionsComeFromTheCategoryTable() {
         let (viewModel, _) = makeViewModel(categories: [Models.Category(name: "Book Club")])

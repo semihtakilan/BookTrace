@@ -11,6 +11,8 @@ import Foundation
 public enum BookSource: String, Hashable, Sendable, Codable, CaseIterable {
     case googleBooks = "gb"
     case openLibrary = "ol"
+    /// Imported metadata without a resolved remote catalogue identifier.
+    case local = "local"
 }
 
 /// Kaynak adıyla birlikte taşınan kitap kimliği.

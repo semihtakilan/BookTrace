@@ -21,6 +21,10 @@ private struct SettingsContentView: View {
     @State var viewModel: SettingsViewModel
 
     @Environment(AppSettings.self) private var settings
+    @Environment(CloudSyncStatus.self) private var syncStatus
+    @Environment(EntitlementStore.self) private var entitlement
+    @Environment(ReadingWorkspace.self) private var workspace
+    @State private var showPaywall = false
     @State private var isConfirmingErase = false
 
     var body: some View {
@@ -38,6 +42,27 @@ private struct SettingsContentView: View {
                 .padding(.vertical, 10)
             }
             .listRowBackground(ReadingStyle.sage)
+            Section {
+                Button { showPaywall = true } label: {
+                    LabeledContent("BookTrace Pro") { Text(entitlement.isPro ? LocalizedStringKey("Active") : LocalizedStringKey("Explore Pro")) }
+                }
+                NavigationLink("Widgets & Live Activity") { ReadingCompanionsView() }
+                NavigationLink("Library transfer") { LibraryToolsView() }
+                NavigationLink("Privacy policy") { PrivacyPolicyView() }
+                Link("Contact support", destination: URL(string: "mailto:booktrace.help@gmail.com")!)
+            }
+            Section("iCloud sync") {
+                switch syncStatus.state {
+                case .local: Text("Saved on this device. iCloud sync is unavailable in this configuration.")
+                case .checking: ProgressView("Checking iCloud…")
+                case .unavailable: Text("iCloud is off. Your library is saved on this device.")
+                case .syncing: ProgressView("Syncing with iCloud…")
+                case .ready: Text("iCloud is ready")
+                case .failed: Text("Sync could not finish. Your local library is available.")
+                }
+                if let date = syncStatus.lastSync { LabeledContent("Last sync") { Text(date, style: .relative) } }
+                Button("Check sync status") { Task { await syncStatus.refresh() } }
+            }
             Section {
                 Picker(selection: $settings.theme) {
                     ForEach(AppTheme.allCases) { theme in
@@ -96,11 +121,11 @@ private struct SettingsContentView: View {
                 } label: {
                     Text("Erase library")
                 }
-                .disabled(viewModel.libraryCount == 0)
+                .disabled(viewModel.libraryCount == 0 && workspace.goals.isEmpty)
             } header: {
                 Text("Data")
             } footer: {
-                Text("Search results are cached on this device so browsing works offline and uses fewer requests. Erasing the library removes all \(viewModel.libraryCount) books and their reading sessions.")
+                Text("Search results are cached on this device for offline browsing. Erasing the library removes all books, reading sessions, notes, quotes and goals.")
             }
 
             Section {
@@ -119,6 +144,7 @@ private struct SettingsContentView: View {
         .scrollContentBackground(.hidden)
         .readingBackground()
         .task { await viewModel.loadDiagnostics() }
+        .sheet(isPresented: $showPaywall) { PaywallView() }
         .navigationTitle("Settings")
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog(
@@ -129,7 +155,7 @@ private struct SettingsContentView: View {
             Button("Erase", role: .destructive) { viewModel.eraseLibrary() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This removes every book and reading session from this device. It cannot be undone.")
+            Text("This removes every book, reading session, quote and goal. With iCloud enabled, this also removes them from your other devices. It cannot be undone.")
         }
         .alert(item: confirmationBinding) { confirmation in
             Alert(

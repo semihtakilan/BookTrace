@@ -83,7 +83,7 @@ private struct BooksContentView: View {
             ReadingEmptyState(symbol: "books.vertical", title: "Every reader starts\nwith one book.",
                               message: "Collect the books you love. Make time for their stories. Keep a trace of every page.",
                               actionTitle: "Find your first book") { routeManager.selectedTab = .explore }
-            Label("Your books and reading sessions stay on this device.", systemImage: "lock")
+            Label("Your library is yours. No BookTrace account needed.", systemImage: "lock")
                 .font(.caption)
                 .foregroundStyle(ReadingStyle.secondary)
                 .frame(maxWidth: .infinity)

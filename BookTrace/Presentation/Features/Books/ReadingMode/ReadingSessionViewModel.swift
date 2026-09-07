@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import BookTraceShared
 import Models
 import Observation
 import SwiftUI
@@ -33,6 +34,9 @@ final class ReadingSessionViewModel {
     @ObservationIgnored
     private let libraryRepository: any LibraryRepository
     @ObservationIgnored private let now: () -> Date
+    @ObservationIgnored private let isProProvider: @MainActor () -> Bool
+    @ObservationIgnored private let liveActivity: any ReadingLiveActivityControlling
+    @ObservationIgnored private var hasLiveActivity = false
 
     /// Süre `Timer` sayarak değil, gerçek tarihlerden hesaplanır. Uygulama arka
     /// plana atıldığında tikler dursa bile geri dönüldüğünde geçen süre doğru kalır.
@@ -48,10 +52,18 @@ final class ReadingSessionViewModel {
     @ObservationIgnored private var highestMilestone = 0
     @ObservationIgnored private static let milestoneMinutes = [5, 10, 15, 20, 30, 45, 60, 90, 120]
 
-    init(entry: LibraryEntry, libraryRepository: any LibraryRepository, now: @escaping () -> Date = Date.init) {
+    init(
+        entry: LibraryEntry,
+        libraryRepository: any LibraryRepository,
+        now: @escaping () -> Date = Date.init,
+        isProProvider: @escaping @MainActor () -> Bool = { false },
+        liveActivity: (any ReadingLiveActivityControlling)? = nil
+    ) {
         self.entry = entry
         self.libraryRepository = libraryRepository
         self.now = now
+        self.isProProvider = isProProvider
+        self.liveActivity = liveActivity ?? ReadingLiveActivityController()
     }
 
     var bookTitle: String { entry.book.title }
@@ -90,19 +102,27 @@ final class ReadingSessionViewModel {
         return preview.currentPage
     }
 
-    func start() {
+    func start(palette: BookPalette? = nil) {
         guard !hasStarted, !didSave, !didDiscard else { return }
         hasStarted = true
         sessionStartDate = now()
         runningSince = sessionStartDate
         isRunning = true
         tick()
+        if isProProvider() {
+            liveActivity.start(entry: entry, palette: palette ?? .fallback(for: entry.id), clock: activityClock)
+            hasLiveActivity = true
+        }
     }
 
     /// Ekran her göründüğünde ve saniyede bir çağrılır; yalnızca görüntüyü tazeler.
     func tick() {
         elapsedSeconds = Int(currentElapsed.rounded(.down))
         noteMilestone()
+        if hasLiveActivity, !isProProvider() {
+            liveActivity.end()
+            hasLiveActivity = false
+        }
     }
 
     func clearMilestone() {
@@ -136,6 +156,7 @@ final class ReadingSessionViewModel {
             isRunning = true
         }
         tick()
+        updateLiveActivity()
     }
 
     /// Finish ekranına geçerken sayaç durur; kullanıcı geri dönerse kaldığı yerden devam eder.
@@ -161,6 +182,8 @@ final class ReadingSessionViewModel {
         isRunning = false
         didDiscard = true
         isFinishing = false
+        liveActivity.end()
+        hasLiveActivity = false
     }
 
     /// Oturumu kaydeder: süre ve sayfa yazılır, `currentPage` ve okuma durumu güncellenir.
@@ -189,8 +212,11 @@ final class ReadingSessionViewModel {
             isFinishing = false
             outcome = SessionOutcome(fractionBefore: fractionBefore, entry: entry, pagesRead: pages)
             didSave = true
+            liveActivity.end()
+            hasLiveActivity = false
         } catch {
             self.error = UserFacingError(error)
+            updateLiveActivity()
         }
     }
 
@@ -207,5 +233,14 @@ final class ReadingSessionViewModel {
 
     private var currentElapsed: TimeInterval {
         accumulatedSeconds + (runningSince.map { max(0, now().timeIntervalSince($0)) } ?? 0)
+    }
+
+    private var activityClock: ReadingActivityClock {
+        ReadingActivityClock(accumulatedSeconds: accumulatedSeconds, runningSince: runningSince, now: now())
+    }
+
+    private func updateLiveActivity() {
+        guard isProProvider() else { liveActivity.end(); return }
+        liveActivity.update(clock: activityClock, currentPage: entry.currentPage, pageCount: entry.effectivePageCount)
     }
 }

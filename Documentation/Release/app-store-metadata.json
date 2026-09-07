@@ -1,0 +1,123 @@
+{
+  "prepared_on": "2026-09-07",
+  "status": "LOCAL_DRAFT_NOT_SUBMITTED",
+  "bundle_id": "com.semihtakilan.BookTrace",
+  "primary_category": "BOOKS",
+  "secondary_category": "LIFESTYLE",
+  "support_email": "booktrace.help@gmail.com",
+  "copyright": "2026 Semih TAKILAN",
+  "privacy_policy_url": null,
+  "support_url": null,
+  "marketing_url": null,
+  "terms_url": "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
+  "subscription_group": "BookTracePro",
+  "products": [
+    {
+      "plan": "monthly",
+      "product_id": "com.semihtakilan.BookTrace.pro.monthly",
+      "type": "AUTO_RENEWABLE_SUBSCRIPTION",
+      "period": "P1M",
+      "intro_trial_days": 0
+    },
+    {
+      "plan": "yearly",
+      "product_id": "com.semihtakilan.BookTrace.pro.yearly",
+      "type": "AUTO_RENEWABLE_SUBSCRIPTION",
+      "period": "P1Y",
+      "intro_trial_days": 7
+    },
+    {
+      "plan": "lifetime",
+      "product_id": "com.semihtakilan.BookTrace.pro.lifetime",
+      "type": "NON_CONSUMABLE",
+      "period": null,
+      "intro_trial_days": 0
+    }
+  ],
+  "locales": {
+    "en-US": {
+      "name": "BookTrace: Reading Journal",
+      "subtitle": "Focus, track, keep your quotes",
+      "promotional_text": "Build a reading rhythm with unlimited books, quiet reading sessions and free iCloud sync. Keep the words you love with BookTrace Pro.",
+      "keywords": "books,tracker,library,timer,focus,goals,quotes,barcode,statistics,readinglog",
+      "description": "Make room for a good book.\n\nBookTrace brings your books, reading sessions and favorite words into one calm place on your iPhone. Build a library without a book limit and start reading without creating a BookTrace account.\n\nYOUR EVERYDAY READING, FREE\n• Add unlimited books, organize your library and track your progress.\n• Find books by title, author or barcode.\n• Settle into focused reading sessions with an atmosphere inspired by each book.\n• Keep a reading journal with session history, basic statistics and a gentle daily streak.\n• Sync your library through your private iCloud database when iCloud is available.\n• Discover local recommendations shaped by your reading preferences.\n• Move your library from Goodreads with free CSV import.\n• Share a free summary of your reading year.\n\nGO DEEPER WITH BOOKTRACE PRO\n• Follow your reading session on the Lock Screen and Dynamic Island with Live Activity.\n• Set reading goals and keep progress close with widgets.\n• Explore your calendar, monthly trends, reading pace, ratings and genres.\n• Save quotes by hand or scan a page with on-device text recognition, then review the text before saving.\n• Share quote cards and a complete year in review.\n• Export Goodreads-compatible CSV or a full JSON backup with sessions, quotes and goals.\n\nBookTrace has no advertising or developer-operated analytics. Your reading library stays on your device and, when enabled, in your private iCloud database. Online book searches and cover downloads contact catalog providers.\n\nPro is available monthly, yearly or as a one-time lifetime purchase. The current local price and any eligible annual trial appear before purchase. Subscriptions renew automatically unless canceled through your Apple Account. Restore purchases from the Pro screen.\n\nTerms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
+      "products": {
+        "monthly": {
+          "display_name": "BookTrace Pro Monthly",
+          "description": "All Pro features, billed monthly."
+        },
+        "yearly": {
+          "display_name": "BookTrace Pro Yearly",
+          "description": "All Pro features, billed yearly."
+        },
+        "lifetime": {
+          "display_name": "BookTrace Pro Lifetime",
+          "description": "All Pro features with one purchase."
+        }
+      },
+      "validation_counts": {
+        "name": 26,
+        "subtitle": 30,
+        "promotional_text": 133,
+        "description": 1856,
+        "keywords_utf8_bytes": 76
+      }
+    },
+    "tr": {
+      "name": "BookTrace: Okuma Günlüğü",
+      "subtitle": "Odaklan, oku, alıntılarını tut",
+      "promotional_text": "Sınırsız kitap, sakin okuma oturumları ve ücretsiz iCloud eşitlemesiyle okuma ritmini bul. Sevdiğin satırları BookTrace Pro ile sakla.",
+      "keywords": "kitap,takip,okuma,hedef,kütüphane,alıntı,odaklanma,barkod,istatistik",
+      "description": "İyi bir kitaba yer aç.\n\nBookTrace; kitaplarını, okuma oturumlarını ve sevdiğin satırları iPhone’unda sakin bir yerde buluşturur. Kitap sınırı olmadan kütüphaneni kur, BookTrace hesabı oluşturmadan okumaya başla.\n\nGÜNLÜK OKUMA ALIŞKANLIĞIN ÜCRETSİZ\n• Sınırsız kitap ekle, kütüphaneni düzenle ve ilerlemeni takip et.\n• Başlık, yazar veya barkodla kitap bul.\n• Her kitaptan ilham alan atmosferlerle okumaya odaklan.\n• Oturum geçmişi, temel istatistikler ve günlük okuma serinle günlüğünü tut.\n• iCloud kullanılabilir olduğunda kütüphaneni özel iCloud veritabanın üzerinden eşitle.\n• Okuma tercihlerine göre cihazında oluşturulan önerileri keşfet.\n• Goodreads kütüphaneni ücretsiz CSV içe aktarmayla taşı.\n• Okuma yılının ücretsiz özetini paylaş.\n\nBOOKTRACE PRO İLE DAHA FAZLASI\n• Canlı Etkinlik ile okuma oturumunu Kilit Ekranı ve Dynamic Island’da takip et.\n• Okuma hedefleri belirle, ilerlemeni araç takımlarıyla yanında tut.\n• Okuma takvimini, aylık eğilimleri, hızını, puanlarını ve türlerini incele.\n• Alıntıları elle yaz veya sayfa tara. Metin tanıma cihazında çalışır; kaydetmeden önce metni gözden geçir.\n• Alıntı kartları ve yılın tüm özetini paylaş.\n• Goodreads uyumlu CSV ya da oturumları, alıntıları ve hedefleri içeren tam JSON yedeği oluştur.\n\nBookTrace reklam veya geliştirici tarafından işletilen analiz sistemi içermez. Kütüphanen cihazında ve eşitleme açıkken özel iCloud veritabanında kalır. Çevrimiçi kitap aramaları ve kapak indirmeleri katalog sağlayıcılarına bağlanır.\n\nPro; aylık, yıllık veya tek seferlik ömür boyu satın alma seçenekleriyle sunulur. Güncel yerel fiyat ve uygunsan yıllık deneme satın almadan önce gösterilir. Abonelikler Apple Hesabından iptal edilmedikçe otomatik yenilenir. Pro ekranından satın almalarını geri yükleyebilirsin.\n\nKullanım Koşulları: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
+      "products": {
+        "monthly": {
+          "display_name": "BookTrace Pro Aylık",
+          "description": "Tüm Pro özellikleri, aylık ödeme."
+        },
+        "yearly": {
+          "display_name": "BookTrace Pro Yıllık",
+          "description": "Tüm Pro özellikleri, yıllık ödeme."
+        },
+        "lifetime": {
+          "display_name": "BookTrace Pro Ömür Boyu",
+          "description": "Tek ödemeyle tüm Pro özellikleri."
+        }
+      },
+      "validation_counts": {
+        "name": 24,
+        "subtitle": 30,
+        "promotional_text": 134,
+        "description": 1855,
+        "keywords_utf8_bytes": 72
+      }
+    },
+    "de-DE": {
+      "name": "BookTrace: Lesetagebuch",
+      "subtitle": "Lesen, fokussieren, festhalten",
+      "promotional_text": "Finde deinen Leserhythmus mit unbegrenzten Büchern, ruhigen Lesesitzungen und kostenlosem iCloud-Abgleich. Sammle Lieblingszitate mit BookTrace Pro.",
+      "keywords": "bücher,bibliothek,lesen,ziele,zitate,statistik,timer,fokus,leseliste",
+      "description": "Schaffe Platz für ein gutes Buch.\n\nBookTrace vereint deine Bücher, Lesesitzungen und Lieblingszitate an einem ruhigen Ort auf deinem iPhone. Baue deine Bibliothek ohne Bücherlimit auf und starte ohne ein BookTrace-Konto.\n\nDEIN LESEALLTAG, KOSTENLOS\n• Füge unbegrenzt Bücher hinzu, ordne deine Bibliothek und verfolge deinen Fortschritt.\n• Finde Bücher nach Titel, Autor oder Barcode.\n• Konzentriere dich mit einer zum Buch passenden Atmosphäre auf deine Lesesitzung.\n• Führe ein Lesetagebuch mit Sitzungsverlauf, grundlegenden Statistiken und einer täglichen Leseserie.\n• Synchronisiere deine Bibliothek über deine private iCloud-Datenbank, wenn iCloud verfügbar ist.\n• Entdecke lokal berechnete Empfehlungen nach deinen Lesevorlieben.\n• Übertrage deine Goodreads-Bibliothek mit kostenlosem CSV-Import.\n• Teile eine kostenlose Zusammenfassung deines Lesejahres.\n\nMEHR MIT BOOKTRACE PRO\n• Verfolge deine Lesesitzung als Live-Aktivität auf dem Sperrbildschirm und in der Dynamic Island.\n• Setze Leseziele und behalte deinen Fortschritt mit Widgets im Blick.\n• Entdecke deinen Lesekalender, monatliche Trends, Lesetempo, Bewertungen und Genres.\n• Schreibe Zitate auf oder scanne eine Seite. Die Texterkennung läuft auf deinem Gerät; prüfe den Text vor dem Speichern.\n• Teile Zitatkarten und deinen vollständigen Jahresrückblick.\n• Exportiere Goodreads-kompatible CSV-Dateien oder eine vollständige JSON-Sicherung mit Sitzungen, Zitaten und Zielen.\n\nBookTrace enthält keine Werbung und keine vom Entwickler betriebene Analyseplattform. Deine Bibliothek bleibt auf deinem Gerät und bei aktiviertem Abgleich in deiner privaten iCloud-Datenbank. Online-Buchsuchen und Cover-Downloads kontaktieren Kataloganbieter.\n\nPro gibt es monatlich, jährlich oder als einmaligen Kauf auf Lebenszeit. Der aktuelle lokale Preis und ein gegebenenfalls verfügbarer Jahrestest werden vor dem Kauf angezeigt. Abonnements verlängern sich automatisch, bis du sie über deinen Apple Account kündigst. Käufe lassen sich auf dem Pro-Bildschirm wiederherstellen.\n\nNutzungsbedingungen: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
+      "products": {
+        "monthly": {
+          "display_name": "BookTrace Pro Monatlich",
+          "description": "Alle Pro-Funktionen, monatlich bezahlt."
+        },
+        "yearly": {
+          "display_name": "BookTrace Pro Jährlich",
+          "description": "Alle Pro-Funktionen, jährlich bezahlt."
+        },
+        "lifetime": {
+          "display_name": "BookTrace Pro Lebenslang",
+          "description": "Alle Pro-Funktionen mit einem Kauf."
+        }
+      },
+      "validation_counts": {
+        "name": 23,
+        "subtitle": 30,
+        "promotional_text": 148,
+        "description": 2118,
+        "keywords_utf8_bytes": 69
+      }
+    }
+  }
+}

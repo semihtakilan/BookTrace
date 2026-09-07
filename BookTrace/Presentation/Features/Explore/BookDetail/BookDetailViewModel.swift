@@ -43,6 +43,10 @@ final class BookDetailViewModel {
     private let settings: AppSettings
     @ObservationIgnored
     private var knownCategories: [Models.Category] = []
+    @ObservationIgnored
+    private var formBaseline: LibraryFormSnapshot?
+    @ObservationIgnored
+    private var formWasEditingExistingEntry = false
 
     init(
         book: BookReference,
@@ -152,6 +156,9 @@ final class BookDetailViewModel {
             selectedCategories = []
         }
         newCategoryName = ""
+        formBaseline = currentFormSnapshot
+        formWasEditingExistingEntry = existingEntry != nil
+        didSave = false
         isPresentingForm = true
     }
 
@@ -178,25 +185,56 @@ final class BookDetailViewModel {
 
     func save() {
         guard canSave else { return }
-        let pageCount = Int(pageCountText.trimmingCharacters(in: .whitespaces))
-
-        // Mevcut kayıt varsa ilerlemesi ve oturumları korunur; yalnızca
-        // kullanıcının bu formdaki seçimleri güncellenir.
-        var entry = existingEntry ?? LibraryEntry(book: book)
-        entry.book = book
-        entry.ownershipStatus = ownershipStatus
-        entry.progressType = progressType
-        // Sayfa sayısı düşürüldüyse ilerleme de yeni tavana çekilir.
-        entry.setPageCount(pageCount)
-        // Sayfa hesabı tamamlandıktan sonra açık durum seçimini uygula.
-        // Değişmeyen bir durum, sayfa düzeltmesinin tamamladığı kitabı geri almaz.
-        if existingEntry == nil || readingStatus != existingEntry?.readingStatus || readingStatus == .finished {
-            entry.setReadingStatus(readingStatus)
-        }
-        entry.categories = selectedCategories
+        let edited = currentFormSnapshot
+        let baseline = formBaseline ?? LibraryFormSnapshot(
+            readingStatus: existingEntry?.readingStatus ?? settings.defaultReadingStatus,
+            ownershipStatus: existingEntry?.ownershipStatus ?? .notOwned,
+            progressType: existingEntry?.progressType ?? settings.defaultProgressType,
+            pageCount: existingEntry?.pageCount,
+            categories: existingEntry?.categories ?? []
+        )
 
         do {
-            try libraryRepository.add(entry)
+            // A sheet can stay open while CloudKit or another screen updates the
+            // book. Start from the current repository value, not the opening copy.
+            let latest = try libraryRepository.entry(for: book.id)
+            guard latest != nil || !formWasEditingExistingEntry else {
+                self.error = .notInLibrary
+                return
+            }
+            let isNewEntry = latest == nil
+            var entry = latest ?? LibraryEntry(book: book)
+            if isNewEntry || edited.ownershipStatus != baseline.ownershipStatus {
+                entry.ownershipStatus = edited.ownershipStatus
+            }
+            if isNewEntry || edited.progressType != baseline.progressType {
+                entry.progressType = edited.progressType
+            }
+            // Only an explicit page-count edit can clamp concurrent progress or
+            // alter completion; unchanged text must preserve a remote correction.
+            if isNewEntry || edited.pageCount != baseline.pageCount {
+                entry.setPageCount(edited.pageCount)
+            }
+            if isNewEntry || edited.readingStatus != baseline.readingStatus {
+                entry.setReadingStatus(edited.readingStatus)
+            }
+            if isNewEntry {
+                entry.categories = edited.categories
+            } else {
+                // Apply category additions/removals as a delta so a remote tag
+                // added while the sheet was open survives an unrelated edit.
+                let originalIDs = Set(baseline.categories.map(\.id))
+                let selectedIDs = Set(edited.categories.map(\.id))
+                let removedIDs = originalIDs.subtracting(selectedIDs)
+                entry.categories.removeAll { removedIDs.contains($0.id) }
+                var retainedIDs = Set(entry.categories.map(\.id))
+                entry.categories += edited.categories.filter {
+                    !originalIDs.contains($0.id) && retainedIDs.insert($0.id).inserted
+                }
+            }
+
+            if isNewEntry { try libraryRepository.add(entry) }
+            else { try libraryRepository.update(entry) }
             existingEntry = try libraryRepository.entry(for: book.id)
             isPresentingForm = false
             didSave = true
@@ -204,5 +242,23 @@ final class BookDetailViewModel {
         } catch {
             self.error = UserFacingError(error)
         }
+    }
+
+    private var currentFormSnapshot: LibraryFormSnapshot {
+        LibraryFormSnapshot(
+            readingStatus: readingStatus,
+            ownershipStatus: ownershipStatus,
+            progressType: progressType,
+            pageCount: Int(pageCountText.trimmingCharacters(in: .whitespacesAndNewlines)),
+            categories: selectedCategories
+        )
+    }
+
+    private struct LibraryFormSnapshot {
+        let readingStatus: ReadingStatus
+        let ownershipStatus: OwnershipStatus
+        let progressType: ProgressType
+        let pageCount: Int?
+        let categories: [Models.Category]
     }
 }
